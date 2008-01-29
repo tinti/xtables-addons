@@ -4,7 +4,7 @@ Prerequirements
 
 	* iptables-devel 1.4.1
 
-	* kernel-source
+	* kernel-source >= 2.6.19
 
 
 Compiling

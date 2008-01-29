@@ -17,17 +17,15 @@
 #include <net/ip.h>
 #include <net/route.h>
 #include <linux/netfilter/x_tables.h>
-#ifdef CONFIG_NETFILTER_XT_TARGET_TEE
-#	include <linux/netfilter/xt_TEE.h>
-#else
-#	include "xt_TEE.h"
-#endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
 #	define WITH_CONNTRACK 1
 #	include <net/netfilter/nf_conntrack.h>
 static struct nf_conn tee_track;
 #endif
+
+#include "compat_xtables.h"
+#include "xt_TEE.h"
 
 static const union nf_inet_addr zero_address;
 
@@ -101,7 +99,8 @@ static void tee_ip_direct_send(struct sk_buff *skb)
 	unsigned int hh_len = LL_RESERVED_SPACE(dev);
 
 	/* Be paranoid, rather than too clever. */
-	if (unlikely(skb_headroom(skb) < hh_len && dev->header_ops != NULL)) {
+	if (unlikely(skb_headroom(skb) < hh_len)) {
+	/* if (dev->header_ops != NULL) */
 		struct sk_buff *skb2;
 
 		skb2 = skb_realloc_headroom(skb, LL_RESERVED_SPACE(dev));

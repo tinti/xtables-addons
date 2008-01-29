@@ -44,6 +44,7 @@
 #endif
 #include <net/route.h>
 #include <net/tcp.h>
+#include "compat_xtables.h"
 
 static inline void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 {
