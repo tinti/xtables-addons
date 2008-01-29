@@ -1,0 +1,58 @@
+
+Prerequirements
+===============
+
+	* iptables-devel 1.4.1
+
+	* kernel-source
+
+
+Compiling
+=========
+
+./configure [options]
+
+--with-kbuild=
+
+	Specifies the path to the kernel build output directory. We
+	need it for building the kernel extensions. For example, on
+	openSUSE:
+
+		--with-kbuild=/usr/src/linux-obj/x86_64/default
+
+--with-ksource=
+
+	Specifies the path to the kernel source directory. This is
+	currently needed for building the userspace extensions because
+	we use unsanitized kernel headers, but the option MAY
+	DISAPPEAR IN FUTURE.
+
+		--with-ksource=/usr/src/linux
+
+--with-iptables=
+
+	Specifies the path to the directory where we may find
+	xtables.h, should it not be within the standard C compiler
+	include path, or if you want to override it. The directory
+	will be checked for xtables.h and include/xtables.h. (This is
+	to support the following specs:)
+
+		--with-iptables=/usr/src/iptables
+		--with-iptables=/usr/src/iptables/include
+		--with-iptables=/opt/iptables/include
+
+--with-iptdir=
+
+	Specifies the path to where the newly built extensions should
+	be installed when `make install` is run. It uses the same
+	default as the iptables package, ${libexecdir}/iptables.
+
+
+Note to distribution packagers
+==============================
+
+Except for --with-kbuild, distributions should not have a need to
+supply any other flags (besides --prefix=/usr and perhaps
+--libdir=/usr/lib64, etc.) to configure when all prerequired packages
+are installed. If iptables-devel is installed, necessary headers
+should be in /usr/include, so --with-iptables is not needed.

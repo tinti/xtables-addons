@@ -1,0 +1,7 @@
+iptables-addons
+===============
+
+iptables-addons is what previously has been patch-o-matic and
+patch-o-matic-ng. Extensions that do not need immediate kernel
+patching are collected here in this repository and can immediately be
+built against a kernel and iptables.

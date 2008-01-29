@@ -1,0 +1,9 @@
+config NETFILTER_XT_TARGET_TEE
+	tristate '"TEE" target support'
+	depends on NETFILTER_XTABLES
+	depends on NETFILTER_ADVANCED
+	depends on IP_NF_MANGLE || IP6_NF_MANGLE
+	---help---
+	This option adds a "TEE" target, which enables you to duplicate
+	packets and route those duplicates to a different gateway.
+	The target has to be used inside the mangle table.
