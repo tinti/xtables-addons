@@ -66,5 +66,7 @@ extern int xtnu_register_matches(struct xtnu_match *, unsigned int);
 extern void xtnu_unregister_matches(struct xtnu_match *, unsigned int);
 extern int xtnu_register_target(struct xtnu_target *);
 extern void xtnu_unregister_target(struct xtnu_target *);
+extern int xtnu_register_targets(struct xtnu_target *, unsigned int);
+extern void xtnu_unregister_targets(struct xtnu_target *, unsigned int);
 
 #endif /* _COMPAT_XTNU_H */

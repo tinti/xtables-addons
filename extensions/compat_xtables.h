@@ -28,6 +28,8 @@
 #	define ip_route_me_harder    xtnu_ip_route_me_harder
 #	define xt_register_target    xtnu_register_target
 #	define xt_unregister_target  xtnu_unregister_target
+#	define xt_register_targets   xtnu_register_targets
+#	define xt_unregister_targets xtnu_unregister_targets
 #endif
 
 #include "compat_xtnu.h"

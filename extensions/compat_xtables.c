@@ -196,6 +196,23 @@ int xtnu_register_target(struct xtnu_target *nt)
 }
 EXPORT_SYMBOL_GPL(xtnu_register_target);
 
+int xtnu_register_targets(struct xtnu_target *nt, unsigned int num)
+{
+	unsigned int i;
+	int ret;
+
+	for (i = 0; i < num; ++i) {
+		ret = xtnu_register_target(&nt[i]);
+		if (ret < 0) {
+			if (i > 0)
+				xtnu_unregister_targets(nt, i);
+			return ret;
+		}
+	}
+	return 0;
+}
+EXPORT_SYMBOL_GPL(xtnu_register_targets);
+
 void xtnu_unregister_target(struct xtnu_target *nt)
 {
 	xt_unregister_target(nt->__compat_target);
@@ -203,6 +220,14 @@ void xtnu_unregister_target(struct xtnu_target *nt)
 }
 EXPORT_SYMBOL_GPL(xtnu_unregister_target);
 
+void xtnu_unregister_targets(struct xtnu_target *nt, unsigned int num)
+{
+	unsigned int i;
+
+	for (i = 0; i < num; ++i)
+		xtnu_unregister_target(&nt[i]);
+}
+EXPORT_SYMBOL_GPL(xtnu_unregister_targets);
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
