@@ -1,5 +1,6 @@
 # -*- Makefile -*-
 
+obj-m += xt_LOGMARK.o
 obj-m += xt_TARPIT.o
 obj-m += xt_TEE.o
 obj-m += compat_xtables.o

@@ -10,6 +10,7 @@ AM_CFLAGS        = ${regular_CFLAGS} ${iptables_CFLAGS} ${kinclude_CFLAGS} \
                    -D_INIT=$*_init
 AM_LDFLAGS       = -module -avoid-version
 ipt_LTLIBRARIES  = \
+	libxt_LOGMARK.la \
 	libxt_TARPIT.la \
 	libxt_TEE.la
 
