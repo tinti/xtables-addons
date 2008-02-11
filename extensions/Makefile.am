@@ -6,7 +6,8 @@ abssrcdir        = $(shell readlink -f ${srcdir})
 regular_CFLAGS  := @regular_CFLAGS@
 xtables_CFLAGS  := @xtables_CFLAGS@
 kinclude_CFLAGS := @kinclude_CFLAGS@
-AM_CFLAGS        = ${regular_CFLAGS} ${xtables_CFLAGS} ${kinclude_CFLAGS} \
+AM_CFLAGS        = ${regular_CFLAGS} -I ${top_srcdir}/include \
+                   ${xtables_CFLAGS} ${kinclude_CFLAGS} \
                    -D_INIT=$*_init
 AM_LDFLAGS       = -module -avoid-version
 xtlib_LTLIBRARIES = \
