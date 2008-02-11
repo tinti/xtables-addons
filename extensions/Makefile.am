@@ -4,12 +4,12 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 abssrcdir        = $(shell readlink -f ${srcdir})
 
 regular_CFLAGS  := @regular_CFLAGS@
-iptables_CFLAGS := @iptables_CFLAGS@
+xtables_CFLAGS  := @xtables_CFLAGS@
 kinclude_CFLAGS := @kinclude_CFLAGS@
-AM_CFLAGS        = ${regular_CFLAGS} ${iptables_CFLAGS} ${kinclude_CFLAGS} \
+AM_CFLAGS        = ${regular_CFLAGS} ${xtables_CFLAGS} ${kinclude_CFLAGS} \
                    -D_INIT=$*_init
 AM_LDFLAGS       = -module -avoid-version
-ipt_LTLIBRARIES  = \
+xtlib_LTLIBRARIES = \
 	libxt_LOGMARK.la \
 	libxt_TARPIT.la \
 	libxt_TEE.la

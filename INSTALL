@@ -1,24 +1,33 @@
+Installation instructions for Xtables-addons
+============================================
+
+Xtables-addons uses the well-known configure(autotools) infrastructure
+in combination with the kernel's Kbuild system.
+
+	$ ./configure
+	$ make
+	# make install
+
 
 Prerequirements
 ===============
 
-	* iptables-devel 1.4.1
+	* xtables(-devel) 1.5.0
 
-	* kernel-source >= 2.6.19
+	* kernel-source >= 2.6.19 with prepared output directory
 
 
-Compiling
-=========
+Configuring and compiling
+=========================
 
 ./configure [options]
 
 --with-kbuild=
 
-	Specifies the path to the kernel build output directory. We
-	need it for building the kernel extensions. For example, on
-	openSUSE:
-
-		--with-kbuild=/usr/src/linux-obj/x86_64/default
+	Specifies the path to the kernel build output directory. We need
+	it for building the kernel extensions. It defaults to
+	/lib/modules/$(running version)/build, which usually points to
+	the right directory. (If not, you need to install something.)
 
 --with-ksource=
 
@@ -29,23 +38,30 @@ Compiling
 
 		--with-ksource=/usr/src/linux
 
---with-iptables=
+--with-xtables=
 
 	Specifies the path to the directory where we may find
 	xtables.h, should it not be within the standard C compiler
-	include path, or if you want to override it. The directory
-	will be checked for xtables.h and include/xtables.h. (This is
-	to support the following specs:)
+	include path (/usr/include), or if you want to override it.
+	The directory will be checked for xtables.h and
+	include/xtables.h. (This is to support the following specs:)
 
-		--with-iptables=/usr/src/iptables
-		--with-iptables=/usr/src/iptables/include
-		--with-iptables=/opt/iptables/include
+		--with-xtables=/usr/src/xtables
+		--with-xtables=/usr/src/xtables/include
+		--with-xtables=/opt/xtables/include
 
---with-iptdir=
+--with-libxtdir=
 
 	Specifies the path to where the newly built extensions should
 	be installed when `make install` is run. It uses the same
-	default as the iptables package, ${libexecdir}/iptables.
+	default as the Xtables package, ${libexecdir}/xtables.
+
+If you want to enable debugging, use
+
+	./configure CFLAGS="-ggdb3 -O0"
+
+(-O0 is used to turn off instruction reordering, which makes debugging
+much easier.)
 
 
 Note to distribution packagers
@@ -54,5 +70,5 @@ Note to distribution packagers
 Except for --with-kbuild, distributions should not have a need to
 supply any other flags (besides --prefix=/usr and perhaps
 --libdir=/usr/lib64, etc.) to configure when all prerequired packages
-are installed. If iptables-devel is installed, necessary headers
-should be in /usr/include, so --with-iptables is not needed.
+are installed. If xtables-devel is installed, necessary headers should
+be in /usr/include, so --with-xtables is not needed.
