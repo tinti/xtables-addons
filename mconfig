@@ -1,0 +1,8 @@
+# -*- Makefile -*-
+#
+# Only "build_${name}=m" (build extensions) or "build_${name}="
+# (do not build) are valid!
+#
+build_LOGMARK=m
+build_TARPIT=m
+build_TEE=m

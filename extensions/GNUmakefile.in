@@ -1,0 +1,90 @@
+# -*- Makefile -*-
+
+top_srcdir      := @top_srcdir@
+srcdir          := @srcdir@
+abstop_srcdir   := $(realpath ${top_srcdir})
+abssrcdir       := $(realpath ${srcdir})
+prefix          := @prefix@
+exec_prefix     := @exec_prefix@
+libdir          := @libdir@
+libexecdir      := @libexecdir@
+xtlibdir        := @xtlibdir@
+kbuilddir       := @kbuilddir@
+
+CC              := @CC@
+CCLD            := ${CC}
+CFLAGS          := @CFLAGS@
+LDFLAGS         := @LDFLAGS@
+regular_CFLAGS  := @regular_CFLAGS@
+kinclude_CFLAGS := @kinclude_CFLAGS@
+
+AM_CFLAGS      := ${regular_CFLAGS} -I${top_srcdir}/include ${kinclude_CFLAGS}
+AM_DEPFLAGS     = -Wp,-MMD,$(@D)/.$(@F).d,-MT,$@
+
+ifeq (${V},)
+AM_LIBTOOL_SILENT = --silent
+AM_VERBOSE_CC     = @echo "  CC      " $@;
+AM_VERBOSE_CCLD   = @echo "  CCLD    " $@;
+AM_VERBOSE_CXX    = @echo "  CXX     " $@;
+AM_VERBOSE_CXXLD  = @echo "  CXXLD   " $@;
+AM_VERBOSE_AR     = @echo "  AR      " $@;
+AM_VERBOSE_GEN    = @echo "  GEN     " $@;
+endif
+
+#
+#	Wildcard module list
+#
+include ${top_srcdir}/mconfig
+pfx_all_mod   := $(patsubst ${srcdir}/libxt_%.c,%,$(wildcard ${srcdir}/libxt_*.c))
+pfx_build_mod := $(foreach i,${pfx_all_mod},$(if ${build_${i}},${i},))
+pfx_solibs    := $(patsubst %,libxt_%.so,${pfx_build_mod})
+
+
+#
+#	Building blocks
+#
+targets := ${pfx_solibs}
+targets_install := ${pfx_solibs}
+
+.SECONDARY:
+
+.PHONY: all install clean distclean FORCE
+
+all: modules ${targets}
+
+install: modules_install ${targets_install}
+	@mkdir -p "${DESTDIR}${xtlibdir}";
+	install -pm0755 ${targets_install} "${DESTDIR}${xtlibdir}/";
+
+clean: clean_modules
+	rm -f *.oo *.so;
+
+distclean: clean
+	rm -f .*.d;
+
+-include .*.d
+
+
+#
+#	Call out to kbuild
+#
+.PHONY: modules modules_install clean_modules
+
+modules:
+	make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} modules;
+
+modules_install:
+	make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} INSTALL_MOD_PATH=${DESTDIR} modules_install;
+
+clean_modules:
+	make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} clean;
+
+
+#
+#	Shared libraries
+#
+lib%.so: lib%.oo
+	${AM_VERBOSE_CCLD} ${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $<;
+
+lib%.oo: ${srcdir}/lib%.c
+	${AM_VERBOSE_CC} ${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} -D_INIT=lib$*_init -DPIC -fPIC ${CFLAGS} -o $@ -c $<;

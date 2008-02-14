@@ -17,6 +17,13 @@ Prerequirements
 	* kernel-source >= 2.6.19 with prepared output directory
 
 
+Selecting extensions
+====================
+
+You can edit the "mconfig" file to select what modules to build and
+install. By default, all modules are enabled.
+
+
 Configuring and compiling
 =========================
 

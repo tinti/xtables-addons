@@ -1,6 +1,9 @@
 # -*- Makefile -*-
 
-obj-m += xt_LOGMARK.o
-obj-m += xt_TARPIT.o
-obj-m += xt_TEE.o
-obj-m += compat_xtables.o
+include ${XA_TOPSRCDIR}/mconfig
+
+obj-m                += compat_xtables.o
+
+obj-${build_LOGMARK} += xt_LOGMARK.o
+obj-${build_TARPIT}  += xt_TARPIT.o
+obj-${build_TEE}     += xt_TEE.o
