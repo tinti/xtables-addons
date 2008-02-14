@@ -9,7 +9,6 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
 kbuilddir="/lib/modules/$(uname -r)/build";
-ksourcedir="/lib/modules/$(uname -r)/source";
 AC_ARG_WITH([kbuild],
 	AS_HELP_STRING([--with-kbuild=PATH],
 	[Path to kernel build directory [[/lib/modules/CURRENT/build]]]),
@@ -53,7 +52,13 @@ regular_CFLAGS="-D_LARGEFILE_SOURCE=1 -D_LARGE_FILES -D_FILE_OFFSET_BITS=64 \
 	-Wmissing-prototypes -Wredundant-decls -Wshadow -Wstrict-prototypes \
 	-Winline -pipe -DIPTABLES_VERSION=\\\"$PACKAGE_VERSION\\\" \
 	-DXTABLES_LIBDIR=\\\"\${xtlibdir}\\\"";
-kinclude_CFLAGS="-I $kbuilddir/include -I $ksourcedir/include";
+kinclude_CFLAGS="";
+if [[ -n "$kbuilddir" ]]; then
+	kinclude_CFLAGS="$kinclude_CFLAGS -I $kbuilddir/include";
+fi;
+if [[ -n "$ksourcedir" ]]; then
+	kinclude_CFLAGS="$kinclude_CFLAGS -I $ksourcedir/include";
+fi;
 
 AC_SUBST([regular_CFLAGS xtables_CFLAGS kinclude_CFLAGS])
 AC_SUBST([kbuilddir])
