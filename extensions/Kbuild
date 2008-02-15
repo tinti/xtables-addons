@@ -1,9 +1,12 @@
 # -*- Makefile -*-
 
 include ${XA_TOPSRCDIR}/mconfig
+-include ${XA_TOPSRCDIR}/mconfig.*
 
 obj-m                += compat_xtables.o
 
 obj-${build_LOGMARK} += xt_LOGMARK.o
 obj-${build_TARPIT}  += xt_TARPIT.o
 obj-${build_TEE}     += xt_TEE.o
+
+-include ${M}/*.Kbuild
