@@ -12,6 +12,8 @@ Makefile
 Makefile.in
 Module.symvers
 
+/downloads
+
 /aclocal.m4
 /autom4te*.cache
 /compile
