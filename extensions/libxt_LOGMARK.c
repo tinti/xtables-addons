@@ -6,19 +6,13 @@
 #include "xt_LOGMARK.h"
 
 enum {
-	F_LEVEL   = 1 << 0,
-	F_PREFIX  = 1 << 1,
-	F_NFMARK  = 1 << 2,
-	F_CTMARK  = 1 << 3,
-	F_SECMARK = 1 << 4,
+	F_LEVEL  = 1 << 0,
+	F_PREFIX = 1 << 1,
 };
 
 static const struct option logmark_tg_opts[] = {
 	{.name = "log-level",   .has_arg = true,  .val = 'l'},
 	{.name = "log-prefix",  .has_arg = true,  .val = 'p'},
-	{.name = "log-nfmark",  .has_arg = false, .val = 'n'},
-	{.name = "log-ctmark",  .has_arg = false, .val = 'c'},
-	{.name = "log-secmark", .has_arg = false, .val = 's'},
 	{},
 };
 
@@ -28,9 +22,6 @@ static void logmark_tg_help(void)
 "LOGMARK target options:\n"
 "  --log-level level      Level of logging (numeric, 0-8)\n"
 "  --log-prefix prefix    Prefix log messages with this string\n"
-"  --log-nfmark           Log the packet mark\n"
-"  --log-ctmark           Log the connection mark\n"
-"  --log-secmark          Log the security mark of the packet\n"
 );
 }
 
@@ -72,27 +63,6 @@ logmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 		strncpy(info->prefix, optarg, sizeof(info->prefix));
 		*flags |= F_PREFIX;
 		return true;
-
-	case 'n': /* --log-nfmark */
-		param_act(P_ONLY_ONCE, "LOGMARK", "--log-nfmark", *flags & F_NFMARK);
-		param_act(P_NO_INVERT, "LOGMARK", "--log-nfmark", invert);
-		info->flags |= XT_LOGMARK_NFMARK;
-		*flags |= F_NFMARK;
-		return true;
-
-	case 'c': /* --log-ctmark */
-		param_act(P_ONLY_ONCE, "LOGMARK", "--log-ctmark", *flags & F_CTMARK);
-		param_act(P_NO_INVERT, "LOGMARK", "--log-ctmark", invert);
-		info->flags |= XT_LOGMARK_CTMARK;
-		*flags |= F_CTMARK;
-		return true;
-
-	case 's': /* --log-secmark */
-		param_act(P_ONLY_ONCE, "LOGMARK", "--log-secmark", *flags & F_SECMARK);
-		param_act(P_NO_INVERT, "LOGMARK", "--log-secmark", invert);
-		info->flags |= XT_LOGMARK_SECMARK;
-		*flags |= F_SECMARK;
-		return true;
 	}
 	return false;
 }
@@ -103,14 +73,7 @@ logmark_tg_print(const void *ip, const struct xt_entry_target *target,
 {
 	const struct xt_logmark_tginfo *info = (void *)target->data;
 
-	printf("LOGMARK level %u prefix \"%s\"", info->level, info->prefix);
-	if (info->flags & XT_LOGMARK_NFMARK)
-		printf(" nfmark");
-	if (info->flags & XT_LOGMARK_CTMARK)
-		printf(" ctmark");
-	if (info->flags & XT_LOGMARK_SECMARK)
-		printf(" secmark");
-	printf("; ");
+	printf("LOGMARK level %u prefix \"%s\" ", info->level, info->prefix);
 }
 
 static void
@@ -122,12 +85,6 @@ logmark_tg_save(const void *ip, const struct xt_entry_target *target)
 		printf("--log-level %u ", info->level);
 	if (*info->prefix != '\0')
 		printf("--log-prefix \"%s\" ", info->prefix);
-	if (info->flags & XT_LOGMARK_NFMARK)
-		printf("--log-nfmark ");
-	if (info->flags & XT_LOGMARK_CTMARK)
-		printf("--log-ctmark ");
-	if (info->flags & XT_LOGMARK_SECMARK)
-		printf("--log-secmark ");
 }
 
 static struct xtables_target logmark_tg_reg = {

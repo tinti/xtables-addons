@@ -22,25 +22,44 @@ logmark_tg(struct sk_buff *skb, const struct net_device *in,
            const struct xt_target *target, const void *targinfo)
 {
 	const struct xt_logmark_tginfo *info = targinfo;
+	const struct nf_conn *ct;
+	enum ip_conntrack_info ctinfo;
 
-	printk("<%u>%.*s", info->level, sizeof(info->prefix), info->prefix);
+	printk("<%u>%.*s""nfmark=0x%x secmark=0x%x classify=0x%x",
+	       info->level, (unsigned int)sizeof(info->prefix), info->prefix,
+	       skb->mark, skb->secmark, skb->priority);
 
-	if (info->flags & XT_LOGMARK_NFMARK)
-		printk(" nfmark=0x%x", skb->mark);
-	if (info->flags & XT_LOGMARK_CTMARK) {
-		const struct nf_conn *ct;
-		enum ip_conntrack_info ctinfo;
+	ct = nf_ct_get(skb, &ctinfo);
+	if (ct == NULL) {
+		printk(" ct=NULL ctmark=NULL ctstate=INVALID ctstatus=NONE");
+	} else if (ct == &nf_conntrack_untracked) {
+		printk(" ct=UNTRACKED ctmark=NULL ctstate=UNTRACKED ctstatus=NONE");
+	} else {
+		printk(" ct=0x%p ctmark=0x%x ctstate=", ct, ct->mark);
+		ctinfo %= IP_CT_IS_REPLY;
+		if (ctinfo == IP_CT_NEW)
+			printk("NEW");
+		else if (ctinfo == IP_CT_ESTABLISHED)
+			printk("ESTABLISHED");
+		else if (ctinfo == IP_CT_RELATED)
+			printk("RELATED");
+		if (test_bit(IPS_SRC_NAT_BIT, &ct->status))
+			printk(",SNAT");
+		if (test_bit(IPS_DST_NAT_BIT, &ct->status))
+			printk(",DNAT");
 
-		ct = nf_ct_get(skb, &ctinfo);
-		if (ct == NULL)
-			printk(" ctmark=X");
-		else
-			printk(" ctmark=0x%x", ct->mark);
+		printk(" ctstatus=");
+		if (ct->status & IPS_EXPECTED)
+			printk("EXPECTED");
+		if (ct->status & IPS_SEEN_REPLY)
+			printk(",SEEN_REPLY");
+		if (ct->status & IPS_ASSURED)
+			printk(",ASSURED");
+		if (ct->status & IPS_CONFIRMED)
+			printk(",CONFIRMED");
 	}
-	if (info->flags & XT_LOGMARK_SECMARK)
-		printk(" secmark=0x%x", skb->secmark);
-	printk("\n");
 
+	printk("\n");
 	return XT_CONTINUE;
 }
 
