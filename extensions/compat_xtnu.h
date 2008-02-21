@@ -61,6 +61,7 @@ static inline struct xtnu_target *xtcompat_nutarget(const struct xt_target *t)
 	return q;
 }
 
+extern int xtnu_ip_local_out(struct sk_buff *);
 extern int xtnu_ip_route_me_harder(struct sk_buff *, unsigned int);
 extern int xtnu_register_match(struct xtnu_match *);
 extern int xtnu_ip_route_output_key(void *, struct rtable **, struct flowi *);
@@ -71,5 +72,7 @@ extern int xtnu_register_target(struct xtnu_target *);
 extern void xtnu_unregister_target(struct xtnu_target *);
 extern int xtnu_register_targets(struct xtnu_target *, unsigned int);
 extern void xtnu_unregister_targets(struct xtnu_target *, unsigned int);
+extern struct xt_match *xtnu_request_find_match(unsigned int,
+	const char *, uint8_t);
 
 #endif /* _COMPAT_XTNU_H */

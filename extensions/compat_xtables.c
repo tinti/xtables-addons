@@ -5,6 +5,7 @@
 #include <linux/version.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/netfilter/x_tables.h>
+#include <linux/netfilter_arp.h>
 #include <net/ip.h>
 #include <net/route.h>
 #include "compat_xtnu.h"
@@ -227,6 +228,25 @@ void xtnu_unregister_targets(struct xtnu_target *nt, unsigned int num)
 }
 EXPORT_SYMBOL_GPL(xtnu_unregister_targets);
 #endif
+
+struct xt_match *xtnu_request_find_match(unsigned int af, const char *name,
+    uint8_t revision)
+{
+	static const char *const xt_prefix[] = {
+		[AF_INET]  = "ip",
+		[AF_INET6] = "ip6",
+		[NF_ARP]   = "arp",
+	};
+	struct xt_match *match;
+
+	match = try_then_request_module(xt_find_match(af, name, revision),
+		"%st_%s", xt_prefix[af], name);
+	if (IS_ERR(match) || match == NULL)
+		return NULL;
+
+	return match;
+}
+EXPORT_SYMBOL_GPL(xtnu_request_find_match);
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)

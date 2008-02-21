@@ -13,9 +13,16 @@
 #	define NF_INET_FORWARD      NF_IP_FORWARD
 #	define NF_INET_LOCAL_OUT    NF_IP_LOCAL_OUT
 #	define NF_INET_POST_ROUTING NF_IP_POST_ROUTING
-#	define init_net             xtnu_ip_route_output_key /* yes */
+#	define ip_local_out         xtnu_ip_local_out
 #	define ip_route_output_key  xtnu_ip_route_output_key
 #	include "compat_nfinetaddr.h"
+#endif
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#	define init_net               xtnu_ip_route_output_key /* yes */
+#	define init_net__loopback_dev (&loopback_dev)
+#else
+#	define init_net__loopback_dev init_net.loopback_dev
 #endif
 
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 22)
@@ -35,6 +42,7 @@
 #	define xt_unregister_targets xtnu_unregister_targets
 #endif
 
+#define xt_request_find_match xtnu_request_find_match
 #include "compat_xtnu.h"
 
 #endif /* _XTABLES_COMPAT_H */
