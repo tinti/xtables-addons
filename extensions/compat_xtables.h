@@ -3,7 +3,11 @@
 
 #include <linux/version.h>
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22)
+#	warning Kernels below 2.6.22 not supported anymore
+#endif
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
 #	define NF_INET_PRE_ROUTING  NF_IP_PRE_ROUTING
 #	define NF_INET_LOCAL_IN     NF_IP_LOCAL_IN
 #	define NF_INET_FORWARD      NF_IP_FORWARD
@@ -14,7 +18,7 @@
 #	include "compat_nfinetaddr.h"
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
+#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 22)
 #	define xt_match              xtnu_match
 #	define xt_register_match     xtnu_register_match
 #	define xt_unregister_match   xtnu_unregister_match

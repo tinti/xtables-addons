@@ -9,8 +9,7 @@
 #include <net/route.h>
 #include "compat_xtnu.h"
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19) && \
-    LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
+#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_run(const struct sk_buff *skb,
     const struct net_device *in, const struct net_device *out,
     const struct xt_match *cm, const void *matchinfo, int offset,
@@ -114,9 +113,7 @@ void xtnu_unregister_matches(struct xtnu_match *nt, unsigned int num)
 		xtnu_unregister_match(&nt[i]);
 }
 EXPORT_SYMBOL_GPL(xtnu_unregister_matches);
-#endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_target_check(const char *table, const void *entry,
     const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
 {
@@ -144,8 +141,7 @@ static bool xtnu_target_check(const char *table, const void *entry,
 }
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19) && \
-    LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 static unsigned int xtnu_target_run(struct sk_buff **pskb,
     const struct net_device *in, const struct net_device *out,
     unsigned int hooknum, const struct xt_target *ct, const void *targinfo)
