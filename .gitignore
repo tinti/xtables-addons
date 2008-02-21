@@ -11,6 +11,7 @@
 Makefile
 Makefile.in
 Module.symvers
+modules.order
 
 /downloads
 
