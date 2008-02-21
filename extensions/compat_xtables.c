@@ -5,6 +5,8 @@
 #include <linux/version.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/netfilter/x_tables.h>
+#include <net/ip.h>
+#include <net/route.h>
 #include "compat_xtnu.h"
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19) && \
@@ -236,6 +238,60 @@ int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)
 	return ip_route_me_harder(&skb, addr_type);
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
+#endif
+
+#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 24)
+static int __xtnu_ip_local_out(struct sk_buff *skb)
+{
+	struct iphdr *iph = ip_hdr(skb);
+
+	iph->tot_len = htons(skb->len);
+	ip_send_check(iph);
+	return nf_hook(PF_INET, NF_IP_LOCAL_OUT, skb, NULL,
+	               skb->dst->dev, dst_output);
+}
+
+int xtnu_ip_local_out(struct sk_buff *skb)
+{
+	int err;
+
+	err = __xtnu_ip_local_out(skb);
+	if (likely(err == 1))
+		err = dst_output(skb);
+
+	return err;
+}
+EXPORT_SYMBOL_GPL(xtnu_ip_local_out);
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+static int __xtnu_ip_local_out(struct sk_buff **pskb)
+{
+	struct iphdr *iph = ip_hdr(*pskb);
+
+	iph->tot_len = htons((*pskb)->len);
+	ip_send_check(iph);
+	return nf_hook(PF_INET, NF_IP_LOCAL_OUT, pskb, NULL,
+	               (*pskb)->dst->dev, dst_output);
+}
+
+int xtnu_ip_local_out(struct sk_buff *skb)
+{
+	int err;
+
+	err = __xtnu_ip_local_out(&skb);
+	if (likely(err == 1))
+		err = dst_output(skb);
+
+	return err;
+}
+EXPORT_SYMBOL_GPL(xtnu_ip_local_out);
+#endif
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
+int xtnu_ip_route_output_key(void *net, struct rtable **rp, struct flowi *flp)
+{
+	return ip_route_output_flow(rp, flp, NULL, 0);
+}
+EXPORT_SYMBOL_GPL(xtnu_ip_route_output_key);
 #endif
 
 MODULE_LICENSE("GPL");

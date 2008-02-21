@@ -9,9 +9,8 @@
 #	define NF_INET_FORWARD      NF_IP_FORWARD
 #	define NF_INET_LOCAL_OUT    NF_IP_LOCAL_OUT
 #	define NF_INET_POST_ROUTING NF_IP_POST_ROUTING
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
+#	define init_net             xtnu_ip_route_output_key /* yes */
+#	define ip_route_output_key  xtnu_ip_route_output_key
 #	include "compat_nfinetaddr.h"
 #endif
 

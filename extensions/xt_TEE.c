@@ -62,7 +62,7 @@ static bool tee_routing(struct sk_buff *skb,
 	};
 
 	/* Trying to route the packet using the standard routing table. */
-	err = ip_route_output_key(&rt, &fl);
+	err = ip_route_output_key(&init_net, &rt, &fl);
 	if (err != 0) {
 		if (net_ratelimit())
 			pr_debug(KBUILD_MODNAME
