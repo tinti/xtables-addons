@@ -29,7 +29,7 @@ static void delude_tg_check(unsigned int flags)
 }
 
 static struct xtables_target delude_tg_reg = {
-	.version       = IPTABLES_VERSION,
+	.version       = XTABLES_VERSION,
 	.name          = "DELUDE",
 	.revision      = 0,
 	.family        = AF_INET,

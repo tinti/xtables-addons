@@ -94,7 +94,7 @@ static void tee_tg_save(const void *ip, const struct xt_entry_target *target)
 
 static struct xtables_target tee_tg_reg = {
 	.name          = "TEE",
-	.version       = IPTABLES_VERSION,
+	.version       = XTABLES_VERSION,
 	.size          = XT_ALIGN(sizeof(struct xt_tee_tginfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_tee_tginfo)),
 	.help          = tee_tg_help,

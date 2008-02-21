@@ -18,7 +18,7 @@ static void tarpit_tg_check(unsigned int flags)
 }
 
 static struct xtables_target tarpit_tg_reg = {
-	.version       = IPTABLES_VERSION,
+	.version       = XTABLES_VERSION,
 	.name          = "TARPIT",
 	.family        = AF_INET,
 	.size          = XT_ALIGN(0),

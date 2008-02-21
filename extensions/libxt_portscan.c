@@ -100,7 +100,7 @@ static void portscan_mt_save(const void *ip, const struct xt_entry_match *match)
 }
 
 static struct xtables_match portscan_mt_reg = {
-	.version       = IPTABLES_VERSION,
+	.version       = XTABLES_VERSION,
 	.name          = "portscan",
 	.revision      = 0,
 	.family        = AF_INET,

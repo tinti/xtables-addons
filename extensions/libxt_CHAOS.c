@@ -93,7 +93,7 @@ static void chaos_tg_save(const void *ip, const struct xt_entry_target *target)
 }
 
 static struct xtables_target chaos_tg_reg = {
-	.version       = IPTABLES_VERSION,
+	.version       = XTABLES_VERSION,
 	.name          = "CHAOS",
 	.family        = AF_INET,
 	.size          = XT_ALIGN(sizeof(struct xt_chaos_tginfo)),

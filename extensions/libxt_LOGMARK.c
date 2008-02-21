@@ -88,7 +88,7 @@ logmark_tg_save(const void *ip, const struct xt_entry_target *target)
 }
 
 static struct xtables_target logmark_tg_reg = {
-	.version       = IPTABLES_VERSION,
+	.version       = XTABLES_VERSION,
 	.name          = "LOGMARK",
 	.revision      = 0,
 	.family        = AF_INET,
@@ -103,7 +103,7 @@ static struct xtables_target logmark_tg_reg = {
 };
 
 static struct xtables_target logmark_tg6_reg = {
-	.version       = IPTABLES_VERSION,
+	.version       = XTABLES_VERSION,
 	.name          = "LOGMARK",
 	.revision      = 0,
 	.family        = AF_INET6,
