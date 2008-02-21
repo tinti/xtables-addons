@@ -91,22 +91,7 @@ static struct xtables_target logmark_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "LOGMARK",
 	.revision      = 0,
-	.family        = AF_INET,
-	.size          = XT_ALIGN(sizeof(struct xt_logmark_tginfo)),
-	.userspacesize = XT_ALIGN(sizeof(struct xt_logmark_tginfo)),
-	.help          = logmark_tg_help,
-	.init          = logmark_tg_init,
-	.parse         = logmark_tg_parse,
-	.print         = logmark_tg_print,
-	.save          = logmark_tg_save,
-	.extra_opts    = logmark_tg_opts,
-};
-
-static struct xtables_target logmark_tg6_reg = {
-	.version       = XTABLES_VERSION,
-	.name          = "LOGMARK",
-	.revision      = 0,
-	.family        = AF_INET6,
+	.family        = AF_UNSPEC,
 	.size          = XT_ALIGN(sizeof(struct xt_logmark_tginfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_logmark_tginfo)),
 	.help          = logmark_tg_help,
@@ -121,5 +106,4 @@ void _init(void);
 void _init(void)
 {
 	xtables_register_target(&logmark_tg_reg);
-	xtables_register_target(&logmark_tg6_reg);
 }
