@@ -2,8 +2,16 @@
 
 top_srcdir      := @top_srcdir@
 srcdir          := @srcdir@
-abstop_srcdir   := $(realpath ${top_srcdir})
-abssrcdir       := $(realpath ${srcdir})
+abstop_srcdir   := $(shell readlink -e ${top_srcdir})
+abssrcdir       := $(shell readlink -e ${srcdir})
+
+if (${abstop_srcdir},)
+$(error Path resolution of ${top_srcdir} failed)
+endif
+if (${abssrcdir},)
+$(error Path resolution of ${srcdir} failed)
+endif
+
 prefix          := @prefix@
 exec_prefix     := @exec_prefix@
 libdir          := @libdir@
