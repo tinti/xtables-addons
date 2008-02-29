@@ -2,6 +2,7 @@
 #define _XTABLES_COMPAT_H 1
 
 #include <linux/version.h>
+#include "compat_xtnu.h"
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22)
 #	warning Kernels below 2.6.22 not supported anymore
@@ -43,6 +44,5 @@
 #endif
 
 #define xt_request_find_match xtnu_request_find_match
-#include "compat_xtnu.h"
 
 #endif /* _XTABLES_COMPAT_H */

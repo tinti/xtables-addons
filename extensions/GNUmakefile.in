@@ -5,10 +5,10 @@ srcdir          := @srcdir@
 abstop_srcdir   := $(shell readlink -e ${top_srcdir})
 abssrcdir       := $(shell readlink -e ${srcdir})
 
-if (${abstop_srcdir},)
+ifeq (${abstop_srcdir},)
 $(error Path resolution of ${top_srcdir} failed)
 endif
-if (${abssrcdir},)
+ifeq (${abssrcdir},)
 $(error Path resolution of ${srcdir} failed)
 endif
 
