@@ -50,8 +50,7 @@ fi;
 regular_CFLAGS="-D_LARGEFILE_SOURCE=1 -D_LARGE_FILES -D_FILE_OFFSET_BITS=64 \
 	-D_REENTRANT -Wall -Waggregate-return -Wmissing-declarations \
 	-Wmissing-prototypes -Wredundant-decls -Wshadow -Wstrict-prototypes \
-	-Winline -pipe -DXTABLES_VERSION=\\\"$PACKAGE_VERSION\\\" \
-	-DXTABLES_LIBDIR=\\\"\${xtlibdir}\\\"";
+	-Winline -pipe -DXTABLES_LIBDIR=\\\"\${xtlibdir}\\\"";
 kinclude_CFLAGS="";
 if [[ -n "$kbuilddir" ]]; then
 	kinclude_CFLAGS="$kinclude_CFLAGS -I $kbuilddir/include";
