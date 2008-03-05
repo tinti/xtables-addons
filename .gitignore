@@ -1,17 +1,11 @@
-.*.cmd
-*.ko
 *.la
 *.lo
 *.loT
-*.mod.c
 *.o
 .deps
 .libs
-.tmp_versions
 Makefile
 Makefile.in
-Module.symvers
-modules.order
 
 /downloads
 

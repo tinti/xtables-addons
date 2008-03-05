@@ -1,0 +1,10 @@
+.*.cmd
+.*.d
+.tmp_versions
+*.ko
+*.mod.c
+*.so
+*.oo
+GNUmakefile
+Module.symvers
+modules.order
