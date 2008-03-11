@@ -17,7 +17,7 @@
 #include <linux/version.h>
 #include <linux/netfilter/x_tables.h>
 #include <linux/netfilter/xt_tcpudp.h>
-#include <net/netfilter/nf_nat_rule.h>
+//#include <net/netfilter/nf_conntrack.h>
 #include "xt_portscan.h"
 #include "compat_xtables.h"
 #define PFX KBUILD_MODNAME ": "
@@ -203,7 +203,7 @@ static bool portscan_mt(const struct sk_buff *skb,
 	 * it either when the connection is already VALID.
 	 */
 	if ((ctdata->mark & connmark_mask) == mark_valid ||
-	     (skb->mark & packet_mask) != mark_seen) {
+	     (skb_nfmark(skb) & packet_mask) != mark_seen) {
 		unsigned int n;
 
 		n = portscan_mt_full(ctdata->mark & connmark_mask, ctstate,
@@ -211,8 +211,7 @@ static bool portscan_mt(const struct sk_buff *skb,
 		    skb->len - protoff - 4 * tcph->doff);
 
 		ctdata->mark = (ctdata->mark & ~connmark_mask) | n;
-		((struct sk_buff *)skb)->mark =
-			(skb->mark & ~packet_mask) ^ mark_seen;
+		skb_nfmark(skb) = (skb_nfmark(skb) & ~packet_mask) ^ mark_seen;
 	}
 
 	return (info->match_syn && ctdata->mark == mark_synscan) ||

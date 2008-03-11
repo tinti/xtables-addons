@@ -53,7 +53,7 @@ static void xt_chaos_total(const struct xt_chaos_tginfo *info,
 	const int offset        = ntohs(iph->frag_off) & IP_OFFSET;
 	typeof(xt_tarpit) destiny;
 	bool ret;
-#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 22)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 	int hotdrop = false;
 #else
 	bool hotdrop = false;
@@ -65,7 +65,9 @@ static void xt_chaos_total(const struct xt_chaos_tginfo *info,
 		return;
 
 	destiny = (info->variant == XTCHAOS_TARPIT) ? xt_tarpit : xt_delude;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+	destiny->target(&skb, in, out, hooknum, destiny, NULL, NULL);
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 	destiny->target(&skb, in, out, hooknum, destiny, NULL);
 #else
 	destiny->target(skb, in, out, hooknum, destiny, NULL);
@@ -89,7 +91,10 @@ static unsigned int chaos_tg(struct sk_buff *skb, const struct net_device *in,
 	const struct iphdr *iph = ip_hdr(skb);
 
 	if ((unsigned int)net_random() <= reject_percentage)
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+		return xt_reject->target(&skb, in, out, hooknum,
+		       target->__compat_target, &reject_params, NULL);
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 		return xt_reject->target(&skb, in, out, hooknum,
 		       target->__compat_target, &reject_params);
 #else

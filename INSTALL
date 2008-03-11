@@ -12,9 +12,9 @@ in combination with the kernel's Kbuild system.
 Prerequirements
 ===============
 
-	* xtables(-devel) 1.5.0
+	* xtables(-devel) 1.5.2
 
-	* kernel-source >= 2.6.22 with prepared output directory
+	* kernel-source >= 2.6.18 with prepared build/output directory
 
 
 Selecting extensions

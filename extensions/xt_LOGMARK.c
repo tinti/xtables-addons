@@ -11,8 +11,9 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/skbuff.h>
+#include <linux/netfilter/nf_conntrack_common.h>
 #include <linux/netfilter/x_tables.h>
-#include <net/netfilter/nf_conntrack.h>
+//#include <net/netfilter/nf_conntrack.h>
 #include "compat_xtables.h"
 #include "xt_LOGMARK.h"
 
@@ -27,7 +28,7 @@ logmark_tg(struct sk_buff *skb, const struct net_device *in,
 
 	printk("<%u>%.*s""nfmark=0x%x secmark=0x%x classify=0x%x",
 	       info->level, (unsigned int)sizeof(info->prefix), info->prefix,
-	       skb->mark, skb->secmark, skb->priority);
+	       skb_nfmark(skb), skb->secmark, skb->priority);
 
 	ct = nf_ct_get(skb, &ctinfo);
 	if (ct == NULL) {

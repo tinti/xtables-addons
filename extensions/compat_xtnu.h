@@ -5,7 +5,13 @@
 #include <linux/netfilter/x_tables.h>
 #include <linux/spinlock.h>
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+typedef _Bool bool;
+enum { false = 0, true = 1, };
+#endif
+
 struct flowi;
+struct hh_cache;
 struct module;
 struct net_device;
 struct rtable;
@@ -74,5 +80,6 @@ extern int xtnu_register_targets(struct xtnu_target *, unsigned int);
 extern void xtnu_unregister_targets(struct xtnu_target *, unsigned int);
 extern struct xt_match *xtnu_request_find_match(unsigned int,
 	const char *, uint8_t);
+extern int xtnu_neigh_hh_output(struct hh_cache *, struct sk_buff *);
 
 #endif /* _COMPAT_XTNU_H */

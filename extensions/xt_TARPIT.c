@@ -90,7 +90,7 @@ static inline void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 
 	/* This packet will not be the same as the other: clear nf fields */
 	nf_reset(nskb);
-	nskb->mark = 0;
+	skb_nfmark(nskb) = 0;
 	skb_init_secmark(nskb);
 
 	skb_shinfo(nskb)->gso_size = 0;
@@ -132,9 +132,15 @@ static inline void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 
 	/* Adjust TCP checksum */
 	tcph->check = 0;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 20)
+	tcph->check = tcp_v4_check(tcph, sizeof(struct tcphdr), niph->saddr,
+	              niph->daddr, csum_partial((char *)tcph,
+	              sizeof(struct tcphdr), 0));
+#else
 	tcph->check = tcp_v4_check(sizeof(struct tcphdr), niph->saddr,
 	              niph->daddr, csum_partial((char *)tcph,
 	              sizeof(struct tcphdr), 0));
+#endif
 
 	/* Set DF, id = 0 */
 	niph->frag_off = htons(IP_DF);

@@ -99,9 +99,15 @@ static void delude_send_reset(struct sk_buff *oldskb, unsigned int hook)
 		}
 	}
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 20)
+	tcph->check = tcp_v4_check(tcph, sizeof(struct tcphdr), niph->saddr,
+	              niph->daddr, csum_partial((char *)tcph,
+	              sizeof(struct tcphdr), 0));
+#else
 	tcph->check = tcp_v4_check(sizeof(struct tcphdr), niph->saddr,
 	              niph->daddr, csum_partial((char *)tcph,
 	              sizeof(struct tcphdr), 0));
+#endif
 
 	addr_type = RTN_UNSPEC;
 #ifdef CONFIG_BRIDGE_NETFILTER

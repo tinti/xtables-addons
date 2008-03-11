@@ -1,3 +1,4 @@
+#include <linux/ip.h>
 #include <linux/kernel.h>
 #include <linux/list.h>
 #include <linux/slab.h>
@@ -8,9 +9,10 @@
 #include <linux/netfilter_arp.h>
 #include <net/ip.h>
 #include <net/route.h>
+#include "compat_skbuff.h"
 #include "compat_xtnu.h"
 
-#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 22)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_run(const struct sk_buff *skb,
     const struct net_device *in, const struct net_device *out,
     const struct xt_match *cm, const void *matchinfo, int offset,
@@ -26,9 +28,17 @@ static int xtnu_match_run(const struct sk_buff *skb,
 	*hotdrop = lo_drop;
 	return lo_ret;
 }
+#endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+static int xtnu_match_check(const char *table, const void *entry,
+    const struct xt_match *cm, void *matchinfo, unsigned int matchinfosize,
+    unsigned int hook_mask)
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_check(const char *table, const void *entry,
     const struct xt_match *cm, void *matchinfo, unsigned int hook_mask)
+#endif
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 {
 	struct xtnu_match *nm = xtcompat_numatch(cm);
 
@@ -38,15 +48,24 @@ static int xtnu_match_check(const char *table, const void *entry,
 		return true;
 	return nm->checkentry(table, entry, nm, matchinfo, hook_mask);
 }
+#endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+static void xtnu_match_destroy(const struct xt_match *cm, void *matchinfo,
+    unsigned int matchinfosize)
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static void xtnu_match_destroy(const struct xt_match *cm, void *matchinfo)
+#endif
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 {
 	struct xtnu_match *nm = xtcompat_numatch(cm);
 
 	if (nm != NULL && nm->destroy != NULL)
 		nm->destroy(nm, matchinfo);
 }
+#endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 int xtnu_register_match(struct xtnu_match *nt)
 {
 	struct xt_match *ct;
@@ -114,52 +133,65 @@ void xtnu_unregister_matches(struct xtnu_match *nt, unsigned int num)
 		xtnu_unregister_match(&nt[i]);
 }
 EXPORT_SYMBOL_GPL(xtnu_unregister_matches);
-
-static int xtnu_target_check(const char *table, const void *entry,
-    const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
-{
-	struct xtnu_target *nt = xtcompat_nutarget(ct);
-	if (nt == NULL)
-		return false;
-	if (nt->checkentry == NULL)
-		/* this is valid, just like if there was no function */
-		return true;
-	return nt->checkentry(table, entry, nt, targinfo, hook_mask);
-}
 #endif
 
-#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 23)
-static bool xtnu_target_check(const char *table, const void *entry,
-    const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
-{
-	struct xtnu_target *nt = xtcompat_nutarget(ct);
-	if (nt == NULL)
-		return false;
-	if (nt->checkentry == NULL)
-		/* this is valid, just like if there was no function */
-		return true;
-	return nt->checkentry(table, entry, nt, targinfo, hook_mask);
-}
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+static unsigned int xtnu_target_run(struct sk_buff **pskb,
+    const struct net_device *in, const struct net_device *out,
+    unsigned int hooknum, const struct xt_target *ct, const void *targinfo,
+    void *userdata)
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 static unsigned int xtnu_target_run(struct sk_buff **pskb,
     const struct net_device *in, const struct net_device *out,
     unsigned int hooknum, const struct xt_target *ct, const void *targinfo)
+#endif
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 {
 	struct xtnu_target *nt = xtcompat_nutarget(ct);
 	if (nt != NULL && nt->target != NULL)
 		return nt->target(*pskb, in, out, hooknum, nt, targinfo);
 	return XT_CONTINUE;
 }
+#endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+static int xtnu_target_check(const char *table, const void *entry,
+    const struct xt_target *ct, void *targinfo,
+    unsigned int targinfosize, unsigned int hook_mask)
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
+static int xtnu_target_check(const char *table, const void *entry,
+    const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+static bool xtnu_target_check(const char *table, const void *entry,
+    const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
+#endif
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+{
+	struct xtnu_target *nt = xtcompat_nutarget(ct);
+	if (nt == NULL)
+		return false;
+	if (nt->checkentry == NULL)
+		/* this is valid, just like if there was no function */
+		return true;
+	return nt->checkentry(table, entry, nt, targinfo, hook_mask);
+}
+#endif
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo,
+    unsigned int targinfosize)
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo)
+#endif
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 {
 	struct xtnu_target *nt = xtcompat_nutarget(ct);
 	if (nt != NULL && nt->destroy != NULL)
 		nt->destroy(nt, targinfo);
 }
+#endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 int xtnu_register_target(struct xtnu_target *nt)
 {
 	struct xt_target *ct;
@@ -233,9 +265,14 @@ struct xt_match *xtnu_request_find_match(unsigned int af, const char *name,
     uint8_t revision)
 {
 	static const char *const xt_prefix[] = {
-		[AF_INET]  = "ip",
-		[AF_INET6] = "ip6",
-		[NF_ARP]   = "arp",
+		[AF_UNSPEC] = "x",
+		[AF_INET]   = "ip",
+		[AF_INET6]  = "ip6",
+#ifdef AF_ARP
+		[AF_ARP]    = "arp",
+#elif defined(NF_ARP) && NF_ARP != AF_UNSPEC
+		[NF_ARP]    = "arp",
+#endif
 	};
 	struct xt_match *match;
 
@@ -251,7 +288,11 @@ EXPORT_SYMBOL_GPL(xtnu_request_find_match);
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)
 {
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+	return ip_route_me_harder(&skb);
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 	return ip_route_me_harder(&skb, addr_type);
+#endif
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
 #endif
@@ -308,6 +349,21 @@ int xtnu_ip_route_output_key(void *net, struct rtable **rp, struct flowi *flp)
 	return ip_route_output_flow(rp, flp, NULL, 0);
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_output_key);
+#endif
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
+int xtnu_neigh_hh_output(struct hh_cache *hh, struct sk_buff *skb)
+{
+	unsigned int hh_alen;
+
+	read_lock_bh(&hh->hh_lock);
+	hh_alen = HH_DATA_ALIGN(hh->hh_len);
+	memcpy(skb->data - hh_alen, hh->hh_data, hh_alen);
+	read_unlock_bh(&hh->hh_lock);
+	skb_push(skb, hh->hh_len);
+	return hh->hh_output(skb);
+}
+EXPORT_SYMBOL_GPL(xtnu_neigh_hh_output);
 #endif
 
 MODULE_LICENSE("GPL");
