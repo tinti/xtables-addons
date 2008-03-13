@@ -5,6 +5,7 @@
 #
 build_CHAOS=m
 build_DELUDE=m
+build_ECHO=
 build_LOGMARK=m
 build_TARPIT=m
 build_TEE=m
