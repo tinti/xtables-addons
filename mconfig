@@ -8,4 +8,5 @@ build_DELUDE=m
 build_LOGMARK=m
 build_TARPIT=m
 build_TEE=m
+build_geoip=m
 build_portscan=m
