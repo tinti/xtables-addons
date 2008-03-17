@@ -80,7 +80,7 @@ get_country_subnets(u_int16_t cc, u_int32_t *count)
    
    stat("/var/geoip/geoipdb.idx", &buf);
    idxsz = buf.st_size/sizeof(struct geoip_index);
-   index = (struct geoip_index *)malloc(buf.st_size);
+   index = malloc(buf.st_size);
 
    fread(index, buf.st_size, 1, ixfd);
 
@@ -110,7 +110,7 @@ get_country_subnets(u_int16_t cc, u_int32_t *count)
             
    fread(&db_nsubnets, sizeof(u_int16_t), 1, dbfd);
 
-   subnets = (struct geoip_subnet*)malloc(db_nsubnets * sizeof(struct geoip_subnet));
+   subnets = malloc(db_nsubnets * sizeof(struct geoip_subnet));
 
    if (!subnets)
       exit_error(OTHER_PROBLEM,

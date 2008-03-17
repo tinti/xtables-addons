@@ -32,15 +32,14 @@ static spinlock_t geoip_lock = SPIN_LOCK_UNLOCKED;
 
 static struct geoip_info *add_node(struct geoip_info *memcpy)
 {
-   struct geoip_info *p =
-      (struct geoip_info *)kmalloc(sizeof(struct geoip_info), GFP_KERNEL);
+   struct geoip_info *p = kmalloc(sizeof(struct geoip_info), GFP_KERNEL);
 
    struct geoip_subnet *s;
    
    if ((p == NULL) || (copy_from_user(p, memcpy, sizeof(struct geoip_info)) != 0))
       return NULL;
 
-   s = (struct geoip_subnet *)kmalloc(p->count * sizeof(struct geoip_subnet), GFP_KERNEL);
+   s = kmalloc(p->count * sizeof(struct geoip_subnet), GFP_KERNEL);
    if ((s == NULL) || (copy_from_user(s, p->subnets, p->count * sizeof(struct geoip_subnet)) != 0))
       return NULL;
   
@@ -109,7 +108,7 @@ static bool xt_geoip_mt(const struct sk_buff *skb,
 		       unsigned int protoff,
 		       bool *hotdrop)
 {
-   const struct xt_geoip_match_info *info = (void*)matchinfo;
+   const struct xt_geoip_match_info *info = matchinfo;
    const struct geoip_info *node; /* This keeps the code sexy */
    const struct iphdr *iph = ip_hdr(skb);
    u_int32_t ip, i, j;
@@ -146,7 +145,7 @@ static bool xt_geoip_mt_checkentry(const char *tablename,
 				  unsigned int hook_mas)
 {
    
-   struct xt_geoip_match_info *info = (void *)matchinfo;
+   struct xt_geoip_match_info *info = matchinfo;
    struct geoip_info *node;
    u_int8_t i;
 
@@ -176,7 +175,7 @@ static bool xt_geoip_mt_checkentry(const char *tablename,
 static void xt_geoip_mt_destroy(const struct xt_match *matcn,
 				void *matchinfo)
 {
-   struct xt_geoip_match_info *info = (void *)matchinfo;
+   struct xt_geoip_match_info *info = matchinfo;
    struct geoip_info *node; /* this keeps the code sexy */
    u_int8_t i;
  
