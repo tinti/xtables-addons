@@ -40,11 +40,6 @@ struct xt_geoip_match_info {
 
    /* Used internally by the kernel */
    struct geoip_info *mem[XT_GEOIP_MAX];
-   u_int8_t *refcount;
-
-   /* not implemented yet:
-   void *fini;
-   */
 };
 
 #define COUNTRY(cc) (cc >> 8), (cc & 0x00FF)

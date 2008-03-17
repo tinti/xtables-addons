@@ -150,24 +150,6 @@ static bool xt_geoip_mt_checkentry(const char *tablename,
    struct geoip_info *node;
    u_int8_t i;
 
-   /* FIXME:   Call a function to free userspace allocated memory.
-    *          As Martin J. said; this match might eat lot of memory
-    *          if commited with iptables-restore --noflush
-   void (*gfree)(struct geoip_info *oldmem);
-   gfree = info->fini;
-   */
-
-   /* If info->refcount isn't NULL, then
-    * it means that checkentry() already
-    * initialized this entry. Increase a
-    * refcount to prevent destroy() of
-    * this entry. */
-   if (info->refcount != NULL) {
-      atomic_inc((atomic_t *)info->refcount);
-      return 1;
-   }
-   
-   
    for (i = 0; i < info->count; i++) {
      
       if ((node = find_node(info->cc[i])) != NULL)
@@ -180,15 +162,6 @@ static bool xt_geoip_mt_checkentry(const char *tablename,
             return 0;
          }
 
-      /* Free userspace allocated memory for that country.
-       * FIXME:   It's a bit odd to call this function everytime
-       *          we process a country.  Would be nice to call
-       *          it once after all countries've been processed.
-       *          - SJ
-       * *not implemented for now*
-      gfree(info->mem[i]);
-      */
-
       /* Overwrite the now-useless pointer info->mem[i] with
        * a pointer to the node's kernelspace structure.
        * This avoids searching for a node in the match() and
@@ -197,18 +170,6 @@ static bool xt_geoip_mt_checkentry(const char *tablename,
       info->mem[i] = node;
    }
 
-   /* We allocate some memory and give info->refcount a pointer
-    * to this memory.  This prevents checkentry() from increasing a refcount
-    * different from the one used by destroy().
-    * For explanation, see http://www.mail-archive.com/netfilter-devel@lists.samba.org/msg00625.html
-    */
-   info->refcount = kmalloc(sizeof(u_int8_t), GFP_KERNEL);
-   if (info->refcount == NULL) {
-      printk(KERN_ERR "xt_geoip: failed to allocate `refcount' memory\n");
-      return 0;
-   }
-   *(info->refcount) = 1;
-   
    return 1;
 }
 
@@ -218,20 +179,6 @@ static void xt_geoip_mt_destroy(const struct xt_match *matcn,
    struct xt_geoip_match_info *info = (void *)matchinfo;
    struct geoip_info *node; /* this keeps the code sexy */
    u_int8_t i;
- 
-   /* Decrease the previously increased refcount in checkentry()
-    * If it's equal to 1, we know this entry is just moving
-    * but not removed. We simply return to avoid useless destroy()
-    * proce	ssing.
-    */
-   atomic_dec((atomic_t *)info->refcount);
-   if (*info->refcount)
-      return;
-
-   /* Don't leak my memory, you idiot.
-    * Bug found with nfsim.. the netfilter's best
-    * friend. --peejix */
-   kfree(info->refcount);
  
    /* This entry has been removed from the table so
     * decrease the refcount of all countries it is

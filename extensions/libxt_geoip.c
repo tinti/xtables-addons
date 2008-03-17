@@ -53,12 +53,6 @@ static struct option geoip_opts[] = {
    {  0  },
 };
 
-/* NOT IMPLEMENTED YET
-static void geoip_free(struct geoip_info *oldmem)
-{
-}
-*/
-
 struct geoip_index {
    u_int16_t cc;
    u_int32_t offset;
@@ -250,9 +244,6 @@ geoip_parse(int c, char **argv, int invert, unsigned int *flags,
    
     info->count = parse_geoip_cc(argv[optind-1], info->cc, info->mem);
     info->flags = *flags;
-    info->refcount = NULL;
-    //info->fini = &geoip_free;
-
     return 1;
 }
 
