@@ -8,16 +8,15 @@
  * Copyright (c) 2004, 2005, 2006, 2007, 2008
  * Samuel Jean & Nicolas Bouliane
  */
-#include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/version.h>
-#include <linux/skbuff.h>
 #include <linux/ip.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
 #include <linux/netdevice.h>
-#include <asm/uaccess.h>
-#include <asm/atomic.h>
-
+#include <linux/skbuff.h>
+#include <linux/version.h>
 #include <linux/netfilter/x_tables.h>
+#include <asm/atomic.h>
+#include <asm/uaccess.h>
 #include "xt_geoip.h"
 #include "compat_xtables.h"
 

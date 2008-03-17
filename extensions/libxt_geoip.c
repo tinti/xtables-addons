@@ -12,18 +12,16 @@
  * Samuel Jean       <peejix@people.netfilter.org>
  * Nicolas Bouliane  <peejix@people.netfilter.org>
  */
-
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include <xtables.h>
 #include "xt_geoip.h"
 
