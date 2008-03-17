@@ -14,6 +14,7 @@
 #include <linux/netdevice.h>
 #include <linux/skbuff.h>
 #include <linux/version.h>
+#include <linux/vmalloc.h>
 #include <linux/netfilter/x_tables.h>
 #include <asm/atomic.h>
 #include <asm/uaccess.h>
@@ -40,7 +41,7 @@ static struct geoip_info *add_node(struct geoip_info *memcpy)
 	if (copy_from_user(p, memcpy, sizeof(struct geoip_info)) != 0)
 		goto free_p;
 
-	s = kmalloc(p->count * sizeof(struct geoip_subnet), GFP_KERNEL);
+	s = vmalloc(p->count * sizeof(struct geoip_subnet));
 	if (s == NULL)
 		goto free_p;
 	if (copy_from_user(s, p->subnets, p->count * sizeof(struct geoip_subnet)) != 0)
@@ -59,7 +60,7 @@ static struct geoip_info *add_node(struct geoip_info *memcpy)
 	spin_unlock_bh(&geoip_lock);
 	return p;
  free_s:
-	kfree(s);
+	vfree(s);
  free_p:
 	kfree(p);
 	return NULL;
@@ -88,11 +89,9 @@ static void geoip_try_remove_node(struct geoip_info *p)
 	/* So now am unlinked or the only one alive, right ?
 	 * What are you waiting ? Free up some memory!
 	 */
-
-	kfree(p->subnets);
-	kfree(p);
-
 	spin_unlock_bh(&geoip_lock);
+	vfree(p->subnets);
+	kfree(p);
 	return;
 }
 
