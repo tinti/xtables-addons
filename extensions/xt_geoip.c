@@ -65,9 +65,13 @@ static struct geoip_info *add_node(struct geoip_info *memcpy)
 	return NULL;
 }
 
-static void remove_node(struct geoip_info *p)
+static void geoip_try_remove_node(struct geoip_info *p)
 {
 	spin_lock_bh(&geoip_lock);
+	if (!atomic_dec_and_test((atomic_t *)&p->ref)) {
+		spin_unlock_bh(&geoip_lock);
+		return;
+	}
 
 	if (p->next) { /* Am I following a node ? */
 		p->next->prev = p->prev;
@@ -99,6 +103,7 @@ static struct geoip_info *find_node(u_int16_t cc)
 
 	while (p) {
 		if (p->cc == cc) {
+			atomic_inc((atomic_t *)&p->ref);
 			spin_unlock_bh(&geoip_lock);
 			return p;
 		}
@@ -150,10 +155,8 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
 	u_int8_t i;
 
 	for (i = 0; i < info->count; i++) {
-
-		if ((node = find_node(info->cc[i])) != NULL)
-				atomic_inc((atomic_t *)&node->ref);	//increase the reference
-		else
+		node = find_node(info->cc[i]);
+		if (node == NULL)
 			if ((node = add_node(info->mem[i])) == NULL) {
 				printk(KERN_ERR
 						"xt_geoip: unable to load '%c%c' into memory\n",
@@ -185,12 +188,9 @@ static void xt_geoip_mt_destroy(const struct xt_match *match, void *matchinfo)
 
 	for (i = 0; i < info->count; i++)
 		if ((node = info->mem[i]) != NULL) {
-			atomic_dec((atomic_t *)&node->ref);
-
 			/* Free up some memory if that node isn't used
 			 * anymore. */
-			if (node->ref < 1)
-				remove_node(node);
+			geoip_try_remove_node(node);
 		}
 		else
 			/* Something strange happened. There's no memory allocated for this
