@@ -35,12 +35,16 @@ static struct geoip_info *add_node(struct geoip_info *memcpy)
 
 	struct geoip_subnet *s;
 
-	if ((p == NULL) || (copy_from_user(p, memcpy, sizeof(struct geoip_info)) != 0))
+	if (p == NULL)
 		return NULL;
+	if (copy_from_user(p, memcpy, sizeof(struct geoip_info)) != 0)
+		goto free_p;
 
 	s = kmalloc(p->count * sizeof(struct geoip_subnet), GFP_KERNEL);
-	if ((s == NULL) || (copy_from_user(s, p->subnets, p->count * sizeof(struct geoip_subnet)) != 0))
-		return NULL;
+	if (s == NULL)
+		goto free_p;
+	if (copy_from_user(s, p->subnets, p->count * sizeof(struct geoip_subnet)) != 0)
+		goto free_s;
 
 	spin_lock_bh(&geoip_lock);
 
@@ -54,6 +58,11 @@ static struct geoip_info *add_node(struct geoip_info *memcpy)
 
 	spin_unlock_bh(&geoip_lock);
 	return p;
+ free_s:
+	kfree(s);
+ free_p:
+	kfree(p);
+	return NULL;
 }
 
 static void remove_node(struct geoip_info *p)
