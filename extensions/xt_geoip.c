@@ -137,7 +137,8 @@ static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
 		}
 
 		for (j = 0; j < node->count; j++)
-			if ((ip > node->subnets[j].begin) && (ip < node->subnets[j].end)) {
+			if (ip >= node->subnets[j].begin &&
+			    ip <= node->subnets[j].end) {
 				spin_unlock_bh(&geoip_lock);
 				return (info->flags & XT_GEOIP_INV) ? 0 : 1;
 			}
