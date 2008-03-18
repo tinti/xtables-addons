@@ -59,7 +59,8 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	s = vmalloc(p->count * sizeof(struct geoip_subnet));
 	if (s == NULL)
 		goto free_p;
-	if (copy_from_user(s, umem.subnets, p->count * sizeof(struct geoip_subnet)) != 0)
+	if (copy_from_user(s, (const void __user *)(unsigned long)umem.subnets,
+	    p->count * sizeof(struct geoip_subnet)) != 0)
 		goto free_s;
 
 	spin_lock_bh(&geoip_lock);
@@ -189,7 +190,7 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
 	for (i = 0; i < info->count; i++) {
 		node = find_node(info->cc[i]);
 		if (node == NULL)
-			if ((node = geoip_add_node(info->mem[i].user)) == NULL) {
+			if ((node = geoip_add_node((const void __user *)(unsigned long)info->mem[i].user)) == NULL) {
 				printk(KERN_ERR
 						"xt_geoip: unable to load '%c%c' into memory\n",
 						COUNTRY(info->cc[i]));

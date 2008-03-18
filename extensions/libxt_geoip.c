@@ -56,7 +56,7 @@ struct geoip_index {
 	u_int32_t offset;
 } __attribute__ ((packed));
 
-struct geoip_subnet *
+static struct geoip_subnet *
 get_country_subnets(u_int16_t cc, u_int32_t *count)
 {
 	FILE *ixfd, *dbfd;
@@ -122,8 +122,7 @@ get_country_subnets(u_int16_t cc, u_int32_t *count)
 	return subnets;
 }
 
-static struct geoip_country_user *
-load_geoip_cc(u_int16_t cc)
+static struct geoip_country_user *geoip_load_cc(unsigned short cc)
 {
 	struct geoip_country_user *ginfo;
 	ginfo = malloc(sizeof(struct geoip_country_user));
@@ -131,7 +130,7 @@ load_geoip_cc(u_int16_t cc)
 	if (!ginfo)
 		return NULL;
 
-	ginfo->subnets = get_country_subnets(cc, &ginfo->count);
+	ginfo->subnets = (unsigned long)get_country_subnets(cc, &ginfo->count);
 	ginfo->cc = cc;
 
 	return ginfo;
@@ -173,9 +172,8 @@ check_geoip_cc(char *cc, u_int16_t cc_used[], u_int8_t count)
 	return cc_int16;
 }
 
-/* Based on libipt_multiport.c parsing code. */
-static u_int8_t
-parse_geoip_cc(const char *ccstr, u_int16_t *cc, union geoip_country_group *mem)
+static unsigned int parse_geoip_cc(const char *ccstr, uint16_t *cc,
+    union geoip_country_group *mem)
 {
 	char *buffer, *cp, *next;
 	u_int8_t i, count = 0;
@@ -192,7 +190,7 @@ parse_geoip_cc(const char *ccstr, u_int16_t *cc, union geoip_country_group *mem)
 		if (next) *next++ = '\0';
 
 		if ((cctmp = check_geoip_cc(cp, cc, count)) != 0) {
-			if ((mem[count++].user = load_geoip_cc(cctmp)) == NULL)
+			if ((mem[count++].user = (unsigned long)geoip_load_cc(cctmp)) == 0)
 				exit_error(OTHER_PROBLEM,
 					"geoip: insufficient memory available");
 			cc[count-1] = cctmp;

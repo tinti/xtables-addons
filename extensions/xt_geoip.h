@@ -25,7 +25,7 @@ struct geoip_subnet {
 };
 
 struct geoip_country_user {
-	struct geoip_subnet *subnets;
+	aligned_u64 subnets;
 	u_int32_t count;
 	u_int16_t cc;
 };
@@ -33,7 +33,7 @@ struct geoip_country_user {
 struct geoip_country_kernel;
 
 union geoip_country_group {
-	struct geoip_country_user *user;
+	aligned_u64 user;
 	struct geoip_country_kernel *kernel;
 };
 
