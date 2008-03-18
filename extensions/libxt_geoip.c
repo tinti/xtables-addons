@@ -15,7 +15,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <ctype.h>
+#include <endian.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -24,6 +26,7 @@
 #include <unistd.h>
 #include <xtables.h>
 #include "xt_geoip.h"
+#define GEOIP_DB_DIR "/var/geoip"
 
 static void geoip_help(void)
 {
@@ -51,78 +54,40 @@ static struct option geoip_opts[] = {
 	{  0  },
 };
 
-struct geoip_index {
-	u_int16_t cc;
-	u_int32_t offset;
-} __attribute__ ((packed));
-
-static struct geoip_subnet *
-get_country_subnets(u_int16_t cc, u_int32_t *count)
+static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
 {
-	FILE *ixfd, *dbfd;
 	struct geoip_subnet *subnets;
-	struct geoip_index *index;
-	struct stat buf;
+	struct stat sb;
+	char buf[256];
+	int fd;
 
-	size_t idxsz;
-	u_int16_t i;
+	/* Use simple integer vector files */
+#if __BYTE_ORDER == _BIG_ENDIAN
+	snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/BE/%s.iv0", code);
+#else
+	snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/LE/%s.iv0", code);
+#endif
 
-	u_int16_t db_cc = 0;
-	u_int16_t db_nsubnets = 0;
-
-	if ((ixfd = fopen("/var/geoip/geoipdb.idx", "r")) == NULL) {
-		perror("/var/geoip/geoipdb.idx");
-		exit_error(OTHER_PROBLEM,
-			"geoip: cannot open geoip's database index file");
+	if ((fd = open(buf, O_RDONLY)) < 0) {
+		fprintf(stderr, "Could not open %s: %s\n", buf, strerror(errno));
+		exit_error(OTHER_PROBLEM, "Could not read geoip database");
 	}
 
-	stat("/var/geoip/geoipdb.idx", &buf);
-	idxsz = buf.st_size/sizeof(struct geoip_index);
-	index = malloc(buf.st_size);
-
-	fread(index, buf.st_size, 1, ixfd);
-
-	for (i = 0; i < idxsz; i++)
-		if (cc == index[i].cc)
-			break;
-
-	if (cc != index[i].cc)
-		exit_error(OTHER_PROBLEM,
-			"geoip match: sorry, '%c%c' isn't in the database\n", COUNTRY(cc));
-
-	fclose(ixfd);
-
-	if ((dbfd = fopen("/var/geoip/geoipdb.bin", "r")) == NULL) {
-		perror("/var/geoip/geoipdb.bin");
-		exit_error(OTHER_PROBLEM,
-			"geoip: cannot open geoip's database file");
-	}
-
-	fseek(dbfd, index[i].offset, SEEK_SET);
-	fread(&db_cc, sizeof(u_int16_t), 1, dbfd);
-
-	if (db_cc != cc)
-		exit_error(OTHER_PROBLEM,
-			"geoip: this shouldn't happened, the database might be corrupted, or there's a bug.\n"
-			"you should contact maintainers");
-
-	fread(&db_nsubnets, sizeof(u_int16_t), 1, dbfd);
-
-	subnets = malloc(db_nsubnets * sizeof(struct geoip_subnet));
-
-	if (!subnets)
-		exit_error(OTHER_PROBLEM,
-			"geoip: insufficient memory available");
-
-	fread(subnets, db_nsubnets * sizeof(struct geoip_subnet), 1, dbfd);
-
-	fclose(dbfd);
-	free(index);
-	*count = db_nsubnets;
+	fstat(fd, &sb);
+	if (sb.st_size % sizeof(struct geoip_subnet) != 0)
+		exit_error(OTHER_PROBLEM, "Database file %s seems to be "
+		           "corrupted", buf);
+	subnets = malloc(sb.st_size);
+	if (subnets == NULL)
+		exit_error(OTHER_PROBLEM, "geoip: insufficient memory");
+	read(fd, subnets, sb.st_size);
+	close(fd);
+	*count = sb.st_size / sizeof(struct geoip_subnet);
 	return subnets;
 }
-
-static struct geoip_country_user *geoip_load_cc(unsigned short cc)
+ 
+static struct geoip_country_user *geoip_load_cc(const char *code,
+    unsigned short cc)
 {
 	struct geoip_country_user *ginfo;
 	ginfo = malloc(sizeof(struct geoip_country_user));
@@ -130,7 +95,7 @@ static struct geoip_country_user *geoip_load_cc(unsigned short cc)
 	if (!ginfo)
 		return NULL;
 
-	ginfo->subnets = (unsigned long)get_country_subnets(cc, &ginfo->count);
+	ginfo->subnets = (unsigned long)geoip_get_subnets(code, &ginfo->count);
 	ginfo->cc = cc;
 
 	return ginfo;
@@ -190,7 +155,7 @@ static unsigned int parse_geoip_cc(const char *ccstr, uint16_t *cc,
 		if (next) *next++ = '\0';
 
 		if ((cctmp = check_geoip_cc(cp, cc, count)) != 0) {
-			if ((mem[count++].user = (unsigned long)geoip_load_cc(cctmp)) == 0)
+			if ((mem[count++].user = (unsigned long)geoip_load_cc(cp, cctmp)) == 0)
 				exit_error(OTHER_PROBLEM,
 					"geoip: insufficient memory available");
 			cc[count-1] = cctmp;
