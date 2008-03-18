@@ -13,6 +13,7 @@
 #include <linux/list.h>
 #include <linux/module.h>
 #include <linux/netdevice.h>
+#include <linux/rcupdate.h>
 #include <linux/skbuff.h>
 #include <linux/version.h>
 #include <linux/vmalloc.h>
@@ -37,7 +38,7 @@ struct geoip_country_kernel {
 };
 
 static LIST_HEAD(geoip_head);
-static spinlock_t geoip_lock = SPIN_LOCK_UNLOCKED;
+static DEFINE_SPINLOCK(geoip_lock);
 
 static struct geoip_country_kernel *
 geoip_add_node(const struct geoip_country_user __user *umem_ptr)
@@ -63,15 +64,16 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	    p->count * sizeof(struct geoip_subnet)) != 0)
 		goto free_s;
 
-	spin_lock_bh(&geoip_lock);
-
 	p->subnets = s;
 	atomic_set(&p->ref, 1);
 	INIT_LIST_HEAD(&p->list);
-	list_add_tail(&p->list, &geoip_head);
 
-	spin_unlock_bh(&geoip_lock);
+	spin_lock(&geoip_lock);
+	list_add_tail_rcu(&p->list, &geoip_head);
+	spin_unlock(&geoip_lock);
+
 	return p;
+
  free_s:
 	vfree(s);
  free_p:
@@ -81,18 +83,19 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 
 static void geoip_try_remove_node(struct geoip_country_kernel *p)
 {
-	spin_lock_bh(&geoip_lock);
+	spin_lock(&geoip_lock);
 	if (!atomic_dec_and_test(&p->ref)) {
-		spin_unlock_bh(&geoip_lock);
+		spin_unlock(&geoip_lock);
 		return;
 	}
-
-	list_del(&p->list);
 
 	/* So now am unlinked or the only one alive, right ?
 	 * What are you waiting ? Free up some memory!
 	 */
-	spin_unlock_bh(&geoip_lock);
+	list_del_rcu(&p->list);
+	spin_unlock(&geoip_lock);
+
+	synchronize_rcu();
 	vfree(p->subnets);
 	kfree(p);
 	return;
@@ -101,16 +104,16 @@ static void geoip_try_remove_node(struct geoip_country_kernel *p)
 static struct geoip_country_kernel *find_node(u_int16_t cc)
 {
 	struct geoip_country_kernel *p;
-	spin_lock_bh(&geoip_lock);
+	spin_lock(&geoip_lock);
 
-	list_for_each_entry(p, &geoip_head, list)
+	list_for_each_entry_rcu(p, &geoip_head, list)
 		if (p->cc == cc) {
 			atomic_inc(&p->ref);
-			spin_unlock_bh(&geoip_lock);
+			spin_unlock(&geoip_lock);
 			return p;
 		}
 
-	spin_unlock_bh(&geoip_lock);
+	spin_unlock(&geoip_lock);
 	return NULL;
 }
 
@@ -147,7 +150,7 @@ static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
 	else
 		ip = ntohl(iph->daddr);
 
-	spin_lock_bh(&geoip_lock);
+	rcu_read_lock();
 	for (i = 0; i < info->count; i++) {
 		if ((node = info->mem[i].kernel) == NULL) {
 			printk(KERN_ERR "xt_geoip: what the hell ?? '%c%c' isn't loaded into memory... skip it!\n",
@@ -157,12 +160,12 @@ static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
 		}
 
 		if (geoip_bsearch(node->subnets, ip, 0, node->count)) {
-			spin_unlock_bh(&geoip_lock);
+			rcu_read_unlock();
 			return (info->flags & XT_GEOIP_INV) ? 0 : 1;
 		}
 	}
 
-	spin_unlock_bh(&geoip_lock);
+	rcu_read_unlock();
 	return (info->flags & XT_GEOIP_INV) ? 1 : 0;
 }
 
