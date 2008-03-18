@@ -27,24 +27,39 @@ MODULE_AUTHOR("Samuel Jean");
 MODULE_DESCRIPTION("xtables module for geoip match");
 MODULE_ALIAS("ipt_geoip");
 
-struct geoip_info *head = NULL;
+struct geoip_country_kernel {
+	struct geoip_subnet *subnets;
+	u_int32_t count;
+	u_int32_t ref;
+	u_int16_t cc;
+	struct geoip_country_kernel *next;
+	struct geoip_country_kernel *prev;
+};
+
+struct geoip_country_kernel *head = NULL;
 static spinlock_t geoip_lock = SPIN_LOCK_UNLOCKED;
 
-static struct geoip_info *add_node(struct geoip_info *memcpy)
+static struct geoip_country_kernel *
+geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 {
-	struct geoip_info *p = kmalloc(sizeof(struct geoip_info), GFP_KERNEL);
-
+	struct geoip_country_user umem;
+	struct geoip_country_kernel *p;
 	struct geoip_subnet *s;
 
+	if (copy_from_user(&umem, umem_ptr, sizeof(umem)) != 0)
+		return NULL;
+
+	p = kmalloc(sizeof(struct geoip_country_kernel), GFP_KERNEL);
 	if (p == NULL)
 		return NULL;
-	if (copy_from_user(p, memcpy, sizeof(struct geoip_info)) != 0)
-		goto free_p;
+
+	p->count   = umem.count;
+	p->cc      = umem.cc;
 
 	s = vmalloc(p->count * sizeof(struct geoip_subnet));
 	if (s == NULL)
 		goto free_p;
-	if (copy_from_user(s, p->subnets, p->count * sizeof(struct geoip_subnet)) != 0)
+	if (copy_from_user(s, umem.subnets, p->count * sizeof(struct geoip_subnet)) != 0)
 		goto free_s;
 
 	spin_lock_bh(&geoip_lock);
@@ -66,7 +81,7 @@ static struct geoip_info *add_node(struct geoip_info *memcpy)
 	return NULL;
 }
 
-static void geoip_try_remove_node(struct geoip_info *p)
+static void geoip_try_remove_node(struct geoip_country_kernel *p)
 {
 	spin_lock_bh(&geoip_lock);
 	if (!atomic_dec_and_test((atomic_t *)&p->ref)) {
@@ -95,9 +110,9 @@ static void geoip_try_remove_node(struct geoip_info *p)
 	return;
 }
 
-static struct geoip_info *find_node(u_int16_t cc)
+static struct geoip_country_kernel *find_node(u_int16_t cc)
 {
-	struct geoip_info *p = head;
+	struct geoip_country_kernel *p = head;
 	spin_lock_bh(&geoip_lock);
 
 	while (p) {
@@ -136,7 +151,7 @@ static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
     const void *matchinfo, int offset, unsigned int protoff, bool *hotdrop)
 {
 	const struct xt_geoip_match_info *info = matchinfo;
-	const struct geoip_info *node; /* This keeps the code sexy */
+	const struct geoip_country_kernel *node;
 	const struct iphdr *iph = ip_hdr(skb);
 	uint32_t ip, i;
 
@@ -147,7 +162,7 @@ static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
 
 	spin_lock_bh(&geoip_lock);
 	for (i = 0; i < info->count; i++) {
-		if ((node = info->mem[i]) == NULL) {
+		if ((node = info->mem[i].kernel) == NULL) {
 			printk(KERN_ERR "xt_geoip: what the hell ?? '%c%c' isn't loaded into memory... skip it!\n",
 					COUNTRY(info->cc[i]));
 
@@ -168,13 +183,13 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
     const struct xt_match *match, void *matchinfo, unsigned int hook_mask)
 {
 	struct xt_geoip_match_info *info = matchinfo;
-	struct geoip_info *node;
+	struct geoip_country_kernel *node;
 	u_int8_t i;
 
 	for (i = 0; i < info->count; i++) {
 		node = find_node(info->cc[i]);
 		if (node == NULL)
-			if ((node = add_node(info->mem[i])) == NULL) {
+			if ((node = geoip_add_node(info->mem[i].user)) == NULL) {
 				printk(KERN_ERR
 						"xt_geoip: unable to load '%c%c' into memory\n",
 						COUNTRY(info->cc[i]));
@@ -186,7 +201,7 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
 		 * This avoids searching for a node in the match() and
 		 * destroy() functions.
 		 */
-		info->mem[i] = node;
+		info->mem[i].kernel = node;
 	}
 
 	return 1;
@@ -195,7 +210,7 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
 static void xt_geoip_mt_destroy(const struct xt_match *match, void *matchinfo)
 {
 	struct xt_geoip_match_info *info = matchinfo;
-	struct geoip_info *node; /* this keeps the code sexy */
+	struct geoip_country_kernel *node;
 	u_int8_t i;
 
 	/* This entry has been removed from the table so
@@ -204,7 +219,7 @@ static void xt_geoip_mt_destroy(const struct xt_match *match, void *matchinfo)
 	 */
 
 	for (i = 0; i < info->count; i++)
-		if ((node = info->mem[i]) != NULL) {
+		if ((node = info->mem[i].kernel) != NULL) {
 			/* Free up some memory if that node isn't used
 			 * anymore. */
 			geoip_try_remove_node(node);

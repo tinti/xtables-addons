@@ -24,13 +24,17 @@ struct geoip_subnet {
 	u_int32_t end;
 };
 
-struct geoip_info {
+struct geoip_country_user {
 	struct geoip_subnet *subnets;
 	u_int32_t count;
-	u_int32_t ref;
 	u_int16_t cc;
-	struct geoip_info *next;
-	struct geoip_info *prev;
+};
+
+struct geoip_country_kernel;
+
+union geoip_country_group {
+	struct geoip_country_user *user;
+	struct geoip_country_kernel *kernel;
 };
 
 struct xt_geoip_match_info {
@@ -39,7 +43,7 @@ struct xt_geoip_match_info {
 	u_int16_t cc[XT_GEOIP_MAX];
 
 	/* Used internally by the kernel */
-	struct geoip_info *mem[XT_GEOIP_MAX];
+	union geoip_country_group mem[XT_GEOIP_MAX];
 };
 
 #define COUNTRY(cc) (cc >> 8), (cc & 0x00FF)
