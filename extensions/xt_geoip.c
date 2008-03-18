@@ -33,8 +33,8 @@ struct geoip_country_kernel {
 	struct list_head list;
 	struct geoip_subnet *subnets;
 	atomic_t ref;
-	u_int32_t count;
-	u_int16_t cc;
+	unsigned int count;
+	unsigned short cc;
 };
 
 static LIST_HEAD(geoip_head);
@@ -98,10 +98,9 @@ static void geoip_try_remove_node(struct geoip_country_kernel *p)
 	synchronize_rcu();
 	vfree(p->subnets);
 	kfree(p);
-	return;
 }
 
-static struct geoip_country_kernel *find_node(u_int16_t cc)
+static struct geoip_country_kernel *find_node(unsigned short cc)
 {
 	struct geoip_country_kernel *p;
 	spin_lock(&geoip_lock);
@@ -143,7 +142,8 @@ static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
 	const struct xt_geoip_match_info *info = matchinfo;
 	const struct geoip_country_kernel *node;
 	const struct iphdr *iph = ip_hdr(skb);
-	uint32_t ip, i;
+	unsigned int i;
+	uint32_t ip;
 
 	if (info->flags & XT_GEOIP_SRC)
 		ip = ntohl(iph->saddr);
@@ -161,12 +161,12 @@ static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
 
 		if (geoip_bsearch(node->subnets, ip, 0, node->count)) {
 			rcu_read_unlock();
-			return (info->flags & XT_GEOIP_INV) ? 0 : 1;
+			return !(info->flags & XT_GEOIP_INV);
 		}
 	}
 
 	rcu_read_unlock();
-	return (info->flags & XT_GEOIP_INV) ? 1 : 0;
+	return info->flags & XT_GEOIP_INV;
 }
 
 static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
@@ -174,7 +174,7 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
 {
 	struct xt_geoip_match_info *info = matchinfo;
 	struct geoip_country_kernel *node;
-	u_int8_t i;
+	unsigned int i;
 
 	for (i = 0; i < info->count; i++) {
 		node = find_node(info->cc[i]);
@@ -183,7 +183,7 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
 				printk(KERN_ERR
 						"xt_geoip: unable to load '%c%c' into memory\n",
 						COUNTRY(info->cc[i]));
-				return 0;
+				return false;
 			}
 
 		/* Overwrite the now-useless pointer info->mem[i] with
@@ -194,14 +194,14 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
 		info->mem[i].kernel = node;
 	}
 
-	return 1;
+	return true;
 }
 
 static void xt_geoip_mt_destroy(const struct xt_match *match, void *matchinfo)
 {
 	struct xt_geoip_match_info *info = matchinfo;
 	struct geoip_country_kernel *node;
-	u_int8_t i;
+	unsigned int i;
 
 	/* This entry has been removed from the table so
 	 * decrease the refcount of all countries it is
@@ -220,7 +220,6 @@ static void xt_geoip_mt_destroy(const struct xt_match *match, void *matchinfo)
 			printk(KERN_ERR
 					"xt_geoip: What happened peejix ? What happened acidfu ?\n"
 					"xt_geoip: please report this bug to the maintainers\n");
-	return;
 }
 
 static struct xt_match xt_geoip_match __read_mostly = {

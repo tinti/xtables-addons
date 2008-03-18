@@ -19,15 +19,16 @@
 
 #define XT_GEOIP_MAX         15       /* Maximum of countries */
 
+/* Yup, an address range will be passed in with host-order */
 struct geoip_subnet {
-	u_int32_t begin;
-	u_int32_t end;
+	__u32 begin;
+	__u32 end;
 };
 
 struct geoip_country_user {
 	aligned_u64 subnets;
-	u_int32_t count;
-	u_int16_t cc;
+	__u32 count;
+	__u16 cc;
 };
 
 struct geoip_country_kernel;
@@ -38,9 +39,9 @@ union geoip_country_group {
 };
 
 struct xt_geoip_match_info {
-	u_int8_t flags;
-	u_int8_t count;
-	u_int16_t cc[XT_GEOIP_MAX];
+	__u8 flags;
+	__u8 count;
+	__u16 cc[XT_GEOIP_MAX];
 
 	/* Used internally by the kernel */
 	union geoip_country_group mem[XT_GEOIP_MAX];
