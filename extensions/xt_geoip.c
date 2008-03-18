@@ -31,8 +31,8 @@ MODULE_ALIAS("ipt_geoip");
 struct geoip_country_kernel {
 	struct list_head list;
 	struct geoip_subnet *subnets;
+	atomic_t ref;
 	u_int32_t count;
-	u_int32_t ref;
 	u_int16_t cc;
 };
 
@@ -66,7 +66,7 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	spin_lock_bh(&geoip_lock);
 
 	p->subnets = s;
-	p->ref = 1;
+	atomic_set(&p->ref, 1);
 	INIT_LIST_HEAD(&p->list);
 	list_add_tail(&p->list, &geoip_head);
 
@@ -82,7 +82,7 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 static void geoip_try_remove_node(struct geoip_country_kernel *p)
 {
 	spin_lock_bh(&geoip_lock);
-	if (!atomic_dec_and_test((atomic_t *)&p->ref)) {
+	if (!atomic_dec_and_test(&p->ref)) {
 		spin_unlock_bh(&geoip_lock);
 		return;
 	}
@@ -105,7 +105,7 @@ static struct geoip_country_kernel *find_node(u_int16_t cc)
 
 	list_for_each_entry(p, &geoip_head, list)
 		if (p->cc == cc) {
-			atomic_inc((atomic_t *)&p->ref);
+			atomic_inc(&p->ref);
 			spin_unlock_bh(&geoip_lock);
 			return p;
 		}
