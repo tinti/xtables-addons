@@ -10,6 +10,7 @@
  */
 #include <linux/ip.h>
 #include <linux/kernel.h>
+#include <linux/list.h>
 #include <linux/module.h>
 #include <linux/netdevice.h>
 #include <linux/skbuff.h>
@@ -28,15 +29,14 @@ MODULE_DESCRIPTION("xtables module for geoip match");
 MODULE_ALIAS("ipt_geoip");
 
 struct geoip_country_kernel {
+	struct list_head list;
 	struct geoip_subnet *subnets;
 	u_int32_t count;
 	u_int32_t ref;
 	u_int16_t cc;
-	struct geoip_country_kernel *next;
-	struct geoip_country_kernel *prev;
 };
 
-struct geoip_country_kernel *head = NULL;
+static LIST_HEAD(geoip_head);
 static spinlock_t geoip_lock = SPIN_LOCK_UNLOCKED;
 
 static struct geoip_country_kernel *
@@ -67,11 +67,8 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 
 	p->subnets = s;
 	p->ref = 1;
-	p->next = head;
-	p->prev = NULL;
-	if (p->next)
-		p->next->prev = p;
-	head = p;
+	INIT_LIST_HEAD(&p->list);
+	list_add_tail(&p->list, &geoip_head);
 
 	spin_unlock_bh(&geoip_lock);
 	return p;
@@ -90,17 +87,7 @@ static void geoip_try_remove_node(struct geoip_country_kernel *p)
 		return;
 	}
 
-	if (p->next) { /* Am I following a node ? */
-		p->next->prev = p->prev;
-		if (p->prev) p->prev->next = p->next; /* Is there a node behind me ? */
-		else head = p->next; /* No? Then I was the head */
-	}
-
-	else
-		if (p->prev) /* Is there a node behind me ? */
-			p->prev->next = NULL;
-		else
-			head = NULL; /* No, we're alone */
+	list_del(&p->list);
 
 	/* So now am unlinked or the only one alive, right ?
 	 * What are you waiting ? Free up some memory!
@@ -113,17 +100,16 @@ static void geoip_try_remove_node(struct geoip_country_kernel *p)
 
 static struct geoip_country_kernel *find_node(u_int16_t cc)
 {
-	struct geoip_country_kernel *p = head;
+	struct geoip_country_kernel *p;
 	spin_lock_bh(&geoip_lock);
 
-	while (p) {
+	list_for_each_entry(p, &geoip_head, list)
 		if (p->cc == cc) {
 			atomic_inc((atomic_t *)&p->ref);
 			spin_unlock_bh(&geoip_lock);
 			return p;
 		}
-		p = p->next;
-	}
+
 	spin_unlock_bh(&geoip_lock);
 	return NULL;
 }
