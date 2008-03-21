@@ -31,27 +31,23 @@
 static void geoip_help(void)
 {
 	printf (
-	"GeoIP v%s options:\n"
-	"        [!]   --src-cc, --source-country country[,country,country,...]\n"
-	"                                                     Match packet coming from (one of)\n"
-	"                                                     the specified country(ies)\n"
+	"geoip match options:\n"
+	"[!] --src-cc, --source-country country[,country...]\n"
+	"	Match packet coming from (one of) the specified country(ies)\n"
+	"[!] --dst-cc, --destination-country country[,country...]\n"
+	"	Match packet going to (one of) the specified country(ies)\n"
 	"\n"
-	"        [!]   --dst-cc, --destination-country country[,country,country,...]\n"
-	"                                                     Match packet going to (one of)\n"
-	"                                                     the specified country(ies)\n"
+	"NOTE: The country is inputed by its ISO3166 code.\n"
 	"\n"
-	"           NOTE: The country is inputed by its ISO3166 code.\n"
-	"\n"
-	"\n", XTABLES_VERSION
 	);
 }
 
 static struct option geoip_opts[] = {
-	{  "dst-cc",  1, 0, '2'  }, /* Alias for --destination-country */
-	{  "destination-country",   1, 0, '2'  },
-	{  "src-cc",  1, 0, '1'  }, /* Alias for --source-country */
-	{  "source-country",  1, 0, '1'  },
-	{  0  },
+	{.name = "dst-cc",              .has_arg = true, .val = '2'},
+	{.name = "destination-country", .has_arg = true, .val = '2'},
+	{.name = "src-cc",              .has_arg = true, .val = '1'},
+	{.name = "source-country",      .has_arg = true, .val = '1'},
+	{NULL},
 };
 
 static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
@@ -127,7 +123,7 @@ check_geoip_cc(char *cc, u_int16_t cc_used[], u_int8_t count)
 	 *			 going to change someday, this whole
 	 *			 match will need to be rewritten, anyway.
 	 *											 - SJ  */
-	cc_int16 = (cc[0]<<8) + cc[1];
+	cc_int16 = (cc[0] << 8) | cc[1];
 
 	// Check for presence of value in cc_used
 	for (i = 0; i < count; i++)

@@ -13,11 +13,13 @@
 #ifndef _LINUX_NETFILTER_XT_GEOIP_H
 #define _LINUX_NETFILTER_XT_GEOIP_H 1
 
-#define XT_GEOIP_SRC         0x01     /* Perform check on Source IP */
-#define XT_GEOIP_DST         0x02     /* Perform check on Destination IP */
-#define XT_GEOIP_INV         0x04     /* Negate the condition */
+enum {
+	XT_GEOIP_SRC = 1 << 0,	/* Perform check on Source IP */
+	XT_GEOIP_DST = 1 << 1,	/* Perform check on Destination IP */
+	XT_GEOIP_INV = 1 << 2,	/* Negate the condition */
 
-#define XT_GEOIP_MAX         15       /* Maximum of countries */
+	XT_GEOIP_MAX = 15,	/* Maximum of countries */
+};
 
 /* Yup, an address range will be passed in with host-order */
 struct geoip_subnet {
