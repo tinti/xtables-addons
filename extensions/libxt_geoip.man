@@ -1,0 +1,16 @@
+Match a packet by its source or destination country.
+.TP
+[\fB!\fP] \fB--src-cc\fP, \fB--source-country\fP \fIcountry\fP[\fB,\fP\fIcountry\fP\fB...\fP]
+Match packet coming from (one of) the specified country(ies)
+.TP
+[\fB!\fP] \fB--dst-cc\fP, \fB--destination-country\fP \fIcountry\fP[\fB,\fP\fIcountry\fP\fB...\fP]
+Match packet going to (one of) the specified country(ies)
+.TP
+NOTE:
+The country is inputed by its ISO3166 code.
+.P
+The extra files you will need is the binary database files. They are generated
+from a country-subnet database with the geoip_csv_iv0.pl tool, available at
+http://jengelh.hopto.org/files/geoip/ . The files MUST be moved to /var/geoip/
+as the shared library is statically looking for this pathname (e.g.
+/var/geoip/LE/de.iv0).
