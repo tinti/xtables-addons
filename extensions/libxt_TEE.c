@@ -59,7 +59,7 @@ static int tee_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 			exit_error(PARAMETER_PROBLEM,
 			           "Invalid IP address %s", optarg);
 
-		memcpy(&info->gw, &ia, sizeof(ia));
+		memcpy(&info->gw, ia, sizeof(*ia));
 		*flags |= FLAG_GATEWAY;
 		return true;
 	}
