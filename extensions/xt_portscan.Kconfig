@@ -1,0 +1,8 @@
+config NETFILTER_XT_MATCH_PORTSCAN
+	tristate '"portscan" target support'
+	depends on NETFILTER_XTABLES && NETFILTER_ADVANCED
+	---help---
+	The portscan match allows to match on the basic types of nmap
+	scans: Stealth Scan, SYN scan and connect scan. It can also match
+	"grab-only" connections, i.e. where data flows in only one
+	direction.

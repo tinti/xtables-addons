@@ -1,0 +1,9 @@
+config NETFILTER_XT_TARGET_CHAOS
+	tristate '"CHAOS" target support'
+	depends on NETFILTER_XTABLES && NETFILTER_ADVANCED
+	depends on NETFILTER_XT_TARGET_DELUDE || NETFILTER_XT_TARGET_TARPIT
+	depends on CONFIG_IP_NF_TARGET_REJECT
+	---help---
+	The CHAOS target is a module to report back false results to nmap
+	scans by randomly switching between DELUDE/TARPIT, REJECT and DROP
+	behavior.
