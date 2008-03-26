@@ -45,16 +45,14 @@ endif
 #
 include ${top_srcdir}/mconfig
 -include ${top_srcdir}/mconfig.*
-pfx_all_mod   := $(patsubst ${srcdir}/libxt_%.c,%,$(wildcard ${srcdir}/libxt_*.c))
-pfx_build_mod := $(foreach i,${pfx_all_mod},$(if ${build_${i}},${i},))
-pfx_solibs    := $(patsubst %,libxt_%.so,${pfx_build_mod})
+include ${srcdir}/Mbuild
 
 
 #
 #	Building blocks
 #
-targets := ${pfx_solibs}
-targets_install := ${pfx_solibs}
+targets := ${obj-m}
+targets_install := ${obj-m}
 
 .SECONDARY:
 
