@@ -3,6 +3,7 @@
 #include <linux/netfilter_ipv4/ip_tables.h>
 #include <net/tcp.h>
 #include <net/udp.h>
+#include <asm/unaligned.h>
 #include "xt_ipp2p.h"
 #include "compat_xtables.h"
 
@@ -10,9 +11,9 @@
 //#define IPP2P_DEBUG_SOUL
 //#define IPP2P_DEBUG_WINMX
 
-#define get_u8(X, O)   (*(__u8 *)(X + O))
-#define get_u16(X, O)  (*(__u16 *)(X + O))
-#define get_u32(X, O)  (*(__u32 *)(X + O))
+#define get_u8(X,  O)  (*(__u8 *)(X + O))
+#define get_u16(X, O)  get_unaligned((__u16 *)(X + O))
+#define get_u32(X, O)  get_unaligned((__u32 *)(X + O))
 
 MODULE_AUTHOR("Eicke Friedrich/Klaus Degner <ipp2p@ipp2p.org>");
 MODULE_DESCRIPTION("An extension to iptables to identify P2P traffic.");
