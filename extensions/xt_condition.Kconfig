@@ -1,0 +1,6 @@
+config NETFILTER_XT_MATCH_CONDITION
+	tristate '"condition" match support'
+	depends on NETFILTER_XTABLES && NETFILTER_ADVANCED
+	---help---
+	This option allows you to match firewall rules against condition
+	variables stored in the /proc/net/nf_condition directory.
