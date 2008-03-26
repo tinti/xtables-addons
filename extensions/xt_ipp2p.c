@@ -19,9 +19,10 @@ MODULE_DESCRIPTION("An extension to iptables to identify P2P traffic.");
 MODULE_LICENSE("GPL");
 
 /* Search for UDP eDonkey/eMule/Kad commands */
-int udp_search_edk(unsigned char *haystack, int packet_len)
+static unsigned int
+udp_search_edk(const unsigned char *haystack, const unsigned int packet_len)
 {
-	unsigned char *t = haystack;
+	const unsigned char *t = haystack;
 	t += 8;
 
 	switch (t[0]) {
@@ -136,9 +137,10 @@ int udp_search_edk(unsigned char *haystack, int packet_len)
 }
 
 /* Search for UDP Gnutella commands */
-int udp_search_gnu(unsigned char *haystack, int packet_len)
+static unsigned int
+udp_search_gnu(const unsigned char *haystack, const unsigned int packet_len)
 {
-	unsigned char *t = haystack;
+	const unsigned char *t = haystack;
 	t += 8;
 
 	if (memcmp(t, "GND", 3) == 0)
@@ -149,9 +151,10 @@ int udp_search_gnu(unsigned char *haystack, int packet_len)
 }
 
 /* Search for UDP KaZaA commands */
-int udp_search_kazaa(unsigned char *haystack, int packet_len)
+static unsigned int
+udp_search_kazaa(const unsigned char *haystack, const unsigned int packet_len)
 {
-	unsigned char *t = haystack;
+	const unsigned char *t = haystack;
 
 	if (t[packet_len-1] == 0x00) {
 		t += packet_len - 6;
@@ -163,9 +166,10 @@ int udp_search_kazaa(unsigned char *haystack, int packet_len)
 }
 
 /* Search for UDP DirectConnect commands */
-int udp_search_directconnect(unsigned char *haystack, int packet_len)
+static unsigned int udp_search_directconnect(const unsigned char *haystack,
+                                             const unsigned int packet_len)
 {
-	unsigned char *t = haystack;
+	const unsigned char *t = haystack;
 
 	if (*(t + 8) == 0x24 && *(t + packet_len - 1) == 0x7c) {
 		t += 8;
@@ -178,7 +182,8 @@ int udp_search_directconnect(unsigned char *haystack, int packet_len)
 }
 
 /* Search for UDP BitTorrent commands */
-int udp_search_bit(unsigned char *haystack, int packet_len)
+static unsigned int
+udp_search_bit(const unsigned char *haystack, const unsigned int packet_len)
 {
 	switch (packet_len) {
 	case 24:
@@ -260,7 +265,8 @@ int udp_search_bit(unsigned char *haystack, int packet_len)
 }
 
 /* Search for Ares commands */
-int search_ares(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_ares(const unsigned char *payload, const unsigned int plen)
 {
 	/* all ares packets start with  */
 	if (payload[1] == 0 && plen - payload[0] == 3) {
@@ -309,11 +315,13 @@ int search_ares(const unsigned char *payload, const u16 plen)
 }
 
 /* Search for SoulSeek commands */
-int search_soul(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_soul(const unsigned char *payload, const unsigned int plen)
 {
 	/* match: xx xx xx xx | xx = sizeof(payload) - 4 */
 	if (get_u32(payload, 0) == plen - 4) {
-		const __u32 m = get_u32(payload, 4);
+		const uint32_t m = get_u32(payload, 4);
+
 		/* match 00 yy yy 00, yy can be everything */
 		if (get_u8(payload, 4) == 0x00 && get_u8(payload, 7) == 0x00) {
 #ifdef IPP2P_DEBUG_SOUL
@@ -406,7 +414,8 @@ int search_soul(const unsigned char *payload, const u16 plen)
 	/* match 14 00 00 00 01 yy 00 00 00 STRING(YY) 01 00 00 00 00 46|50 00 00 00 00 */
 	/* without size at the beginning !!! */
 	if (get_u32(payload, 0) == 0x14 && get_u8(payload, 4) == 0x01) {
-		__u32 y = get_u32(payload, 5);
+		uint32_t y = get_u32(payload, 5);
+
 		/* we need 19 chars + string */
 		if (y + 19 <= plen) {
 			const unsigned char *w = payload + 9 + y;
@@ -425,7 +434,8 @@ int search_soul(const unsigned char *payload, const u16 plen)
 }
 
 /* Search for WinMX commands */
-int search_winmx(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_winmx(const unsigned char *payload, const unsigned int plen)
 {
 	if (plen == 4 && memcmp(payload, "SEND", 4) == 0)
 		return IPP2P_WINMX * 100 + 1;
@@ -439,9 +449,9 @@ int search_winmx(const unsigned char *payload, const u16 plen)
 		return 0;
 
 	if (memcmp(payload, "SEND", 4) == 0 || memcmp(payload, "GET", 3) == 0) {
-		u16 c = 4;
-		const u16 end = plen - 2;
-		u8 count = 0;
+		uint16_t c = 4;
+		const uint16_t end = plen - 2;
+		uint8_t count = 0;
 
 		while (c < end) {
 			if (payload[c] == 0x20 && payload[c+1] == 0x22) {
@@ -478,7 +488,8 @@ int search_winmx(const unsigned char *payload, const u16 plen)
 }
 
 /* Search for appleJuice commands */
-int search_apple(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_apple(const unsigned char *payload, const unsigned int plen)
 {
 	if (plen > 7 && payload[6] == 0x0d && payload[7] == 0x0a &&
 	    memcmp(payload, "ajprot", 6) == 0)
@@ -488,7 +499,8 @@ int search_apple(const unsigned char *payload, const u16 plen)
 }
 
 /* Search for BitTorrent commands */
-int search_bittorrent(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_bittorrent(const unsigned char *payload, const unsigned int plen)
 {
 	if (plen > 20) {
 		/* test for match 0x13+"BitTorrent protocol" */
@@ -531,7 +543,8 @@ int search_bittorrent(const unsigned char *payload, const u16 plen)
 }
 
 /* check for Kazaa get command */
-int search_kazaa(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_kazaa(const unsigned char *payload, const unsigned int plen)
 {
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a &&
 	    memcmp(payload, "GET /.hash=", 11) == 0)
@@ -541,7 +554,8 @@ int search_kazaa(const unsigned char *payload, const u16 plen)
 }
 
 /* check for gnutella get command */
-int search_gnu(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_gnu(const unsigned char *payload, const unsigned int plen)
 {
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a) {
 		if (memcmp(payload, "GET /get/", 9) == 0)
@@ -553,7 +567,8 @@ int search_gnu(const unsigned char *payload, const u16 plen)
 }
 
 /* check for gnutella get commands and other typical data */
-int search_all_gnu(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_all_gnu(const unsigned char *payload, const unsigned int plen)
 {
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a) {
 		if (memcmp(payload, "GNUTELLA CONNECT/", 17) == 0)
@@ -564,8 +579,9 @@ int search_all_gnu(const unsigned char *payload, const u16 plen)
 		if (memcmp(payload, "GET /get/", 9) == 0 ||
 		    memcmp(payload, "GET /uri-res/", 13) == 0)
 		{
-			u16 c = 8;
-			const u16 end = plen - 22;
+			uint16_t c = 8;
+			const uint16_t end = plen - 22;
+
 			while (c < end) {
 				if (payload[c] == 0x0a &&
 				    payload[c+1] == 0x0d &&
@@ -580,15 +596,16 @@ int search_all_gnu(const unsigned char *payload, const u16 plen)
 }
 
 /* check for KaZaA download commands and other typical data */
-int search_all_kazaa(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 {
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a) {
 		if (memcmp(payload, "GIVE ", 5) == 0)
 			return IPP2P_KAZAA * 100 + 1;
 
 		if (memcmp(payload, "GET /", 5) == 0) {
-			u16 c = 8;
-			const u16 end = plen - 22;
+			uint16_t c = 8;
+			const uint16_t end = plen - 22;
 
 			while (c < end) {
 				if (payload[c] == 0x0a &&
@@ -604,7 +621,8 @@ int search_all_kazaa(const unsigned char *payload, const u16 plen)
 }
 
 /* fast check for edonkey file segment transfer command */
-int search_edk(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_edk(const unsigned char *payload, const unsigned int plen)
 {
 	if (payload[0] != 0xe3) {
 		return 0;
@@ -617,13 +635,14 @@ int search_edk(const unsigned char *payload, const u16 plen)
 }
 
 /* intensive but slower search for some edonkey packets including size-check */
-int search_all_edk(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_all_edk(const unsigned char *payload, const unsigned int plen)
 {
 	if (payload[0] != 0xe3) {
 		return 0;
 	} else {
 		//t += head_len;
-		const u16 cmd = get_u16(payload, 1);
+		const uint16_t cmd = get_u16(payload, 1);
 
 		if (cmd == plen - 5) {
 			switch (payload[5]) {
@@ -640,7 +659,8 @@ int search_all_edk(const unsigned char *payload, const u16 plen)
 }
 
 /* fast check for Direct Connect send command */
-int search_dc(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_dc(const unsigned char *payload, const unsigned int plen)
 {
 	if (payload[0] != 0x24) {
 		return 0;
@@ -653,7 +673,8 @@ int search_dc(const unsigned char *payload, const u16 plen)
 }
 
 /* intensive but slower check for all direct connect packets */
-int search_all_dc(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_all_dc(const unsigned char *payload, const unsigned int plen)
 {
 	if (payload[0] == 0x24 && payload[plen-1] == 0x7c) {
 		const unsigned char *t = &payload[1];
@@ -673,7 +694,8 @@ int search_all_dc(const unsigned char *payload, const u16 plen)
 }
 
 /* check for mute */
-int search_mute(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_mute(const unsigned char *payload, const unsigned int plen)
 {
 	if (plen == 209 || plen == 345 || plen == 473 || plen == 609 ||
 	    plen == 1121) {
@@ -690,14 +712,15 @@ int search_mute(const unsigned char *payload, const u16 plen)
 }
 
 /* check for xdcc */
-int search_xdcc(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_xdcc(const unsigned char *payload, const unsigned int plen)
 {
 	/* search in small packets only */
 	if (plen > 20 && plen < 200 && payload[plen-1] == 0x0a &&
 	    payload[plen-2] == 0x0d && memcmp(payload, "PRIVMSG ", 8) == 0)
 	{
-		u16 x = 10;
-		const u16 end = plen - 13;
+		uint16_t x = 10;
+		const uint16_t end = plen - 13;
 
 		/*
 		 * is seems to be a irc private massage, chedck for
@@ -714,7 +737,8 @@ int search_xdcc(const unsigned char *payload, const u16 plen)
 }
 
 /* search for waste */
-int search_waste(const unsigned char *payload, const u16 plen)
+static unsigned int
+search_waste(const unsigned char *payload, const unsigned int plen)
 {
 	if (plen >= 8 && memcmp(payload, "GET.sha1:", 9) == 0)
 		return IPP2P_WASTE * 100 + 0;
@@ -722,11 +746,11 @@ int search_waste(const unsigned char *payload, const u16 plen)
 	return 0;
 }
 
-static struct {
-	int command;
+static const struct {
+	unsigned int command;
 	__u8 short_hand;	/* for fucntions included in short hands */
-	int packet_len;
-	int (*function_name)(const unsigned char *, const u16);
+	unsigned int packet_len;
+	unsigned int (*function_name)(const unsigned char *, const unsigned int);
 } matchlist[] = {
 	{IPP2P_EDK,        SHORT_HAND_IPP2P, 20, search_all_edk},
 //	{IPP2P_DATA_KAZAA, SHORT_HAND_DATA, 200, search_kazaa},
@@ -747,11 +771,11 @@ static struct {
 	{0},
 };
 
-static struct {
-	int command;
+static const struct {
+	unsigned int command;
 	__u8 short_hand;	/* for fucntions included in short hands */
-	int packet_len;
-	int (*function_name)(unsigned char *, int);
+	unsigned int packet_len;
+	unsigned int (*function_name)(const unsigned char *, const unsigned int);
 } udp_list[] = {
 	{IPP2P_KAZAA, SHORT_HAND_IPP2P, 14, udp_search_kazaa},
 	{IPP2P_BIT,   SHORT_HAND_IPP2P, 23, udp_search_bit},
@@ -767,10 +791,11 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
          const void *matchinfo, int offset, unsigned int protoff, bool *hotdrop)
 {
 	const struct ipt_p2p_info *info = matchinfo;
-	unsigned char  *haystack;
-	struct iphdr *ip = ip_hdr(skb);
-	int p2p_result = 0, i = 0;
-	int hlen = ntohs(ip->tot_len) - ip->ihl * 4;	/* hlen = packet-data length */
+	const unsigned char  *haystack;
+	const struct iphdr *ip = ip_hdr(skb);
+	bool p2p_result = false;
+	int i = 0;
+	unsigned int hlen = ntohs(ip->tot_len) - ip->ihl * 4;	/* hlen = packet-data length */
 
 	/* must not be a fragment */
 	if (offset != 0) {
@@ -786,12 +811,12 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
 		return 0;
 	}
 
-	haystack = (char *)ip + ip->ihl * 4;	/* haystack = packet data */
+	haystack = (const char *)ip + ip->ihl * 4;	/* haystack = packet data */
 
 	switch (ip->protocol) {
 	case IPPROTO_TCP:	/* what to do with a TCP packet */
 	{
-		struct tcphdr *tcph = (void *)ip + ip->ihl * 4;
+		const struct tcphdr *tcph = (const void *)ip + ip->ihl * 4;
 
 		if (tcph->fin) return 0;  /* if FIN bit is set bail out */
 		if (tcph->syn) return 0;  /* if SYN bit is set bail out */
@@ -819,7 +844,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
 
 	case IPPROTO_UDP:	/* what to do with an UDP packet */
 	{
-		struct udphdr *udph = (void *)ip + ip->ihl * 4;
+		const struct udphdr *udph = (const void *)ip + ip->ihl * 4;
 
 		while (udp_list[i].command) {
 			if (((info->cmd & udp_list[i].command) == udp_list[i].command ||

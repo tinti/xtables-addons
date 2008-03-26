@@ -39,7 +39,7 @@ static void ipp2p_mt_help(void)
 	, IPP2P_VERSION);
 }
 
-static struct option ipp2p_mt_opts[] = {
+static const struct option ipp2p_mt_opts[] = {
 	{ "ipp2p", 0, 0, '1' },
 	{ "edk", 0, 0, '2' },
 	{ "dc", 0, 0, '7' },
@@ -287,7 +287,7 @@ static void
 ipp2p_mt_print(const void *entry, const struct xt_entry_match *match,
                int numeric)
 {
-	struct ipt_p2p_info *info = (struct ipt_p2p_info *)match->data;
+	const struct ipt_p2p_info *info = (const void *)match->data;
 
 	printf("ipp2p v%s", IPP2P_VERSION);
 	if ((info->cmd & SHORT_HAND_IPP2P) == SHORT_HAND_IPP2P)
@@ -337,7 +337,7 @@ ipp2p_mt_print(const void *entry, const struct xt_entry_match *match,
 
 static void ipp2p_mt_save(const void *entry, const struct xt_entry_match *match)
 {
-	struct ipt_p2p_info *info = (struct ipt_p2p_info *)match->data;
+	const struct ipt_p2p_info *info = (const void *)match->data;
 
 	if ((info->cmd & SHORT_HAND_IPP2P) == SHORT_HAND_IPP2P)
 		printf("--ipp2p ");
@@ -398,7 +398,7 @@ static struct xtables_match ipp2p_mt_reg = {
 	.extra_opts    = ipp2p_mt_opts,
 };
 
-void _init(void)
+static void _init(void)
 {
 	xtables_register_match(&ipp2p_mt_reg);
 }
