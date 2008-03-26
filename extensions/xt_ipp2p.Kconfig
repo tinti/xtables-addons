@@ -1,0 +1,6 @@
+config NETFILTER_XT_MATCH_IPP2P
+	tristate '"ipp2p" match support'
+	depends on NETFILTER_XTABLES && NETFILTER_ADVANCED
+	---help---
+	This option makes possible to match some P2P packets
+	therefore helps controlling such traffic.
