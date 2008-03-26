@@ -761,10 +761,10 @@ static struct {
 	{0},
 };
 
-static int
-match(const struct sk_buff *skb, const struct net_device *in,
-      const struct net_device *out, const struct xt_match *match,
-      const void *matchinfo, int offset, unsigned int protoff, int *hotdrop)
+static bool
+ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
+         const struct net_device *out, const struct xt_match *match,
+         const void *matchinfo, int offset, unsigned int protoff, bool *hotdrop)
 {
 	const struct ipt_p2p_info *info = matchinfo;
 	unsigned char  *haystack;
@@ -844,23 +844,24 @@ match(const struct sk_buff *skb, const struct net_device *in,
 	}
 }
 
-static struct xt_match ipp2p_match = {
+static struct xt_match ipp2p_mt_reg __read_mostly = {
 	.name       = "ipp2p",
+	.revision   = 0,
 	.family     = AF_INET,
-	.match      = &match,
+	.match      = ipp2p_mt,
 	.matchsize  = sizeof(struct ipt_p2p_info),
 	.me         = THIS_MODULE,
 };
 
-static int __init init(void)
+static int __init ipp2p_mt_init(void)
 {
-	return xt_register_match(&ipp2p_match);
+	return xt_register_match(&ipp2p_mt_reg);
 }
 
-static void __exit fini(void)
+static void __exit ipp2p_mt_exit(void)
 {
-	xt_unregister_match(&ipp2p_match);
+	xt_unregister_match(&ipp2p_mt_reg);
 }
 
-module_init(init);
-module_exit(fini);
+module_init(ipp2p_mt_init);
+module_exit(ipp2p_mt_exit);
