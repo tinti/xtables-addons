@@ -795,7 +795,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
 	const struct iphdr *ip = ip_hdr(skb);
 	bool p2p_result = false;
 	int i = 0;
-	unsigned int hlen = ntohs(ip->tot_len) - ip->ihl * 4;	/* hlen = packet-data length */
+	unsigned int hlen = ntohs(ip->tot_len) - ip_hdrlen(skb);	/* hlen = packet-data length */
 
 	/* must not be a fragment */
 	if (offset != 0) {
@@ -811,12 +811,12 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
 		return 0;
 	}
 
-	haystack = (const char *)ip + ip->ihl * 4;	/* haystack = packet data */
+	haystack = skb_network_header(skb) + ip_hdrlen(skb);
 
 	switch (ip->protocol) {
 	case IPPROTO_TCP:	/* what to do with a TCP packet */
 	{
-		const struct tcphdr *tcph = (const void *)ip + ip->ihl * 4;
+		const struct tcphdr *tcph = tcp_hdr(skb);
 
 		if (tcph->fin) return 0;  /* if FIN bit is set bail out */
 		if (tcph->syn) return 0;  /* if SYN bit is set bail out */
@@ -844,7 +844,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
 
 	case IPPROTO_UDP:	/* what to do with an UDP packet */
 	{
-		const struct udphdr *udph = (const void *)ip + ip->ihl * 4;
+		const struct udphdr *udph = udp_hdr(skb);
 
 		while (udp_list[i].command) {
 			if (((info->cmd & udp_list[i].command) == udp_list[i].command ||
