@@ -1,11 +1,9 @@
-
 #include <stdio.h>
 #include <netdb.h>
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <ctype.h>
-
 #include <xtables.h>
 #include "xt_ipp2p.h"
 
@@ -60,20 +58,6 @@ static struct option opts[] = {
         {0}
 };
 
-	
-
-static void
-init(struct xt_entry_match *m)
-{
-    struct ipt_p2p_info *info = (struct ipt_p2p_info *)m->data;
-
-    /*init the module with default values*/
-    info->cmd = 0;
-    info->debug = 0;
-
-}
-	
-
 static int
 parse(int c, char **argv, int invert, unsigned int *flags,
 	const void *entry,
@@ -121,7 +105,6 @@ parse(int c, char **argv, int invert, unsigned int *flags,
 	    info->cmd = *flags;	    
 	    break;
 
-
 	case '7':		/*cmd: dc*/
             if ((*flags & IPP2P_DC) == IPP2P_DC)
             exit_error(PARAMETER_PROBLEM,
@@ -142,7 +125,6 @@ parse(int c, char **argv, int invert, unsigned int *flags,
             *flags += IPP2P_DC;
 	    info->cmd = *flags;
 	    break;
-
 
 	case '9':		/*cmd: gnu*/
             if ((*flags & IPP2P_GNU) == IPP2P_GNU)
@@ -214,7 +196,6 @@ parse(int c, char **argv, int invert, unsigned int *flags,
 	    info->cmd = *flags;
 	    break;																											
 
-
 	case 'd':		/*cmd: soul*/
             if ((*flags & IPP2P_SOUL) == IPP2P_SOUL)
             exit_error(PARAMETER_PROBLEM,
@@ -228,7 +209,6 @@ parse(int c, char **argv, int invert, unsigned int *flags,
             *flags += IPP2P_SOUL;
 	    info->cmd = *flags;
 	    break;																											
-
 
 	case 'e':		/*cmd: winmx*/
             if ((*flags & IPP2P_WINMX) == IPP2P_WINMX)
@@ -299,7 +279,6 @@ parse(int c, char **argv, int invert, unsigned int *flags,
     return 1;
 }
 
-
 static void
 final_check(unsigned int flags)
 {
@@ -307,8 +286,6 @@ final_check(unsigned int flags)
             exit_error(PARAMETER_PROBLEM,
 	    "\nipp2p-parameter problem: for ipp2p usage type: iptables -m ipp2p --help\n");
 }
-
-
 
 static void
 print(const void *ip,
@@ -340,8 +317,6 @@ print(const void *ip,
     printf(" ");
 }
 			    						   
-
-
 static void
 save(const void *ip, const struct xt_entry_match *match)
 {
@@ -368,19 +343,14 @@ save(const void *ip, const struct xt_entry_match *match)
     if (info->debug != 0) printf("--debug ");
 }
 
-		
-
-
 static 
 struct xtables_match ipp2p= 
 { 
-    .next           = NULL,
     .name           = "ipp2p",
     .version        = XTABLES_VERSION,
     .size           = XT_ALIGN(sizeof(struct ipt_p2p_info)),
     .userspacesize  = XT_ALIGN(sizeof(struct ipt_p2p_info)),
     .help           = &help,
-    .init           = &init,
     .parse          = &parse,
     .final_check    = &final_check,
     .print          = &print,
@@ -388,10 +358,7 @@ struct xtables_match ipp2p=
     .extra_opts     = opts
 };
 					    
-
-
 void _init(void)
 {
 	xtables_register_match(&ipp2p);
 }
-
