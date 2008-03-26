@@ -749,40 +749,38 @@ search_waste(const unsigned char *payload, const unsigned int plen)
 
 static const struct {
 	unsigned int command;
-	__u8 short_hand;	/* for fucntions included in short hands */
 	unsigned int packet_len;
 	unsigned int (*function_name)(const unsigned char *, const unsigned int);
 } matchlist[] = {
-	{IPP2P_EDK,        SHORT_HAND_IPP2P, 20, search_all_edk},
-//	{IPP2P_DATA_KAZAA, SHORT_HAND_DATA, 200, search_kazaa},
-//	{IPP2P_DATA_EDK,   SHORT_HAND_DATA,  60, search_edk},
-//	{IPP2P_DATA_DC,    SHORT_HAND_DATA,  26, search_dc},
-	{IPP2P_DC,         SHORT_HAND_IPP2P,  5, search_all_dc},
-//	{IPP2P_DATA_GNU,   SHORT_HAND_DATA,  40, search_gnu},
-	{IPP2P_GNU,        SHORT_HAND_IPP2P,  5, search_all_gnu},
-	{IPP2P_KAZAA,      SHORT_HAND_IPP2P,  5, search_all_kazaa},
-	{IPP2P_BIT,        SHORT_HAND_IPP2P, 20, search_bittorrent},
-	{IPP2P_APPLE,      SHORT_HAND_IPP2P,  5, search_apple},
-	{IPP2P_SOUL,       SHORT_HAND_IPP2P,  5, search_soul},
-	{IPP2P_WINMX,      SHORT_HAND_IPP2P,  2, search_winmx},
-	{IPP2P_ARES,       SHORT_HAND_IPP2P,  5, search_ares},
-	{IPP2P_MUTE,       SHORT_HAND_NONE, 200, search_mute},
-	{IPP2P_WASTE,      SHORT_HAND_NONE,   5, search_waste},
-	{IPP2P_XDCC,       SHORT_HAND_NONE,   5, search_xdcc},
+	{IPP2P_EDK,         20, search_all_edk},
+//	{IPP2P_DATA_KAZAA, 200, search_kazaa},
+//	{IPP2P_DATA_EDK,    60, search_edk},
+//	{IPP2P_DATA_DC,     26, search_dc},
+	{IPP2P_DC,           5, search_all_dc},
+//	{IPP2P_DATA_GNU,    40, search_gnu},
+	{IPP2P_GNU,          5, search_all_gnu},
+	{IPP2P_KAZAA,        5, search_all_kazaa},
+	{IPP2P_BIT,         20, search_bittorrent},
+	{IPP2P_APPLE,        5, search_apple},
+	{IPP2P_SOUL,         5, search_soul},
+	{IPP2P_WINMX,        2, search_winmx},
+	{IPP2P_ARES,         5, search_ares},
+	{IPP2P_MUTE,       200, search_mute},
+	{IPP2P_WASTE,        5, search_waste},
+	{IPP2P_XDCC,         5, search_xdcc},
 	{0},
 };
 
 static const struct {
 	unsigned int command;
-	__u8 short_hand;	/* for fucntions included in short hands */
 	unsigned int packet_len;
 	unsigned int (*function_name)(const unsigned char *, const unsigned int);
 } udp_list[] = {
-	{IPP2P_KAZAA, SHORT_HAND_IPP2P, 14, udp_search_kazaa},
-	{IPP2P_BIT,   SHORT_HAND_IPP2P, 23, udp_search_bit},
-	{IPP2P_GNU,   SHORT_HAND_IPP2P, 11, udp_search_gnu},
-	{IPP2P_EDK,   SHORT_HAND_IPP2P,  9, udp_search_edk},
-	{IPP2P_DC,    SHORT_HAND_IPP2P, 12, udp_search_directconnect},
+	{IPP2P_KAZAA, 14, udp_search_kazaa},
+	{IPP2P_BIT,   23, udp_search_bit},
+	{IPP2P_GNU,   11, udp_search_gnu},
+	{IPP2P_EDK,    9, udp_search_edk},
+	{IPP2P_DC,    12, udp_search_directconnect},
 	{0},
 };
 
@@ -826,8 +824,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
 		haystack += tcph->doff * 4; /* get TCP-Header-Size */
 		hlen -= tcph->doff * 4;
 		while (matchlist[i].command) {
-			if (((info->cmd & matchlist[i].command) == matchlist[i].command ||
-			    (info->cmd & matchlist[i].short_hand) == matchlist[i].short_hand) &&
+			if ((info->cmd & matchlist[i].command) == matchlist[i].command &&
 			    hlen > matchlist[i].packet_len)
 			{
 				p2p_result = matchlist[i].function_name(haystack, hlen);
@@ -848,8 +845,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
 		const struct udphdr *udph = udp_hdr(skb);
 
 		while (udp_list[i].command) {
-			if (((info->cmd & udp_list[i].command) == udp_list[i].command ||
-			    (info->cmd & udp_list[i].short_hand) == udp_list[i].short_hand) &&
+			if ((info->cmd & udp_list[i].command) == udp_list[i].command &&
 			    hlen > udp_list[i].packet_len)
 			{
 				p2p_result = udp_list[i].function_name(haystack, hlen);
