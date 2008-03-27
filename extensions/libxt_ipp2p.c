@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <netdb.h>
 #include <string.h>
@@ -38,20 +39,20 @@ static void ipp2p_mt_help(void)
 }
 
 static const struct option ipp2p_mt_opts[] = {
-	{ "edk", 0, 0, '2' },
-	{ "dc", 0, 0, '7' },
-	{ "gnu", 0, 0, '9' },
-	{ "kazaa", 0, 0, 'a' },
-	{ "bit", 0, 0, 'b' },
-	{ "apple", 0, 0, 'c' },
-	{ "soul", 0, 0, 'd' },
-	{ "winmx", 0, 0, 'e' },
-	{ "ares", 0, 0, 'f' },
-	{ "mute", 0, 0, 'g' },
-	{ "waste", 0, 0, 'h' },
-	{ "xdcc", 0, 0, 'i' },
-	{ "debug", 0, 0, 'j' },
-	{0},
+	{.name = "edk",   .has_arg = false, .val = '2'},
+	{.name = "dc",    .has_arg = false, .val = '7'},
+	{.name = "gnu",   .has_arg = false, .val = '9'},
+	{.name = "kazaa", .has_arg = false, .val = 'a'},
+	{.name = "bit",   .has_arg = false, .val = 'b'},
+	{.name = "apple", .has_arg = false, .val = 'c'},
+	{.name = "soul",  .has_arg = false, .val = 'd'},
+	{.name = "winmx", .has_arg = false, .val = 'e'},
+	{.name = "ares",  .has_arg = false, .val = 'f'},
+	{.name = "mute",  .has_arg = false, .val = 'g'},
+	{.name = "waste", .has_arg = false, .val = 'h'},
+	{.name = "xdcc",  .has_arg = false, .val = 'i'},
+	{.name = "debug", .has_arg = false, .val = 'j'},
+	{NULL},
 };
 
 static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
