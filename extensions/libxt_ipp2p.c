@@ -68,8 +68,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		exit_error(PARAMETER_PROBLEM,
 				"ipp2p: use `--edk' OR `--edk-data' but not both of them!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_EDK;
-		info->cmd = *flags;
+		*flags    |= IPP2P_EDK;
+		info->cmd |= IPP2P_EDK;
 		break;
 
 	case '7':		/*cmd: dc*/
@@ -81,8 +81,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		exit_error(PARAMETER_PROBLEM,
 				"ipp2p: use `--dc' OR `--dc-data' but not both of them!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_DC;
-		info->cmd = *flags;
+		*flags    |= IPP2P_DC;
+		info->cmd |= IPP2P_DC;
 		break;
 
 	case '9':		/*cmd: gnu*/
@@ -94,8 +94,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		exit_error(PARAMETER_PROBLEM,
 				"ipp2p: use `--gnu' OR `--gnu-data' but not both of them!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_GNU;
-		info->cmd = *flags;
+		*flags    |= IPP2P_GNU;
+		info->cmd |= IPP2P_GNU;
 		break;
 
 	case 'a':		/*cmd: kazaa*/
@@ -107,8 +107,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		exit_error(PARAMETER_PROBLEM,
 				"ipp2p: use `--kazaa' OR `--kazaa-data' but not both of them!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_KAZAA;
-		info->cmd = *flags;
+		*flags    |= IPP2P_KAZAA;
+		info->cmd |= IPP2P_KAZAA;
 		break;
 
 	case 'b':		/*cmd: bit*/
@@ -116,8 +116,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		exit_error(PARAMETER_PROBLEM,
 				"ipp2p: `--bit' may only be "
 				"specified once!");
-		*flags += IPP2P_BIT;
-		info->cmd = *flags;
+		*flags    |= IPP2P_BIT;
+		info->cmd |= IPP2P_BIT;
 		break;
 
 	case 'c':		/*cmd: apple*/
@@ -126,8 +126,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 				"ipp2p: `--apple' may only be "
 				"specified once!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_APPLE;
-		info->cmd = *flags;
+		*flags    |= IPP2P_APPLE;
+		info->cmd |= IPP2P_APPLE;
 		break;
 
 	case 'd':		/*cmd: soul*/
@@ -136,8 +136,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 				"ipp2p: `--soul' may only be "
 				"specified once!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_SOUL;
-		info->cmd = *flags;
+		*flags    |= IPP2P_SOUL;
+		info->cmd |= IPP2P_SOUL;
 		break;
 
 	case 'e':		/*cmd: winmx*/
@@ -146,8 +146,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 				"ipp2p: `--winmx' may only be "
 				"specified once!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_WINMX;
-		info->cmd = *flags;
+		*flags    |= IPP2P_WINMX;
+		info->cmd |= IPP2P_WINMX;
 		break;
 
 	case 'f':		/*cmd: ares*/
@@ -156,8 +156,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 				"ipp2p: `--ares' may only be "
 				"specified once!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_ARES;
-		info->cmd = *flags;
+		*flags    |= IPP2P_ARES;
+		info->cmd |= IPP2P_ARES;
 		break;
 
 	case 'g':		/*cmd: mute*/
@@ -166,26 +166,28 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 				"ipp2p: `--mute' may only be "
 				"specified once!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_MUTE;
-		info->cmd = *flags;
+		*flags    |= IPP2P_MUTE;
+		info->cmd |= IPP2P_MUTE;
 		break;
+
 	case 'h':		/*cmd: waste*/
 		if ((*flags & IPP2P_WASTE) == IPP2P_WASTE)
 		exit_error(PARAMETER_PROBLEM,
 				"ipp2p: `--waste' may only be "
 				"specified once!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_WASTE;
-		info->cmd = *flags;
+		*flags    |= IPP2P_WASTE;
+		info->cmd |= IPP2P_WASTE;
 		break;
+
 	case 'i':		/*cmd: xdcc*/
 		if ((*flags & IPP2P_XDCC) == IPP2P_XDCC)
 		exit_error(PARAMETER_PROBLEM,
 				"ipp2p: `--ares' may only be "
 				"specified once!");
 		if (invert) exit_error(PARAMETER_PROBLEM, "ipp2p: invert [!] is not allowed!");
-		*flags += IPP2P_XDCC;
-		info->cmd = *flags;
+		*flags    |= IPP2P_XDCC;
+		info->cmd |= IPP2P_XDCC;
 		break;
 
 	case 'j':		/*cmd: debug*/
