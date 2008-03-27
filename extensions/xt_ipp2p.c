@@ -753,11 +753,11 @@ static const struct {
 	unsigned int (*function_name)(const unsigned char *, const unsigned int);
 } matchlist[] = {
 	{IPP2P_EDK,         20, search_all_edk},
-//	{IPP2P_DATA_KAZAA, 200, search_kazaa},
-//	{IPP2P_DATA_EDK,    60, search_edk},
-//	{IPP2P_DATA_DC,     26, search_dc},
+	{IPP2P_DATA_KAZAA, 200, search_kazaa}, /* exp */
+	{IPP2P_DATA_EDK,    60, search_edk}, /* exp */
+	{IPP2P_DATA_DC,     26, search_dc}, /* exp */
 	{IPP2P_DC,           5, search_all_dc},
-//	{IPP2P_DATA_GNU,    40, search_gnu},
+	{IPP2P_DATA_GNU,    40, search_gnu}, /* exp */
 	{IPP2P_GNU,          5, search_all_gnu},
 	{IPP2P_KAZAA,        5, search_all_kazaa},
 	{IPP2P_BIT,         20, search_bittorrent},
