@@ -30,7 +30,8 @@ static unsigned int echo_tg4(struct sk_buff *oldskb,
 	void *payload;
 
 	/* This allows us to do the copy operation in fewer lines of code. */
-	skb_linearize(oldskb);
+	if (skb_linearize(oldskb) < 0)
+		return NF_DROP;
 
 	oldip  = ip_hdr(oldskb);
 	oldudp = skb_header_pointer(oldskb, ip_hdrlen(oldskb),
