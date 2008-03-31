@@ -887,3 +887,4 @@ static void __exit ipp2p_mt_exit(void)
 
 module_init(ipp2p_mt_init);
 module_exit(ipp2p_mt_exit);
+MODULE_ALIAS("ipt_ipp2p");
