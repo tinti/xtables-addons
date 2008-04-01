@@ -12,6 +12,14 @@
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
 
+static inline int unable(const char *cause)
+{
+	if (net_ratelimit())
+		printk(KERN_ERR KBUILD_MODNAME
+		       ": compat layer limits reached (%s) - dropping packets\n", cause);
+	return -1;
+}
+
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_run(const struct sk_buff *skb,
     const struct net_device *in, const struct net_device *out,
@@ -288,11 +296,17 @@ EXPORT_SYMBOL_GPL(xtnu_request_find_match);
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)
 {
+	struct sk_buff *nskb = skb;
+	int ret;
+
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-	return ip_route_me_harder(&skb);
+	ret = ip_route_me_harder(&skb);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-	return ip_route_me_harder(&skb, addr_type);
+	ret = ip_route_me_harder(&nskb, addr_type);
 #endif
+	if (nskb != skb)
+		return unable(__func__);
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
 #endif
