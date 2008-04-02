@@ -68,8 +68,25 @@ static void condition_save(const void *ip, const struct xt_entry_match *match)
 	printf("--condition %s\"%s\" ", (info->invert) ? "! " : "", info->name);
 }
 
-static struct xtables_match condition_match = {
+static struct xtables_match condition_mt4_reg = {
 	.name 		= "condition",
+	.revision	= 0,
+	.family		= PF_INET,
+	.version 	= XTABLES_VERSION,
+	.size 		= XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
+	.userspacesize 	= XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
+	.help 		= condition_help,
+	.parse 		= condition_parse,
+	.final_check	= condition_check,
+	.print 		= condition_print,
+	.save 		= condition_save,
+	.extra_opts 	= condition_opts,
+};
+
+static struct xtables_match condition_mt6_reg = {
+	.name 		= "condition",
+	.revision	= 0,
+	.family		= PF_INET6,
 	.version 	= XTABLES_VERSION,
 	.size 		= XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
 	.userspacesize 	= XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
@@ -83,5 +100,6 @@ static struct xtables_match condition_match = {
 
 static void _init(void)
 {
-	xtables_register_match(&condition_match);
+	xtables_register_match(&condition_mt4_reg);
+	xtables_register_match(&condition_mt6_reg);
 }
