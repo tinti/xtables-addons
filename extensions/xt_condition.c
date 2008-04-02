@@ -1,61 +1,49 @@
-/*-------------------------------------------*\
-|          Netfilter Condition Module         |
-|                                             |
-|  Description: This module allows firewall   |
-|    rules to match using condition variables |
-|    stored in /proc files.                   |
-|                                             |
-|  Author: Stephane Ouellette     2002-10-22  |
-|          <ouellettes@videotron.ca>          |
-|          Massimiliano Hofer     2006-05-15  |
-|          <max@nucleus.it>                   |
-|                                             |
-|  History:                                   |
-|    2003-02-10  Second version with improved |
-|                locking and simplified code. |
-|    2006-05-15  2.6.16 adaptations.          |
-|                Locking overhaul.            |
-|                Various bug fixes.           |
-|                                             |
-|  This software is distributed under the     |
-|  terms of the GNU GPL.                      |
-\*-------------------------------------------*/
-
-#include <linux/version.h>
+/*
+ *	xt_condition
+ *
+ *	Description: This module allows firewall rules to match using
+ *	condition variables available through procfs.
+ *
+ *	Authors:
+ *	Stephane Ouellette <ouellettes@videotron.ca>, 2002-10-22
+ *	Massimiliano Hofer <max@nucleus.it>, 2006-05-15
+ *
+ *	This software is distributed under the terms of the GNU GPL.
+ */
 #include <linux/kernel.h>
+#include <linux/list.h>
 #include <linux/module.h>
 #include <linux/proc_fs.h>
 #include <linux/spinlock.h>
-#include <asm/semaphore.h>
 #include <linux/string.h>
-#include <linux/list.h>
-#include <asm/atomic.h>
-#include <asm/uaccess.h>
+#include <linux/version.h>
 #include <linux/netfilter/x_tables.h>
+#include <asm/uaccess.h>
 #include "xt_condition.h"
 #include "compat_xtables.h"
 
 #ifndef CONFIG_PROC_FS
-#error  "Proc file system support is required for this module"
+#	error "proc file system support is required for this module"
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 #	define proc_net init_net.proc_net
 #endif
 
 /* Defaults, these can be overridden on the module command-line. */
-static unsigned int condition_list_perms = 0644;
+static unsigned int condition_list_perms = S_IRUGO | S_IWUSR;
 static unsigned int condition_uid_perms = 0;
 static unsigned int condition_gid_perms = 0;
 
-MODULE_AUTHOR("Stephane Ouellette <ouellettes@videotron.ca> and Massimiliano Hofer <max@nucleus.it>");
+MODULE_AUTHOR("Stephane Ouellette <ouellettes@videotron.ca>");
+MODULE_AUTHOR("Massimiliano Hofer <max@nucleus.it>");
 MODULE_DESCRIPTION("Allows rules to match against condition variables");
 MODULE_LICENSE("GPL");
-module_param(condition_list_perms, uint, 0600);
-MODULE_PARM_DESC(condition_list_perms,"permissions on /proc/net/nf_condition/* files");
-module_param(condition_uid_perms, uint, 0600);
-MODULE_PARM_DESC(condition_uid_perms,"user owner of /proc/net/nf_condition/* files");
-module_param(condition_gid_perms, uint, 0600);
-MODULE_PARM_DESC(condition_gid_perms,"group owner of /proc/net/nf_condition/* files");
+module_param(condition_list_perms, uint, S_IRUSR | S_IWUSR);
+MODULE_PARM_DESC(condition_list_perms, "permissions on /proc/net/nf_condition/* files");
+module_param(condition_uid_perms, uint, S_IRUSR | S_IWUSR);
+MODULE_PARM_DESC(condition_uid_perms, "user owner of /proc/net/nf_condition/* files");
+module_param(condition_gid_perms, uint, S_IRUSR | S_IWUSR);
+MODULE_PARM_DESC(condition_gid_perms, "group owner of /proc/net/nf_condition/* files");
 MODULE_ALIAS("ipt_condition");
 MODULE_ALIAS("ip6t_condition");
 
@@ -71,16 +59,16 @@ struct condition_variable {
 static DECLARE_MUTEX(proc_lock);
 
 static LIST_HEAD(conditions_list);
-static struct proc_dir_entry *proc_net_condition = NULL;
+static struct proc_dir_entry *proc_net_condition;
 
 static int condition_proc_read(char __user *buffer, char **start, off_t offset,
                                int length, int *eof, void *data)
 {
 	const struct condition_variable *var = data;
 
-	buffer[0] = (var->enabled) ? '1' : '0';
+	buffer[0] = var->enabled ? '1' : '0';
 	buffer[1] = '\n';
-	if (length>=2)
+	if (length >= 2)
 		*eof = true;
 
 	return 2;
@@ -92,10 +80,10 @@ static int condition_proc_write(struct file *file, const char __user *buffer,
 	struct condition_variable *var = data;
 	char newval;
 
-	if (length>0) {
+	if (length > 0) {
 		if (get_user(newval, buffer) != 0)
 			return -EFAULT;
-	        /* Match only on the first character */
+		/* Match only on the first character */
 		switch (newval) {
 		case '0':
 			var->enabled = false;
@@ -149,8 +137,10 @@ condition_mt_check(const char *tablename, const void *entry,
 		return false;
 	}
 
-	/* Let's acquire the lock, check for the condition and add it */
-	/* or increase the reference counter.                         */
+	/*
+	 * Let's acquire the lock, check for the condition and add it
+	 * or increase the reference counter.
+	 */
 	if (down_interruptible(&proc_lock))
 		return false;
 
@@ -213,9 +203,12 @@ static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)
 				list_del_rcu(pos);
 				remove_proc_entry(var->status_proc->name, proc_net_condition);
 				up(&proc_lock);
-				/* synchronize_rcu() would be goog enough, but synchronize_net() */
-				/* guarantees that no packet will go out with the old rule after */
-				/* succesful removal.                                            */
+				/*
+				 * synchronize_rcu() would be good enough, but
+				 * synchronize_net() guarantees that no packet
+				 * will go out with the old rule after
+				 * succesful removal.
+				 */
 				synchronize_net();
 				kfree(var);
 				return;

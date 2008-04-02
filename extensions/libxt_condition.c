@@ -15,8 +15,8 @@ static void condition_help(void)
 }
 
 static const struct option condition_opts[] = {
-	{ .name = "condition", .has_arg = 1, .flag = 0, .val = 'X' },
-	{ .name = 0 }
+	{.name = "condition", .has_arg = true, .val = 'X'},
+	{NULL},
 };
 
 static int condition_parse(int c, char **argv, int invert, unsigned int *flags,
