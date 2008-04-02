@@ -126,7 +126,7 @@ condition_mt_check(const char *tablename, const void *entry,
 {
 	const struct xt_condition_mtinfo *info = matchinfo;
 	struct list_head *pos;
-	struct condition_variable *var, *newvar;
+	struct condition_variable *var;
 
 	/* Forbid certain names */
 	if (*info->name == '\0' || *info->name == '.' ||
@@ -154,34 +154,34 @@ condition_mt_check(const char *tablename, const void *entry,
 	}
 
 	/* At this point, we need to allocate a new condition variable. */
-	newvar = kmalloc(sizeof(struct condition_variable), GFP_KERNEL);
+	var = kmalloc(sizeof(struct condition_variable), GFP_KERNEL);
 
-	if (newvar == NULL) {
+	if (var == NULL) {
 		up(&proc_lock);
 		return false;
 	}
 
 	/* Create the condition variable's proc file entry. */
-	newvar->status_proc = create_proc_entry(info->name, condition_list_perms, proc_net_condition);
+	var->status_proc = create_proc_entry(info->name, condition_list_perms, proc_net_condition);
 
-	if (newvar->status_proc == NULL) {
-		kfree(newvar);
+	if (var->status_proc == NULL) {
+		kfree(var);
 		up(&proc_lock);
 		return false;
 	}
 
-	newvar->refcount = 1;
-	newvar->enabled  = false;
-	newvar->status_proc->owner = THIS_MODULE;
-	newvar->status_proc->data = newvar;
+	var->refcount = 1;
+	var->enabled  = false;
+	var->status_proc->owner = THIS_MODULE;
+	var->status_proc->data  = var;
 	wmb();
-	newvar->status_proc->read_proc  = condition_proc_read;
-	newvar->status_proc->write_proc = condition_proc_write;
+	var->status_proc->read_proc  = condition_proc_read;
+	var->status_proc->write_proc = condition_proc_write;
 
-	list_add_rcu(&newvar->list, &conditions_list);
+	list_add_rcu(&var->list, &conditions_list);
 
-	newvar->status_proc->uid = condition_uid_perms;
-	newvar->status_proc->gid = condition_gid_perms;
+	var->status_proc->uid = condition_uid_perms;
+	var->status_proc->gid = condition_gid_perms;
 
 	up(&proc_lock);
 
