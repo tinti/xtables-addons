@@ -1,5 +1,6 @@
 /* Shared library add-on to iptables for condition match */
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,7 +89,7 @@ static struct xtables_match condition_mt6_reg = {
 	.family		= PF_INET6,
 	.version 	= XTABLES_VERSION,
 	.size 		= XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
-	.userspacesize 	= XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
+	.userspacesize 	= offsetof(struct xt_condition_mtinfo, condvar),
 	.help 		= condition_help,
 	.parse 		= condition_parse,
 	.final_check	= condition_check,

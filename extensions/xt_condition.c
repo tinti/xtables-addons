@@ -104,19 +104,14 @@ condition_mt(const struct sk_buff *skb, const struct net_device *in,
              bool *hotdrop)
 {
 	const struct xt_condition_mtinfo *info = matchinfo;
-	struct condition_variable *var;
-	int condition_status = 0;
+	const struct condition_variable *var   = info->condvar;
+	bool x;
 
 	rcu_read_lock();
-	list_for_each_entry_rcu(var, &conditions_list, list) {
-		if (strcmp(info->name, var->status_proc->name) == 0) {
-			condition_status = var->enabled;
-			break;
-		}
-	}
+	x = rcu_dereference(var->enabled);
 	rcu_read_unlock();
 
-	return condition_status ^ info->invert;
+	return x ^ info->invert;
 }
 
 static bool
@@ -124,8 +119,7 @@ condition_mt_check(const char *tablename, const void *entry,
                    const struct xt_match *match, void *matchinfo,
                    unsigned int hook_mask)
 {
-	const struct xt_condition_mtinfo *info = matchinfo;
-	struct list_head *pos;
+	struct xt_condition_mtinfo *info = matchinfo;
 	struct condition_variable *var;
 
 	/* Forbid certain names */
@@ -144,11 +138,11 @@ condition_mt_check(const char *tablename, const void *entry,
 	if (down_interruptible(&proc_lock))
 		return false;
 
-	list_for_each(pos, &conditions_list) {
-		var = list_entry(pos, struct condition_variable, list);
+	list_for_each_entry(var, &conditions_list, list) {
 		if (strcmp(info->name, var->status_proc->name) == 0) {
 			var->refcount++;
 			up(&proc_lock);
+			info->condvar = var;
 			return true;
 		}
 	}
@@ -185,38 +179,30 @@ condition_mt_check(const char *tablename, const void *entry,
 
 	up(&proc_lock);
 
+	info->condvar = var;
 	return true;
 }
 
 static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)
 {
 	const struct xt_condition_mtinfo *info = matchinfo;
-	struct list_head *pos;
-	struct condition_variable *var;
+	struct condition_variable *var = info->condvar;
 
 	down(&proc_lock);
-
-	list_for_each(pos, &conditions_list) {
-		var = list_entry(pos, struct condition_variable, list);
-		if (strcmp(info->name, var->status_proc->name) == 0) {
-			if (--var->refcount == 0) {
-				list_del_rcu(pos);
-				remove_proc_entry(var->status_proc->name, proc_net_condition);
-				up(&proc_lock);
-				/*
-				 * synchronize_rcu() would be good enough, but
-				 * synchronize_net() guarantees that no packet
-				 * will go out with the old rule after
-				 * succesful removal.
-				 */
-				synchronize_net();
-				kfree(var);
-				return;
-			}
-			break;
-		}
+	if (--var->refcount == 0) {
+		list_del_rcu(&var->list);
+		remove_proc_entry(var->status_proc->name, proc_net_condition);
+		up(&proc_lock);
+		/*
+		 * synchronize_rcu() would be good enough, but
+		 * synchronize_net() guarantees that no packet
+		 * will go out with the old rule after
+		 * succesful removal.
+		 */
+		synchronize_net();
+		kfree(var);
+		return;
 	}
-
 	up(&proc_lock);
 }
 
