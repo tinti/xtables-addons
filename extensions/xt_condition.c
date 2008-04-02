@@ -136,27 +136,18 @@ condition_mt_check(const char *tablename, const void *entry,
                    const struct xt_match *match, void *matchinfo,
                    unsigned int hook_mask)
 {
-	static const char * const forbidden_names[]={ "", ".", ".." };
 	const struct xt_condition_mtinfo *info = matchinfo;
 	struct list_head *pos;
 	struct condition_variable *var, *newvar;
 
-	int i;
-
-	/* We don't want a '/' in a proc file name. */
-	for (i=0; i < CONDITION_NAME_LEN && info->name[i] != '\0'; i++)
-		if (info->name[i] == '/')
-			return false;
-
-	/* We can't handle file names longer than CONDITION_NAME_LEN and */
-	/* we want a NULL terminated string. */
-	if (i == CONDITION_NAME_LEN)
+	/* Forbid certain names */
+	if (*info->name == '\0' || *info->name == '.' ||
+	    info->name[sizeof(info->name)-1] != '\0' ||
+	    memchr(info->name, '/', sizeof(info->name)) != NULL) {
+		printk(KERN_INFO KBUILD_MODNAME ": name not allowed or too "
+		       "long: \"%.*s\"\n", sizeof(info->name), info->name);
 		return false;
-
-	/* We don't want certain reserved names. */
-	for (i=0; i < sizeof(forbidden_names)/sizeof(char *); i++)
-		if(strcmp(info->name, forbidden_names[i])==0)
-			return false;
+	}
 
 	/* Let's acquire the lock, check for the condition and add it */
 	/* or increase the reference counter.                         */

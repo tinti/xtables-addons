@@ -31,8 +31,8 @@ static int condition_parse(int c, char **argv, int invert, unsigned int *flags,
 
 		check_inverse(optarg, &invert, &optind, 0);
 
-		if (strlen(argv[optind - 1]) < CONDITION_NAME_LEN)
-			strcpy(info->name, argv[optind - 1]);
+		if (strlen(optarg) < sizeof(info->name))
+			strcpy(info->name, optarg);
 		else
 			exit_error(PARAMETER_PROBLEM,
 				   "File name too long");
