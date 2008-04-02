@@ -73,9 +73,8 @@ static DECLARE_MUTEX(proc_lock);
 static LIST_HEAD(conditions_list);
 static struct proc_dir_entry *proc_net_condition = NULL;
 
-static int
-xt_condition_read_info(char __user *buffer, char **start, off_t offset,
-			int length, int *eof, void *data)
+static int condition_proc_read(char __user *buffer, char **start, off_t offset,
+                               int length, int *eof, void *data)
 {
 	const struct condition_variable *var = data;
 
@@ -87,10 +86,8 @@ xt_condition_read_info(char __user *buffer, char **start, off_t offset,
 	return 2;
 }
 
-
-static int
-xt_condition_write_info(struct file *file, const char __user *buffer,
-			 unsigned long length, void *data)
+static int condition_proc_write(struct file *file, const char __user *buffer,
+                                unsigned long length, void *data)
 {
 	struct condition_variable *var = data;
 	char newval;
@@ -196,8 +193,8 @@ condition_mt_check(const char *tablename, const void *entry,
 	newvar->status_proc->owner = THIS_MODULE;
 	newvar->status_proc->data = newvar;
 	wmb();
-	newvar->status_proc->read_proc = xt_condition_read_info;
-	newvar->status_proc->write_proc = xt_condition_write_info;
+	newvar->status_proc->read_proc  = condition_proc_read;
+	newvar->status_proc->write_proc = condition_proc_write;
 
 	list_add_rcu(&newvar->list, &conditions_list);
 
@@ -238,64 +235,53 @@ static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)
 	up(&proc_lock);
 }
 
-static struct xt_match condition_match = {
-	.name = "condition",
-	.family = PF_INET,
-	.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
-	.match      = condition_mt,
-	.checkentry = condition_mt_check,
-	.destroy    = condition_mt_destroy,
-	.me = THIS_MODULE
-};
-
-static struct xt_match condition6_match = {
-	.name = "condition",
-	.family = PF_INET6,
-	.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
-	.match      = condition_mt,
-	.checkentry = condition_mt_check,
-	.destroy    = condition_mt_destroy,
-	.me = THIS_MODULE
+static struct xt_match condition_mt_reg[] __read_mostly = {
+	{
+		.name       = "condition",
+		.revision   = 0,
+		.family     = PF_INET,
+		.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
+		.match      = condition_mt,
+		.checkentry = condition_mt_check,
+		.destroy    = condition_mt_destroy,
+		.me         = THIS_MODULE,
+	},
+	{
+		.name       = "condition",
+		.revision   = 0,
+		.family     = PF_INET6,
+		.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
+		.match      = condition_mt,
+		.checkentry = condition_mt_check,
+		.destroy    = condition_mt_destroy,
+		.me         = THIS_MODULE,
+	},
 };
 
 static const char *const dir_name = "nf_condition";
 
-static int __init
-init(void)
+static int __init condition_mt_init(void)
 {
-	int errorcode;
+	int ret;
 
 	proc_net_condition = proc_mkdir(dir_name, proc_net);
-	if (proc_net_condition == NULL) {
-		remove_proc_entry(dir_name, proc_net);
+	if (proc_net_condition == NULL)
 		return -EACCES;
-	}
 
-        errorcode = xt_register_match(&condition_match);
-	if (errorcode) {
-		xt_unregister_match(&condition_match);
+	ret = xt_register_matches(condition_mt_reg, ARRAY_SIZE(condition_mt_reg));
+	if (ret < 0) {
 		remove_proc_entry(dir_name, proc_net);
-		return errorcode;
-	}
-
-	errorcode = xt_register_match(&condition6_match);
-	if (errorcode) {
-		xt_unregister_match(&condition6_match);
-		xt_unregister_match(&condition_match);
-		remove_proc_entry(dir_name, proc_net);
-		return errorcode;
+		return ret;
 	}
 
 	return 0;
 }
 
-static void __exit
-fini(void)
+static void __exit condition_mt_exit(void)
 {
-	xt_unregister_match(&condition6_match);
-	xt_unregister_match(&condition_match);
+	xt_unregister_matches(condition_mt_reg, ARRAY_SIZE(condition_mt_reg));
 	remove_proc_entry(dir_name, proc_net);
 }
 
-module_init(init);
-module_exit(fini);
+module_init(condition_mt_init);
+module_exit(condition_mt_exit);
