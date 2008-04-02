@@ -77,8 +77,7 @@ static int
 xt_condition_read_info(char __user *buffer, char **start, off_t offset,
 			int length, int *eof, void *data)
 {
-	struct condition_variable *var =
-	    (struct condition_variable *) data;
+	const struct condition_variable *var = data;
 
 	buffer[0] = (var->enabled) ? '1' : '0';
 	buffer[1] = '\n';
@@ -93,8 +92,7 @@ static int
 xt_condition_write_info(struct file *file, const char __user *buffer,
 			 unsigned long length, void *data)
 {
-	struct condition_variable *var =
-	    (struct condition_variable *) data;
+	struct condition_variable *var = data;
 	char newval;
 
 	if (length>0) {
@@ -111,7 +109,7 @@ xt_condition_write_info(struct file *file, const char __user *buffer,
 		}
 	}
 
-	return (int) length;
+	return length;
 }
 
 static bool
@@ -120,8 +118,7 @@ condition_mt(const struct sk_buff *skb, const struct net_device *in,
              const void *matchinfo, int offset, unsigned int protoff,
              bool *hotdrop)
 {
-	const struct condition_info *info =
-	    (const struct condition_info *) matchinfo;
+	const struct condition_info *info = matchinfo;
 	struct condition_variable *var;
 	int condition_status = 0;
 
@@ -143,7 +140,7 @@ condition_mt_check(const char *tablename, const void *entry,
                    unsigned int hook_mask)
 {
 	static const char * const forbidden_names[]={ "", ".", ".." };
-	struct condition_info *info = (struct condition_info *) matchinfo;
+	const struct condition_info *info = matchinfo;
 	struct list_head *pos;
 	struct condition_variable *var, *newvar;
 
@@ -214,7 +211,7 @@ condition_mt_check(const char *tablename, const void *entry,
 
 static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)
 {
-	struct condition_info *info = (struct condition_info *) matchinfo;
+	const struct condition_info *info = matchinfo;
 	struct list_head *pos;
 	struct condition_variable *var;
 

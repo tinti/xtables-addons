@@ -21,8 +21,7 @@ static const struct option condition_opts[] = {
 static int condition_parse(int c, char **argv, int invert, unsigned int *flags,
                            const void *entry, struct xt_entry_match **match)
 {
-	struct condition_info *info =
-	    (struct condition_info *) (*match)->data;
+	struct condition_info *info = (void *)(*match)->data;
 
 	if (c == 'X') {
 		if (*flags)
@@ -55,8 +54,7 @@ static void condition_check(unsigned int flags)
 static void condition_print(const void *ip, const struct xt_entry_match *match,
                             int numeric)
 {
-	const struct condition_info *info =
-	    (const struct condition_info *) match->data;
+	const struct condition_info *info = (const void *)match->data;
 
 	printf("condition %s%s ", (info->invert) ? "!" : "", info->name);
 }
@@ -64,8 +62,7 @@ static void condition_print(const void *ip, const struct xt_entry_match *match,
 
 static void condition_save(const void *ip, const struct xt_entry_match *match)
 {
-	const struct condition_info *info =
-	    (const struct condition_info *) match->data;
+	const struct condition_info *info = (const void *)match->data;
 
 	printf("--condition %s\"%s\" ", (info->invert) ? "! " : "", info->name);
 }
@@ -83,8 +80,7 @@ static struct xtables_match condition_match = {
 	.extra_opts 	= condition_opts,
 };
 
-void _init(void);
-void _init(void)
+static void _init(void)
 {
 	xtables_register_match(&condition_match);
 }
