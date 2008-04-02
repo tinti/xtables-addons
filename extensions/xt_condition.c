@@ -63,7 +63,7 @@ struct condition_variable {
 	struct list_head list;
 	struct proc_dir_entry *status_proc;
 	unsigned int refcount;
-        int enabled;   /* TRUE == 1, FALSE == 0 */
+	bool enabled;
 };
 
 /* proc_lock is a user context only semaphore used for write access */
@@ -81,7 +81,7 @@ static int condition_proc_read(char __user *buffer, char **start, off_t offset,
 	buffer[0] = (var->enabled) ? '1' : '0';
 	buffer[1] = '\n';
 	if (length>=2)
-		*eof = 1;
+		*eof = true;
 
 	return 2;
 }
@@ -98,10 +98,10 @@ static int condition_proc_write(struct file *file, const char __user *buffer,
 	        /* Match only on the first character */
 		switch (newval) {
 		case '0':
-			var->enabled = 0;
+			var->enabled = false;
 			break;
 		case '1':
-			var->enabled = 1;
+			var->enabled = true;
 			break;
 		}
 	}
@@ -146,28 +146,29 @@ condition_mt_check(const char *tablename, const void *entry,
 	/* We don't want a '/' in a proc file name. */
 	for (i=0; i < CONDITION_NAME_LEN && info->name[i] != '\0'; i++)
 		if (info->name[i] == '/')
-			return 0;
+			return false;
+
 	/* We can't handle file names longer than CONDITION_NAME_LEN and */
 	/* we want a NULL terminated string. */
 	if (i == CONDITION_NAME_LEN)
-		return 0;
+		return false;
 
 	/* We don't want certain reserved names. */
 	for (i=0; i < sizeof(forbidden_names)/sizeof(char *); i++)
 		if(strcmp(info->name, forbidden_names[i])==0)
-			return 0;
+			return false;
 
 	/* Let's acquire the lock, check for the condition and add it */
 	/* or increase the reference counter.                         */
 	if (down_interruptible(&proc_lock))
-	   return -EINTR;
+		return false;
 
 	list_for_each(pos, &conditions_list) {
 		var = list_entry(pos, struct condition_variable, list);
 		if (strcmp(info->name, var->status_proc->name) == 0) {
 			var->refcount++;
 			up(&proc_lock);
-			return 1;
+			return true;
 		}
 	}
 
@@ -176,7 +177,7 @@ condition_mt_check(const char *tablename, const void *entry,
 
 	if (newvar == NULL) {
 		up(&proc_lock);
-		return -ENOMEM;
+		return false;
 	}
 
 	/* Create the condition variable's proc file entry. */
@@ -185,11 +186,11 @@ condition_mt_check(const char *tablename, const void *entry,
 	if (newvar->status_proc == NULL) {
 		kfree(newvar);
 		up(&proc_lock);
-		return -ENOMEM;
+		return false;
 	}
 
 	newvar->refcount = 1;
-	newvar->enabled = 0;
+	newvar->enabled  = false;
 	newvar->status_proc->owner = THIS_MODULE;
 	newvar->status_proc->data = newvar;
 	wmb();
@@ -203,7 +204,7 @@ condition_mt_check(const char *tablename, const void *entry,
 
 	up(&proc_lock);
 
-	return 1;
+	return true;
 }
 
 static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)

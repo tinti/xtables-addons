@@ -1,4 +1,5 @@
 /* Shared library add-on to iptables for condition match */
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,10 +39,10 @@ static int condition_parse(int c, char **argv, int invert, unsigned int *flags,
 
 		info->invert = invert;
 		*flags = 1;
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
 }
 
 static void condition_check(unsigned int flags)
