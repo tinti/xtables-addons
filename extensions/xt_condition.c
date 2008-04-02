@@ -118,7 +118,7 @@ condition_mt(const struct sk_buff *skb, const struct net_device *in,
              const void *matchinfo, int offset, unsigned int protoff,
              bool *hotdrop)
 {
-	const struct condition_info *info = matchinfo;
+	const struct xt_condition_mtinfo *info = matchinfo;
 	struct condition_variable *var;
 	int condition_status = 0;
 
@@ -140,7 +140,7 @@ condition_mt_check(const char *tablename, const void *entry,
                    unsigned int hook_mask)
 {
 	static const char * const forbidden_names[]={ "", ".", ".." };
-	const struct condition_info *info = matchinfo;
+	const struct xt_condition_mtinfo *info = matchinfo;
 	struct list_head *pos;
 	struct condition_variable *var, *newvar;
 
@@ -211,7 +211,7 @@ condition_mt_check(const char *tablename, const void *entry,
 
 static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)
 {
-	const struct condition_info *info = matchinfo;
+	const struct xt_condition_mtinfo *info = matchinfo;
 	struct list_head *pos;
 	struct condition_variable *var;
 
@@ -241,7 +241,7 @@ static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)
 static struct xt_match condition_match = {
 	.name = "condition",
 	.family = PF_INET,
-	.matchsize = sizeof(struct condition_info),
+	.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
 	.match      = condition_mt,
 	.checkentry = condition_mt_check,
 	.destroy    = condition_mt_destroy,
@@ -251,7 +251,7 @@ static struct xt_match condition_match = {
 static struct xt_match condition6_match = {
 	.name = "condition",
 	.family = PF_INET6,
-	.matchsize = sizeof(struct condition_info),
+	.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
 	.match      = condition_mt,
 	.checkentry = condition_mt_check,
 	.destroy    = condition_mt_destroy,

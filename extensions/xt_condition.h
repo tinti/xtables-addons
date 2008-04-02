@@ -1,11 +1,13 @@
 #ifndef _XT_CONDITION_H
 #define _XT_CONDITION_H
 
-#define CONDITION_NAME_LEN  32
+enum {
+	CONDITION_NAME_LEN = 31,
+};
 
-struct condition_info {
+struct xt_condition_mtinfo {
 	char name[CONDITION_NAME_LEN];
-	int  invert;
+	__u8 invert;
 };
 
 #endif /* _XT_CONDITION_H */
