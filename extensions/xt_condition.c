@@ -38,10 +38,12 @@
 #ifndef CONFIG_PROC_FS
 #error  "Proc file system support is required for this module"
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+#	define proc_net init_net.proc_net
+#endif
 
 /* Defaults, these can be overridden on the module command-line. */
 static unsigned int condition_list_perms = 0644;
-static unsigned int compat_dir_name = 0;
 static unsigned int condition_uid_perms = 0;
 static unsigned int condition_gid_perms = 0;
 
@@ -54,8 +56,6 @@ module_param(condition_uid_perms, uint, 0600);
 MODULE_PARM_DESC(condition_uid_perms,"user owner of /proc/net/nf_condition/* files");
 module_param(condition_gid_perms, uint, 0600);
 MODULE_PARM_DESC(condition_gid_perms,"group owner of /proc/net/nf_condition/* files");
-module_param(compat_dir_name, bool, 0400);
-MODULE_PARM_DESC(compat_dir_name,"use old style /proc/net/ipt_condition/* files");
 MODULE_ALIAS("ipt_condition");
 MODULE_ALIAS("ip6t_condition");
 
@@ -72,7 +72,6 @@ static DECLARE_MUTEX(proc_lock);
 
 static LIST_HEAD(conditions_list);
 static struct proc_dir_entry *proc_net_condition = NULL;
-static const char *dir_name;
 
 static int
 xt_condition_read_info(char __user *buffer, char **start, off_t offset,
@@ -115,20 +114,11 @@ xt_condition_write_info(struct file *file, const char __user *buffer,
 	return (int) length;
 }
 
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-static int
-match(const struct sk_buff *skb, const struct net_device *in,
-      const struct net_device *out, const struct xt_match *match,
-      const void *matchinfo, int offset,
-      unsigned int protoff, int *hotdrop)
-#else
-bool
-match(const struct sk_buff *skb, const struct net_device *in,
-      const struct net_device *out, const struct xt_match *match,
-      const void *matchinfo, int offset,
-      unsigned int protoff, bool *hotdrop)
-#endif
+static bool
+condition_mt(const struct sk_buff *skb, const struct net_device *in,
+             const struct net_device *out, const struct xt_match *match,
+             const void *matchinfo, int offset, unsigned int protoff,
+             bool *hotdrop)
 {
 	const struct condition_info *info =
 	    (const struct condition_info *) matchinfo;
@@ -147,20 +137,10 @@ match(const struct sk_buff *skb, const struct net_device *in,
 	return condition_status ^ info->invert;
 }
 
-
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-static int
-#else
-bool
-#endif
-checkentry(const char *tablename, const void *ip,
-	   const struct xt_match *match,
-	   void *matchinfo,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-	   unsigned int matchsize,
-#endif
-	   unsigned int hook_mask)
+static bool
+condition_mt_check(const char *tablename, const void *entry,
+                   const struct xt_match *match, void *matchinfo,
+                   unsigned int hook_mask)
 {
 	static const char * const forbidden_names[]={ "", ".", ".." };
 	struct condition_info *info = (struct condition_info *) matchinfo;
@@ -232,23 +212,11 @@ checkentry(const char *tablename, const void *ip,
 	return 1;
 }
 
-
-static void
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-destroy(const struct xt_match *match, void *matchinfo,
-	unsigned int matchsize)
-#else
-destroy(const struct xt_match *match, void *matchinfo)
-#endif
+static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)
 {
 	struct condition_info *info = (struct condition_info *) matchinfo;
 	struct list_head *pos;
 	struct condition_variable *var;
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-	if (matchsize != XT_ALIGN(sizeof(struct condition_info)))
-		return;
-#endif
 
 	down(&proc_lock);
 
@@ -273,14 +241,13 @@ destroy(const struct xt_match *match, void *matchinfo)
 	up(&proc_lock);
 }
 
-
 static struct xt_match condition_match = {
 	.name = "condition",
 	.family = PF_INET,
 	.matchsize = sizeof(struct condition_info),
-	.match = &match,
-	.checkentry = &checkentry,
-	.destroy = &destroy,
+	.match      = condition_mt,
+	.checkentry = condition_mt_check,
+	.destroy    = condition_mt_destroy,
 	.me = THIS_MODULE
 };
 
@@ -288,21 +255,18 @@ static struct xt_match condition6_match = {
 	.name = "condition",
 	.family = PF_INET6,
 	.matchsize = sizeof(struct condition_info),
-	.match = &match,
-	.checkentry = &checkentry,
-	.destroy = &destroy,
+	.match      = condition_mt,
+	.checkentry = condition_mt_check,
+	.destroy    = condition_mt_destroy,
 	.me = THIS_MODULE
 };
+
+static const char *const dir_name = "nf_condition";
 
 static int __init
 init(void)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
-	struct proc_dir_entry * const proc_net=init_net.proc_net;
-#endif
 	int errorcode;
-
-	dir_name = compat_dir_name? "ipt_condition": "nf_condition";
 
 	proc_net_condition = proc_mkdir(dir_name, proc_net);
 	if (proc_net_condition == NULL) {
@@ -328,17 +292,12 @@ init(void)
 	return 0;
 }
 
-
 static void __exit
 fini(void)
 {
 	xt_unregister_match(&condition6_match);
 	xt_unregister_match(&condition_match);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
-	remove_proc_entry(dir_name, init_net.proc_net);
-#else
 	remove_proc_entry(dir_name, proc_net);
-#endif
 }
 
 module_init(init);

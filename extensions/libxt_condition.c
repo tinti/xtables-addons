@@ -47,7 +47,7 @@ static int condition_parse(int c, char **argv, int invert, unsigned int *flags,
 
 static void condition_check(unsigned int flags)
 {
-	if (!flags)
+	if (flags == 0)
 		exit_error(PARAMETER_PROBLEM,
 			   "Condition match: must specify --condition");
 }
