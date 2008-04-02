@@ -9,9 +9,10 @@
 
 static void condition_help(void)
 {
-	printf("condition match options:\n"
-	       "--condition [!] filename       "
-	       "Match on boolean value stored in /proc file\n");
+	printf(
+"condition match options:\n"
+"[!] --condition name    Match on boolean value stored in procfs file\n"
+);
 }
 
 static const struct option condition_opts[] = {
@@ -28,8 +29,6 @@ static int condition_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags)
 			exit_error(PARAMETER_PROBLEM,
 				   "Can't specify multiple conditions");
-
-		check_inverse(optarg, &invert, &optind, 0);
 
 		if (strlen(optarg) < sizeof(info->name))
 			strcpy(info->name, optarg);
