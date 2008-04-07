@@ -85,6 +85,15 @@ static bool tee_routing(struct sk_buff *skb,
 	return true;
 }
 
+static bool dev_hh_avail(const struct net_device *dev)
+{
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+	return dev->hard_header != NULL;
+#else
+	return dev->header_ops != NULL;
+#endif
+}
+
 /*
  * Stolen from ip_finish_output2
  * PRE : skb->dev is set to the device we are leaving by
@@ -99,8 +108,7 @@ static void tee_ip_direct_send(struct sk_buff *skb)
 	unsigned int hh_len = LL_RESERVED_SPACE(dev);
 
 	/* Be paranoid, rather than too clever. */
-	if (unlikely(skb_headroom(skb) < hh_len)) {
-	/* if (dev->header_ops != NULL) */
+	if (unlikely(skb_headroom(skb) < hh_len) && dev_hh_avail(dev)) {
 		struct sk_buff *skb2;
 
 		skb2 = skb_realloc_headroom(skb, LL_RESERVED_SPACE(dev));
