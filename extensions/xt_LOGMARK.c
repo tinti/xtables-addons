@@ -17,6 +17,18 @@
 #include "compat_xtables.h"
 #include "xt_LOGMARK.h"
 
+static const char *const hook_names[] = {
+	[NF_INET_PRE_ROUTING]  = "PREROUTING",
+	[NF_INET_LOCAL_IN]     = "INPUT",
+	[NF_INET_FORWARD]      = "FORWARD",
+	[NF_INET_LOCAL_OUT]    = "OUTPUT",
+	[NF_INET_POST_ROUTING] = "POSTROUTING",
+};
+
+static const char *const dir_names[] = {
+	"ORIGINAL", "REPLY",
+};
+
 static unsigned int
 logmark_tg(struct sk_buff *skb, const struct net_device *in,
            const struct net_device *out, unsigned int hooknum,
@@ -26,11 +38,13 @@ logmark_tg(struct sk_buff *skb, const struct net_device *in,
 	const struct nf_conn *ct;
 	enum ip_conntrack_info ctinfo;
 
-	printk("<%u>%.*s""nfmark=0x%x secmark=0x%x classify=0x%x",
+	printk("<%u>%.*s""hook=%s nfmark=0x%x secmark=0x%x classify=0x%x",
 	       info->level, (unsigned int)sizeof(info->prefix), info->prefix,
+	       hook_names[hooknum],
 	       skb_nfmark(skb), skb->secmark, skb->priority);
 
 	ct = nf_ct_get(skb, &ctinfo);
+	printk(" ctdir=%s", dir_names[ctinfo >= IP_CT_IS_REPLY]);
 	if (ct == NULL) {
 		printk(" ct=NULL ctmark=NULL ctstate=INVALID ctstatus=NONE");
 	} else if (ct == &nf_conntrack_untracked) {
