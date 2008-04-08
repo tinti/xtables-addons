@@ -16,6 +16,10 @@
 #define IPT_AND_MASK_USED    2
 #define IPT_OR_MASK_USED     4
 
+enum {
+	FL_SHIFT = 1 << 3,
+};
+
 /* Function which prints out usage message. */
 static void ipmark_tg_help(void)
 {
@@ -24,6 +28,7 @@ static void ipmark_tg_help(void)
 "  --addr src/dst         use source or destination ip address\n"
 "  --and-mask value       logical AND ip address with this value becomes MARK\n"
 "  --or-mask value        logical OR ip address with this value becomes MARK\n"
+"  --shift value          shift address right by value before copying to mark\n"
 "\n");
 }
 
@@ -31,6 +36,7 @@ static const struct option ipmark_tg_opts[] = {
 	{ "addr", 1, 0, '1' },
 	{ "and-mask", 1, 0, '2' },
 	{ "or-mask", 1, 0, '3' },
+	{.name = "shift",    .has_arg = true, .val = '4'},
 	{NULL},
 };
 
@@ -46,6 +52,7 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
                            const void *entry, struct xt_entry_target **target)
 {
 	struct xt_ipmark_tginfo *info = (void *)(*target)->data;
+	unsigned int n;
 
 	switch (c) {
 		char *end;
@@ -77,6 +84,18 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 			           "IPMARK target: Can't specify --or-mask twice");
 		*flags |= IPT_OR_MASK_USED;
 		break;
+
+	case '4':
+		param_act(P_ONLY_ONCE, "IPMARK", "--shift", *flags & FL_SHIFT);
+		param_act(P_NO_INVERT, "IPMARK", "--shift", invert);
+		/*
+		 * Anything >31 does not make sense for IPv4, but it still
+		 * does the right thing.
+		 */
+		if (!strtonum(optarg, NULL, &n, 0, 128))
+			param_act(P_BAD_VALUE, "IPMARK", "--shift", optarg);
+		info->shift = n;
+		return true;
 
 	default:
 		return 0;
@@ -141,7 +160,24 @@ static struct xtables_target ipmark_tg4_reg = {
 	.extra_opts    = ipmark_tg_opts,
 };
 
+static struct xtables_target ipmark_tg6_reg = {
+	.version       = XTABLES_VERSION,
+	.name          = "IPMARK",
+	.family        = PF_INET6,
+	.revision      = 0,
+	.size          = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
+	.userspacesize = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
+	.help          = ipmark_tg_help,
+	.init          = ipmark_tg_init,
+	.parse         = ipmark_tg_parse,
+	.final_check   = ipmark_tg_check,
+	.print         = ipmark_tg_print,
+	.save          = ipmark_tg_save,
+	.extra_opts    = ipmark_tg_opts,
+};
+
 static void _init(void)
 {
 	xtables_register_target(&ipmark_tg4_reg);
+	xtables_register_target(&ipmark_tg6_reg);
 }
