@@ -4,5 +4,6 @@ obj-${build_ECHO}     += libxt_ECHO.so
 obj-${build_LOGMARK}  += libxt_LOGMARK.so
 obj-${build_TARPIT}   += libxt_TARPIT.so
 obj-${build_TEE}      += libxt_TEE.so
+obj-${build_condition} += libxt_condition.so
 obj-${build_geoip}    += libxt_geoip.so
 obj-${build_portscan} += libxt_portscan.so

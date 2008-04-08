@@ -6,5 +6,6 @@ build_ECHO=
 build_LOGMARK=m
 build_TARPIT=m
 build_TEE=m
+build_condition=m
 build_geoip=m
 build_portscan=m

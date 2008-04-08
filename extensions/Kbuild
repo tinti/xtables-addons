@@ -11,6 +11,7 @@ obj-${build_ECHO}    += xt_ECHO.o
 obj-${build_LOGMARK} += xt_LOGMARK.o
 obj-${build_TARPIT}  += xt_TARPIT.o
 obj-${build_TEE}     += xt_TEE.o
+obj-${build_condition} += xt_condition.o
 obj-${build_geoip}    += xt_geoip.o
 obj-${build_portscan} += xt_portscan.o
 
