@@ -1,16 +1,16 @@
+#include <linux/ip.h>
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/version.h>
-#include <linux/ip.h>
-#include <net/checksum.h>
-
 #include <linux/netfilter/x_tables.h>
+#include <net/checksum.h>
 #include "xt_IPMARK.h"
 #include "compat_xtables.h"
 
 MODULE_AUTHOR("Grzegorz Janoszka <Grzegorz@Janoszka.pl>");
 MODULE_DESCRIPTION("IP tables IPMARK: mark based on ip address");
 MODULE_LICENSE("GPL");
+MODULE_ALIAS("ipt_IPMARK");
 
 static unsigned int
 ipmark_tg(struct sk_buff *skb,
@@ -21,7 +21,7 @@ ipmark_tg(struct sk_buff *skb,
        const void *targinfo)
 {
 	const struct xt_ipmark_tginfo *ipmarkinfo = targinfo;
-	struct iphdr *iph = ip_hdr(skb);
+	const struct iphdr *iph = ip_hdr(skb);
 	__u32 mark;
 
 	if (ipmarkinfo->selector == XT_IPMARK_SRC)

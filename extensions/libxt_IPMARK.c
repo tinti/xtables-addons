@@ -5,11 +5,10 @@
  *
  * This program is distributed under the terms of GNU GPL
  */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <getopt.h>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <xtables.h>
 #include "xt_IPMARK.h"
 
@@ -18,8 +17,7 @@
 #define IPT_OR_MASK_USED     4
 
 /* Function which prints out usage message. */
-static void
-help(void)
+static void ipmark_tg_help(void)
 {
 	printf(
 "IPMARK target options:\n"
@@ -29,27 +27,23 @@ help(void)
 "\n");
 }
 
-static struct option opts[] = {
+static const struct option ipmark_tg_opts[] = {
 	{ "addr", 1, 0, '1' },
 	{ "and-mask", 1, 0, '2' },
 	{ "or-mask", 1, 0, '3' },
-	{ 0 }
+	{NULL},
 };
 
 /* Initialize the target. */
-static void
-init(struct xt_entry_target *t)
+static void ipmark_tg_init(struct xt_entry_target *t)
 {
 	struct xt_ipmark_tginfo *info = (void *)t->data;
 
 	info->andmask = ~0U;
 }
 
-/* Function which parses command options; returns true if it
-   ate an option */
-static int
-parse(int c, char **argv, int invert, unsigned int *flags,
-      const void *entry, struct xt_entry_target **target)
+static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
+                           const void *entry, struct xt_entry_target **target)
 {
 	struct xt_ipmark_tginfo *info = (void *)(*target)->data;
 
@@ -91,8 +85,7 @@ parse(int c, char **argv, int invert, unsigned int *flags,
 	return 1;
 }
 
-static void
-final_check(unsigned int flags)
+static void ipmark_tg_check(unsigned int flags)
 {
 	if (!(flags & IPT_ADDR_USED))
 		exit_error(PARAMETER_PROBLEM,
@@ -102,10 +95,9 @@ final_check(unsigned int flags)
 		           "IPMARK target: Parameter --and-mask or --or-mask is required");
 }
 
-/* Prints out the targinfo. */
 static void
-print(const void *entry, const struct xt_entry_target *target,
-      int numeric)
+ipmark_tg_print(const void *entry, const struct xt_entry_target *target,
+                int numeric)
 {
 	const struct xt_ipmark_tginfo *info = (const void *)target->data;
 
@@ -117,9 +109,8 @@ print(const void *entry, const struct xt_entry_target *target,
 	       (unsigned int)info->andmask, (unsigned int)info->ormask);
 }
 
-/* Saves the union ipt_targinfo in parsable form to stdout. */
 static void
-save(const void *entry, const struct xt_entry_target *target)
+ipmark_tg_save(const void *entry, const struct xt_entry_target *target)
 {
 	const struct xt_ipmark_tginfo *info = (const void *)target->data;
 
@@ -133,22 +124,23 @@ save(const void *entry, const struct xt_entry_target *target)
 		printf("--or-mask 0x%x ", (unsigned int)info->ormask);
 }
 
-static struct xtables_target ipmark = {
-	.next          = NULL,
-	.name          = "IPMARK",
+static struct xtables_target ipmark_tg4_reg = {
 	.version       = XTABLES_VERSION,
+	.name          = "IPMARK",
+	.family        = PF_INET,
+	.revision      = 0,
 	.size          = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
-	.help          = &help,
-	.init          = &init,
-	.parse         = &parse,
-	.final_check   = &final_check,
-	.print         = &print,
-	.save          = &save,
-	.extra_opts    = opts
+	.help          = ipmark_tg_help,
+	.init          = ipmark_tg_init,
+	.parse         = ipmark_tg_parse,
+	.final_check   = ipmark_tg_check,
+	.print         = ipmark_tg_print,
+	.save          = ipmark_tg_save,
+	.extra_opts    = ipmark_tg_opts,
 };
 
-void _init(void)
+static void _init(void)
 {
-	xtables_register_target(&ipmark);
+	xtables_register_target(&ipmark_tg4_reg);
 }
