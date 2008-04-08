@@ -37,6 +37,7 @@ logmark_tg(struct sk_buff *skb, const struct net_device *in,
 	const struct xt_logmark_tginfo *info = targinfo;
 	const struct nf_conn *ct;
 	enum ip_conntrack_info ctinfo;
+	bool prev = false;
 
 	printk("<%u>%.*s""hook=%s nfmark=0x%x secmark=0x%x classify=0x%x",
 	       info->level, (unsigned int)sizeof(info->prefix), info->prefix,
@@ -64,14 +65,16 @@ logmark_tg(struct sk_buff *skb, const struct net_device *in,
 			printk(",DNAT");
 
 		printk(" ctstatus=");
-		if (ct->status & IPS_EXPECTED)
+		if (ct->status & IPS_EXPECTED) {
 			printk("EXPECTED");
+			prev = true;
+		}
 		if (ct->status & IPS_SEEN_REPLY)
-			printk(",SEEN_REPLY");
+			printk("%s""SEEN_REPLY", prev++ ? "," : "");
 		if (ct->status & IPS_ASSURED)
-			printk(",ASSURED");
+			printk("%s""ASSURED", prev++ ? "," : "");
 		if (ct->status & IPS_CONFIRMED)
-			printk(",CONFIRMED");
+			printk("%s""CONFIRMED", prev++ ? "," : "");
 	}
 
 	printk("\n");
