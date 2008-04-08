@@ -40,12 +40,9 @@ static struct option opts[] = {
 static void
 init(struct xt_entry_target *t)
 {
-	struct ipt_ipmark_target_info *ipmarkinfo =
-		(struct ipt_ipmark_target_info *)t->data;
+	struct xt_ipmark_tginfo *info = (void *)t->data;
 
-	ipmarkinfo->andmask=0xffffffff;
-	ipmarkinfo->ormask=0;
-
+	info->andmask = ~0U;
 }
 
 /* Function which parses command options; returns true if it
@@ -54,14 +51,13 @@ static int
 parse(int c, char **argv, int invert, unsigned int *flags,
       const void *entry, struct xt_entry_target **target)
 {
-	struct ipt_ipmark_target_info *ipmarkinfo
-		= (struct ipt_ipmark_target_info *)(*target)->data;
+	struct xt_ipmark_tginfo *info = (void *)(*target)->data;
 
 	switch (c) {
 		char *end;
 	case '1':
-		if(!strcmp(optarg, "src")) ipmarkinfo->addr=IPT_IPMARK_SRC;
-		  else if(!strcmp(optarg, "dst")) ipmarkinfo->addr=IPT_IPMARK_DST;
+		if(!strcmp(optarg, "src")) info->selector=XT_IPMARK_SRC;
+		  else if(!strcmp(optarg, "dst")) info->selector=XT_IPMARK_DST;
 		    else exit_error(PARAMETER_PROBLEM, "Bad addr value `%s' - should be `src' or `dst'", optarg);
 		if (*flags & IPT_ADDR_USED)
 			exit_error(PARAMETER_PROBLEM,
@@ -70,7 +66,7 @@ parse(int c, char **argv, int invert, unsigned int *flags,
 		break;
 	
 	case '2':
-		ipmarkinfo->andmask = strtoul(optarg, &end, 0);
+		info->andmask = strtoul(optarg, &end, 0);
 		if (*end != '\0' || end == optarg)
 			exit_error(PARAMETER_PROBLEM, "Bad and-mask value `%s'", optarg);
 		if (*flags & IPT_AND_MASK_USED)
@@ -79,7 +75,7 @@ parse(int c, char **argv, int invert, unsigned int *flags,
 		*flags |= IPT_AND_MASK_USED;
 		break;
 	case '3':
-		ipmarkinfo->ormask = strtoul(optarg, &end, 0);
+		info->ormask = strtoul(optarg, &end, 0);
 		if (*end != '\0' || end == optarg)
 			exit_error(PARAMETER_PROBLEM, "Bad or-mask value `%s'", optarg);
 		if (*flags & IPT_OR_MASK_USED)
@@ -111,39 +107,38 @@ static void
 print(const void *entry, const struct xt_entry_target *target,
       int numeric)
 {
-	const struct ipt_ipmark_target_info *ipmarkinfo =
-		(const struct ipt_ipmark_target_info *)target->data;
+	const struct xt_ipmark_tginfo *info = (const void *)target->data;
 
-	if(ipmarkinfo->addr == IPT_IPMARK_SRC)
+	if (info->selector == XT_IPMARK_SRC)
 	  printf("IPMARK src");
 	else
 	  printf("IPMARK dst");
-	printf(" ip and 0x%lx or 0x%lx", ipmarkinfo->andmask, ipmarkinfo->ormask);
+	printf(" ip and 0x%x or 0x%x",
+	       (unsigned int)info->andmask, (unsigned int)info->ormask);
 }
 
 /* Saves the union ipt_targinfo in parsable form to stdout. */
 static void
 save(const void *entry, const struct xt_entry_target *target)
 {
-	const struct ipt_ipmark_target_info *ipmarkinfo =
-		(const struct ipt_ipmark_target_info *)target->data;
+	const struct xt_ipmark_tginfo *info = (const void *)target->data;
 
-	if(ipmarkinfo->addr == IPT_IPMARK_SRC)
+	if (info->selector == XT_IPMARK_SRC)
 	  printf("--addr=src ");
 	else
 	  printf("--addr=dst ");
-	if(ipmarkinfo->andmask != 0xffffffff)
-	  printf("--and-mask 0x%lx ", ipmarkinfo->andmask);
-	if(ipmarkinfo->ormask != 0)
-	  printf("--or-mask 0x%lx ", ipmarkinfo->ormask);
+	if (info->andmask != ~0U)
+		printf("--and-mask 0x%x ", (unsigned int)info->andmask);
+	if (info->ormask != 0)
+		printf("--or-mask 0x%x ", (unsigned int)info->ormask);
 }
 
 static struct xtables_target ipmark = {
 	.next          = NULL,
 	.name          = "IPMARK",
 	.version       = XTABLES_VERSION,
-	.size          = XT_ALIGN(sizeof(struct ipt_ipmark_target_info)),
-	.userspacesize = XT_ALIGN(sizeof(struct ipt_ipmark_target_info)),
+	.size          = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
+	.userspacesize = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
 	.help          = &help,
 	.init          = &init,
 	.parse         = &parse,

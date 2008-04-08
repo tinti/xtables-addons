@@ -1,13 +1,15 @@
-#ifndef _IPT_IPMARK_H_target
-#define _IPT_IPMARK_H_target
+#ifndef _LINUX_NETFILTER_XT_IPMARK_H
+#define _LINUX_NETFILTER_XT_IPMARK_H 1
 
-struct ipt_ipmark_target_info {
-	unsigned long andmask;
-	unsigned long ormask;
-	unsigned char addr;
+enum {
+	XT_IPMARK_SRC,
+	XT_IPMARK_DST,
 };
 
-#define IPT_IPMARK_SRC    0
-#define IPT_IPMARK_DST    1
+struct xt_ipmark_tginfo {
+	__u32 andmask;
+	__u32 ormask;
+	__u8 selector;
+};
 
-#endif /*_IPT_IPMARK_H_target*/
+#endif /* _LINUX_NETFILTER_XT_IPMARK_H */

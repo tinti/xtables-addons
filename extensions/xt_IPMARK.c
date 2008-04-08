@@ -20,14 +20,14 @@ ipmark_tg(struct sk_buff *skb,
        const struct xt_target *target,
        const void *targinfo)
 {
-	const struct ipt_ipmark_target_info *ipmarkinfo = targinfo;
+	const struct xt_ipmark_tginfo *ipmarkinfo = targinfo;
 	struct iphdr *iph = ip_hdr(skb);
-	unsigned long mark;
+	__u32 mark;
 
-	if (ipmarkinfo->addr == IPT_IPMARK_SRC)
-		mark = (unsigned long) ntohl(iph->saddr);
+	if (ipmarkinfo->selector == XT_IPMARK_SRC)
+		mark = ntohl(iph->saddr);
 	else
-		mark = (unsigned long) ntohl(iph->daddr);
+		mark = ntohl(iph->daddr);
 
 	mark &= ipmarkinfo->andmask;
 	mark |= ipmarkinfo->ormask;
@@ -41,7 +41,7 @@ static struct xt_target ipt_ipmark_reg = {
 	.family		= AF_INET,
 	.table		= "mangle",
 	.target		= ipmark_tg,
-	.targetsize	= sizeof(struct ipt_ipmark_target_info),
+	.targetsize	= sizeof(struct xt_ipmark_tginfo),
 	.me		= THIS_MODULE
 };
 
