@@ -1,5 +1,5 @@
 
-AC_INIT([xtables-addons], [1.5.3])
+AC_INIT([xtables-addons], [1.5.4])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_INSTALL
 AM_INIT_AUTOMAKE

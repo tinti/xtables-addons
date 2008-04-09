@@ -33,6 +33,7 @@ extension and xt_foobar.c for the kernel extension.
 
 	mconfig.foobar
 	extensions/Kbuild.foobar
+	extensions/Mbuild.foobar
 	extensions/libxt_foobar.c
 	extensions/libxt_foobar.man
 	extensions/xt_foobar.c
