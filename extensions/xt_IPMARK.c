@@ -9,7 +9,7 @@
 #include "compat_xtables.h"
 
 MODULE_AUTHOR("Grzegorz Janoszka <Grzegorz@Janoszka.pl>");
-MODULE_DESCRIPTION("IP tables IPMARK: mark based on ip address");
+MODULE_DESCRIPTION("Xtables: mark based on IP address");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_IPMARK");
 MODULE_ALIAS("ip6t_IPMARK");

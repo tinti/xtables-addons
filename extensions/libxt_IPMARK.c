@@ -12,12 +12,11 @@
 #include <xtables.h>
 #include "xt_IPMARK.h"
 
-#define IPT_ADDR_USED        1
-#define IPT_AND_MASK_USED    2
-#define IPT_OR_MASK_USED     4
-
 enum {
-	FL_SHIFT = 1 << 3,
+	FL_ADDR_USED     = 1 << 0,
+	FL_AND_MASK_USED = 1 << 1,
+	FL_OR_MASK_USED  = 1 << 2,
+	FL_SHIFT         = 1 << 3,
 };
 
 /* Function which prints out usage message. */
@@ -25,17 +24,17 @@ static void ipmark_tg_help(void)
 {
 	printf(
 "IPMARK target options:\n"
-"  --addr src/dst         use source or destination ip address\n"
-"  --and-mask value       logical AND ip address with this value becomes MARK\n"
-"  --or-mask value        logical OR ip address with this value becomes MARK\n"
-"  --shift value          shift address right by value before copying to mark\n"
+"  --addr {src|dst}    use source or destination ip address\n"
+"  --and-mask value    logical AND ip address with this value becomes MARK\n"
+"  --or-mask value     logical OR ip address with this value becomes MARK\n"
+"  --shift value       shift address right by value before copying to mark\n"
 "\n");
 }
 
 static const struct option ipmark_tg_opts[] = {
-	{ "addr", 1, 0, '1' },
-	{ "and-mask", 1, 0, '2' },
-	{ "or-mask", 1, 0, '3' },
+	{.name = "addr",     .has_arg = true, .val = '1'},
+	{.name = "and-mask", .has_arg = true, .val = '2'},
+	{.name = "or-mask",  .has_arg = true, .val = '3'},
 	{.name = "shift",    .has_arg = true, .val = '4'},
 	{NULL},
 };
@@ -53,36 +52,39 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 {
 	struct xt_ipmark_tginfo *info = (void *)(*target)->data;
 	unsigned int n;
+	char *end;
 
 	switch (c) {
-		char *end;
 	case '1':
-		if(!strcmp(optarg, "src")) info->selector=XT_IPMARK_SRC;
-		  else if(!strcmp(optarg, "dst")) info->selector=XT_IPMARK_DST;
-		    else exit_error(PARAMETER_PROBLEM, "Bad addr value `%s' - should be `src' or `dst'", optarg);
-		if (*flags & IPT_ADDR_USED)
+		if (strcmp(optarg, "src") == 0)
+			info->selector = XT_IPMARK_SRC;
+		else if (strcmp(optarg, "dst") == 0)
+			info->selector = XT_IPMARK_DST;
+		else
+			exit_error(PARAMETER_PROBLEM, "Bad addr value `%s' - should be `src' or `dst'", optarg);
+		if (*flags & FL_ADDR_USED)
 			exit_error(PARAMETER_PROBLEM,
 			           "IPMARK target: Can't specify --addr twice");
-		*flags |= IPT_ADDR_USED;
+		*flags |= FL_ADDR_USED;
 		break;
 	
 	case '2':
 		info->andmask = strtoul(optarg, &end, 0);
 		if (*end != '\0' || end == optarg)
 			exit_error(PARAMETER_PROBLEM, "Bad and-mask value `%s'", optarg);
-		if (*flags & IPT_AND_MASK_USED)
+		if (*flags & FL_AND_MASK_USED)
 			exit_error(PARAMETER_PROBLEM,
 			           "IPMARK target: Can't specify --and-mask twice");
-		*flags |= IPT_AND_MASK_USED;
+		*flags |= FL_AND_MASK_USED;
 		break;
 	case '3':
 		info->ormask = strtoul(optarg, &end, 0);
 		if (*end != '\0' || end == optarg)
 			exit_error(PARAMETER_PROBLEM, "Bad or-mask value `%s'", optarg);
-		if (*flags & IPT_OR_MASK_USED)
+		if (*flags & FL_OR_MASK_USED)
 			exit_error(PARAMETER_PROBLEM,
 			           "IPMARK target: Can't specify --or-mask twice");
-		*flags |= IPT_OR_MASK_USED;
+		*flags |= FL_OR_MASK_USED;
 		break;
 
 	case '4':
@@ -106,7 +108,7 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 
 static void ipmark_tg_check(unsigned int flags)
 {
-	if (!(flags & IPT_ADDR_USED))
+	if (!(flags & FL_ADDR_USED))
 		exit_error(PARAMETER_PROBLEM,
 		           "IPMARK target: Parameter --addr is required");
 }
