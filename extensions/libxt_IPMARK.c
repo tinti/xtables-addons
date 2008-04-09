@@ -52,40 +52,37 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 {
 	struct xt_ipmark_tginfo *info = (void *)(*target)->data;
 	unsigned int n;
-	char *end;
 
 	switch (c) {
 	case '1':
+		param_act(P_ONLY_ONCE, "IPMARK", "addr", *flags & FL_ADDR_USED);
+		param_act(P_NO_INVERT, "IPMARK", "addr", invert);
 		if (strcmp(optarg, "src") == 0)
 			info->selector = XT_IPMARK_SRC;
 		else if (strcmp(optarg, "dst") == 0)
 			info->selector = XT_IPMARK_DST;
 		else
 			exit_error(PARAMETER_PROBLEM, "Bad addr value `%s' - should be `src' or `dst'", optarg);
-		if (*flags & FL_ADDR_USED)
-			exit_error(PARAMETER_PROBLEM,
-			           "IPMARK target: Can't specify --addr twice");
 		*flags |= FL_ADDR_USED;
-		break;
+		return true;
 	
 	case '2':
-		info->andmask = strtoul(optarg, &end, 0);
-		if (*end != '\0' || end == optarg)
-			exit_error(PARAMETER_PROBLEM, "Bad and-mask value `%s'", optarg);
-		if (*flags & FL_AND_MASK_USED)
-			exit_error(PARAMETER_PROBLEM,
-			           "IPMARK target: Can't specify --and-mask twice");
+		param_act(P_ONLY_ONCE, "IPMARK", "and-mask", *flags & FL_AND_MASK_USED);
+		param_act(P_NO_INVERT, "IPMARK", "and-mask", invert);
+		if (!strtonum(optarg, NULL, &n, 0, ~0U))
+			param_act(P_BAD_VALUE, "IPMARK", "and-mask", optarg);
+		info->andmask = n;
 		*flags |= FL_AND_MASK_USED;
-		break;
+		return true;
+
 	case '3':
-		info->ormask = strtoul(optarg, &end, 0);
-		if (*end != '\0' || end == optarg)
-			exit_error(PARAMETER_PROBLEM, "Bad or-mask value `%s'", optarg);
-		if (*flags & FL_OR_MASK_USED)
-			exit_error(PARAMETER_PROBLEM,
-			           "IPMARK target: Can't specify --or-mask twice");
+		param_act(P_ONLY_ONCE, "IPMARK", "or-mask", *flags & FL_OR_MASK_USED);
+		param_act(P_NO_INVERT, "IPMARK", "or-mask", invert);
+		if (!strtonum(optarg, NULL, &n, 0, ~0U))
+			param_act(P_BAD_VALUE, "IPMARK", "or-mask", optarg);
+		info->ormask = n;
 		*flags |= FL_OR_MASK_USED;
-		break;
+		return true;
 
 	case '4':
 		param_act(P_ONLY_ONCE, "IPMARK", "--shift", *flags & FL_SHIFT);
@@ -98,12 +95,9 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 			param_act(P_BAD_VALUE, "IPMARK", "--shift", optarg);
 		info->shift = n;
 		return true;
-
-	default:
-		return 0;
 	}
 
-	return 1;
+	return false;
 }
 
 static void ipmark_tg_check(unsigned int flags)
