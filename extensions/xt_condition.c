@@ -127,7 +127,8 @@ condition_mt_check(const char *tablename, const void *entry,
 	    info->name[sizeof(info->name)-1] != '\0' ||
 	    memchr(info->name, '/', sizeof(info->name)) != NULL) {
 		printk(KERN_INFO KBUILD_MODNAME ": name not allowed or too "
-		       "long: \"%.*s\"\n", sizeof(info->name), info->name);
+		       "long: \"%.*s\"\n", (unsigned int)sizeof(info->name),
+		       info->name);
 		return false;
 	}
 
