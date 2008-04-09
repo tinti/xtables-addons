@@ -59,6 +59,7 @@
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 #	define xt_target             xtnu_target
 #	define ip_route_me_harder    xtnu_ip_route_me_harder
+#	define skb_make_writable     xtnu_skb_make_writable
 #	define xt_register_target    xtnu_register_target
 #	define xt_unregister_target  xtnu_unregister_target
 #	define xt_register_targets   xtnu_register_targets

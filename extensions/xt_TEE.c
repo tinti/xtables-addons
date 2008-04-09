@@ -158,6 +158,9 @@ tee_tg(struct sk_buff *skb, const struct net_device *in,
 	}
 #endif
 
+	if (!skb_make_writable(skb, sizeof(struct iphdr)))
+		return NF_DROP;
+
 	/*
 	 * If we are in INPUT, the checksum must be recalculated since
 	 * the length could have changed as a result of defragmentation.

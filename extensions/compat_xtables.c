@@ -309,6 +309,18 @@ int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
+
+int xtnu_skb_make_writable(struct sk_buff *skb, unsigned int len)
+{
+	struct sk_buff *nskb = skb;
+	int ret;
+
+	ret = skb_make_writable(&skb, len);
+	if (nskb != skb)
+		return unable(__func__);
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xtnu_skb_make_writable);
 #endif
 
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 24)
