@@ -90,9 +90,6 @@ static void ipmark_tg_check(unsigned int flags)
 	if (!(flags & IPT_ADDR_USED))
 		exit_error(PARAMETER_PROBLEM,
 		           "IPMARK target: Parameter --addr is required");
-	if (!(flags & (IPT_AND_MASK_USED | IPT_OR_MASK_USED)))
-		exit_error(PARAMETER_PROBLEM,
-		           "IPMARK target: Parameter --and-mask or --or-mask is required");
 }
 
 static void
