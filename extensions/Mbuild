@@ -1,6 +1,7 @@
 obj-${build_CHAOS}    += libxt_CHAOS.so
 obj-${build_DELUDE}   += libxt_DELUDE.so
 obj-${build_ECHO}     += libxt_ECHO.so
+obj-${build_IPMARK}   += libxt_IPMARK.so
 obj-${build_LOGMARK}  += libxt_LOGMARK.so
 obj-${build_TARPIT}   += libxt_TARPIT.so
 obj-${build_TEE}      += libxt_TEE.so

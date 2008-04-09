@@ -1,0 +1,12 @@
+config NETFILTER_XT_TARGET_IPMARK
+	tristate '"IPMARK" target support'
+	depends on NETFILTER_XTABLES && NETFILTER_ADVANCED
+	depends on IP_NF_MANGLE || IP6_NF_MANGLE
+	---help---
+	This option adds an "IPMARK" target, which allows you to create
+	rules in the "mangle" table which alter the netfilter mark field
+	basing on the source or destination ip address of the packet.
+	This is very useful for very fast massive shaping -- using only one
+	rule you can direct packets to houndreds different queues. You
+	will probably find it helpful only if your linux machine acts as a
+	shaper for many others computers.
