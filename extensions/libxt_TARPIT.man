@@ -21,7 +21,7 @@ the Linux box, and add:
 -A FORWARD -p tcp -j TARPIT
 .IP
 -A FORWARD -j DROP
-.TP
+.PP
 NOTE:
 If you use the conntrack module while you are using TARPIT, you should also use
 the NOTRACK target, or the kernel will unnecessarily allocate resources for

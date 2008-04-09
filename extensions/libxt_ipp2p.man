@@ -35,9 +35,6 @@ Matches some WinMX packets. Considered as beta, use careful!
 .B "--ares "
 Matches Ares and AresLite packets. Use together with -j DROP only.
 .TP
-.B "--ipp2p "
-Short hand for: --edk --kazaa --gnu --dc
-.TP
 .B "--debug "
 Prints some information about each hit into kernel logfile. May 
 produce huge logfiles so beware!

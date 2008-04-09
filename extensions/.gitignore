@@ -1,5 +1,6 @@
 .*.cmd
 .*.d
+.manpages.lst
 .tmp_versions
 *.ko
 *.mod.c
@@ -8,3 +9,5 @@
 GNUmakefile
 Module.symvers
 modules.order
+matches.man
+targets.man

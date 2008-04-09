@@ -3,6 +3,14 @@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 SUBDIRS          = extensions
 
+man_MANS := xtables-addons.8
+
+xtables-addons.8: ${srcdir}/xtables-addons.8.in extensions/matches.man extensions/targets.man
+	${AM_VERBOSE_GEN} sed -e '/@MATCHES@/ r extensions/matches.man' -e '/@TARGET@/ r extensions/targets.man' $< >$@;
+
+extensions/%:
+	${MAKE} ${AM_MAKEFLAGS} -C $(@D) $(@F)
+
 .PHONY: tarball
 tarball:
 	rm -Rf /tmp/xtables-addons-${PACKAGE_VERSION};

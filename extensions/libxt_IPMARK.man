@@ -2,11 +2,10 @@ Allows you to mark a received packet basing on its IP address. This
 can replace many mangle/mark entries with only one, if you use
 firewall based classifier.
 
-This target is to be used inside the mangle table, in the PREROUTING,
-POSTROUTING or FORWARD hooks.
+This target is to be used inside the \fBmangle\fP table.
 .TP
-.BI "--addr " "src/dst"
-Use source or destination IP address.
+\fB--addr\fP {\fBsrc\fP|\fBdst\fP}
+Select source or destination IP address as a basis for the mark.
 .TP
 .BI "--and-mask " "mask"
 Perform bitwise `and' on the IP address and this mask.
