@@ -99,11 +99,14 @@ ipmark_tg_print(const void *entry, const struct xt_entry_target *target,
 	const struct xt_ipmark_tginfo *info = (const void *)target->data;
 
 	if (info->selector == XT_IPMARK_SRC)
-	  printf("IPMARK src");
+		printf("IPMARK src ip");
 	else
-	  printf("IPMARK dst");
-	printf(" ip and 0x%x or 0x%x",
-	       (unsigned int)info->andmask, (unsigned int)info->ormask);
+		printf("IPMARK dst ip");
+
+	if (info->andmask != ~0U)
+		printf(" and 0x%x ", (unsigned int)info->andmask);
+	if (info->ormask != 0)
+		printf(" or 0x%x ", (unsigned int)info->ormask);
 }
 
 static void
