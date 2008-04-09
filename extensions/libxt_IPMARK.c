@@ -115,9 +115,10 @@ ipmark_tg_save(const void *entry, const struct xt_entry_target *target)
 	const struct xt_ipmark_tginfo *info = (const void *)target->data;
 
 	if (info->selector == XT_IPMARK_SRC)
-	  printf("--addr=src ");
+		printf("--addr src ");
 	else
-	  printf("--addr=dst ");
+		printf("--addr dst ");
+
 	if (info->andmask != ~0U)
 		printf("--and-mask 0x%x ", (unsigned int)info->andmask);
 	if (info->ormask != 0)
