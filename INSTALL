@@ -14,7 +14,7 @@ Prerequirements
 
 	* xtables(-devel) 1.5.2
 
-	* kernel-source >= 2.6.18 with prepared build/output directory
+	* kernel-source >= 2.6.18.5 with prepared build/output directory
 
 
 Selecting extensions

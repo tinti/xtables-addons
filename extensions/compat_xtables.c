@@ -299,7 +299,8 @@ int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)
 	struct sk_buff *nskb = skb;
 	int ret;
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 17)
+	/* Actually this one is valid up to 2.6.18.4, but changed in 2.6.18.5 */
 	ret = ip_route_me_harder(&skb);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 	ret = ip_route_me_harder(&nskb, addr_type);
