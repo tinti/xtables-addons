@@ -12,7 +12,11 @@ in combination with the kernel's Kbuild system.
 Prerequirements
 ===============
 
-	* xtables(-devel) 1.5.2
+	* a recent iptables snapshot
+	  - from the "xtables" git repository at dev.medozas.de
+	    (minimum as per git-describe: v1.4.0-77)
+	  - or the subversion repository at netfilter.org (minimum: r7502)
+	  - or the xtables-combined tarball that is currently distributed
 
 	* kernel-source >= 2.6.18.5 with prepared build/output directory
 
@@ -35,15 +39,6 @@ Configuring and compiling
 	it for building the kernel extensions. It defaults to
 	/lib/modules/$(running version)/build, which usually points to
 	the right directory. (If not, you need to install something.)
-
---with-ksource=
-
-	Specifies the path to the kernel source directory. This is
-	currently needed for building the userspace extensions because
-	we use unsanitized kernel headers, but the option MAY
-	DISAPPEAR IN FUTURE.
-
-		--with-ksource=/usr/src/linux
 
 --with-xtables=
 
@@ -77,5 +72,5 @@ Note to distribution packagers
 Except for --with-kbuild, distributions should not have a need to
 supply any other flags (besides --prefix=/usr and perhaps
 --libdir=/usr/lib64, etc.) to configure when all prerequired packages
-are installed. If xtables-devel is installed, necessary headers should
+are installed. If iptables-devel is installed, necessary headers should
 be in /usr/include, so --with-xtables is not needed.
