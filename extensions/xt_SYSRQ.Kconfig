@@ -1,0 +1,8 @@
+config NETFILTER_XT_TARGET_SYSRQ
+	tristate '"SYSRQ" target support'
+	depends on NETFILTER_XTABLES && NETFILTER_ADVANCED
+	---help---
+	The SYSRQ target allows to remotely trigger sysrq on the
+	local machine over the network. This can be useful when vital
+	parts of the machine hang and sysrq cannot be triggered
+	through, for example, the shell.

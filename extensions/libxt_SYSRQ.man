@@ -1,0 +1,47 @@
+The SYSRQ target allows to remotely trigger sysrq on the local machine over the
+network. This can be useful when vital parts of the machine hang, for example
+an oops in a filesystem causing locks to be not released and processes to get
+stuck as a result -- if still possible, use /proc/sysrq-trigger. Even when
+processes are stuck, interrupts are likely to be still processed, and as such,
+sysrq can be triggered through incoming network packets.
+.PP
+This xt_SYSRQ implementation does not use any encryption, so you should change
+the SYSRQ password after use unless you have made sure it was transmitted
+securely and no one sniffed the network, e.g. by use of an IPsec tunnel whose
+endpoint is at the machine where you want to trigger the sysrq. Also, you
+should limit as to who can issue commands using \fB-s\fP and/or \fB-m mac\fP,
+and also that the destination is correct using \fB-d\fP (to protect against
+potential broadcast packets), noting that it is still short of MAC/IP spoofing:
+.IP
+-A INPUT -s 10.10.25.1 -m mac --mac-source aa:bb:cc:dd:ee:ff -d 10.10.25.7
+-p udp --dport 9 -j SYSRQ
+.IP
+(with IPsec) -A INPUT -s 10.10.25.1 -d 10.10.25.7 -m policy --dir in --pol
+ipsec --proto esp --tunnel-src 10.10.25.1 --tunnel-dst 10.10.25.7
+-p udp --dport 9 -j SYSRQ
+.PP
+This extension does not take any options. The \fB-p udp\fP options are
+required.
+.PP
+The SYSRQ password can be changed through
+/sys/module/xt_SYSRQ/parameters/password; note you need to use `echo -n` to
+not add a newline to the password, i.e.
+.IP
+echo -n "password" >/sys/.../password
+.PP
+Alternatively, the password may be specified at modprobe time, but this is
+insecure as people can possible see it through ps(1). You can use an option
+line in /etc/modprobe.d/sysrq if it is properly guarded, that is, only readable
+by root.
+.IP
+options xt_SYSRQ password=cookies
+.PP
+To trigger SYSRQ from a remote host, just use netcat or socat, specifying the
+action (only one) as first character, followed by the password:
+.IP
+echo -n "scookies" | socat stdin udp-sendto:10.10.25.7:9
+.IP
+echo -n "scookies" | netcat -u 10.10.25.7 9
+.PP
+See the Linux docs for possible sysrq keys. Important ones are:
+re(b)oot, power(o)ff, (s)ync filesystems, (u)mount and remount readonly.

@@ -5,6 +5,7 @@ build_DELUDE=m
 build_ECHO=
 build_IPMARK=m
 build_LOGMARK=m
+build_SYSRQ=m
 build_TARPIT=m
 build_TEE=m
 build_condition=m
