@@ -1,0 +1,3 @@
+# -*- Makefile -*-
+
+obj-${build_quota2} += libxt_quota2.so
