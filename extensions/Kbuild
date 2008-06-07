@@ -18,3 +18,4 @@ obj-${build_ipp2p}    += xt_ipp2p.o
 obj-${build_portscan} += xt_portscan.o
 
 -include ${M}/*.Kbuild
+-include ${M}/Kbuild.*

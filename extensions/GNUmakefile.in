@@ -46,6 +46,8 @@ endif
 include ${top_srcdir}/mconfig
 -include ${top_srcdir}/mconfig.*
 include ${srcdir}/Mbuild
+-include ${srcdir}/Mbuild.*
+-include ${srcdir}/*.Mbuild
 
 
 #
