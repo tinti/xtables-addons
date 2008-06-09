@@ -5,20 +5,21 @@ enum xt_quota_flags {
 	XT_QUOTA_INVERT = 0x1,
 	XT_QUOTA_GROW   = 0x2,
 	XT_QUOTA_MASK   = 0x3,
+
+	XT_QUOTA_COUNTER_NAME_LENGTH = 31,
 };
 
-struct quota_sysfs_entry;
+struct quota_counter;
 
 struct xt_quota_mtinfo2 {
-	char name[31];
+	char name[XT_QUOTA_COUNTER_NAME_LENGTH];
 	u_int8_t flags;
 
-	/* Comparison-invariant section */
+	/* Comparison-invariant */
 	aligned_u64 quota;
 
 	/* Used internally by the kernel */
-	struct xt_quota_mtinfo2 *master __attribute__((aligned(8)));
-	void *procfs_entry __attribute__((aligned(8)));
+	struct quota_counter *master __attribute__((aligned(8)));
 };
 
 #endif /* _XT_QUOTA_H */
