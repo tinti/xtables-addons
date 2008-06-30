@@ -1,0 +1,6 @@
+# -*- Makefile -*-
+
+obj-m += ipt_set.o ipt_SET.o
+obj-m += ip_set.o ip_set_ipmap.o ip_set_portmap.o ip_set_macipmap.o
+obj-m += ip_set_iphash.o ip_set_nethash.o ip_set_ipporthash.o
+obj-m += ip_set_iptree.o ip_set_iptreemap.o

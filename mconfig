@@ -10,4 +10,5 @@ build_TEE=m
 build_condition=m
 build_geoip=m
 build_ipp2p=m
+build_ipset=m
 build_portscan=m

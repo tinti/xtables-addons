@@ -15,6 +15,7 @@ obj-${build_TEE}     += xt_TEE.o
 obj-${build_condition} += xt_condition.o
 obj-${build_geoip}    += xt_geoip.o
 obj-${build_ipp2p}    += xt_ipp2p.o
+obj-${build_ipset}    += ipset/
 obj-${build_portscan} += xt_portscan.o
 
 -include ${M}/*.Kbuild
