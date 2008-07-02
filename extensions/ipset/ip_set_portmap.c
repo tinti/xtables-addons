@@ -2,7 +2,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* Kernel module implementing a port set type as a bitmap */
@@ -78,7 +78,7 @@ get_port(const struct sk_buff *skb, u_int32_t flags)
 static inline int
 __testport(struct ip_set *set, ip_set_ip_t port, ip_set_ip_t *hash_port)
 {
-	struct ip_set_portmap *map = (struct ip_set_portmap *) set->data;
+	struct ip_set_portmap *map = set->data;
 
 	if (port < map->first_port || port > map->last_port)
 		return -ERANGE;
@@ -92,8 +92,7 @@ static int
 testport(struct ip_set *set, const void *data, size_t size,
          ip_set_ip_t *hash_port)
 {
-	struct ip_set_req_portmap *req = 
-	    (struct ip_set_req_portmap *) data;
+	const struct ip_set_req_portmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_portmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -105,7 +104,7 @@ testport(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-testport_kernel(struct ip_set *set, 
+testport_kernel(struct ip_set *set,
 	        const struct sk_buff *skb,
 	        ip_set_ip_t *hash_port,
 	        const u_int32_t *flags,
@@ -126,7 +125,7 @@ testport_kernel(struct ip_set *set,
 static inline int
 __addport(struct ip_set *set, ip_set_ip_t port, ip_set_ip_t *hash_port)
 {
-	struct ip_set_portmap *map = (struct ip_set_portmap *) set->data;
+	struct ip_set_portmap *map = set->data;
 
 	if (port < map->first_port || port > map->last_port)
 		return -ERANGE;
@@ -142,8 +141,7 @@ static int
 addport(struct ip_set *set, const void *data, size_t size,
         ip_set_ip_t *hash_port)
 {
-	struct ip_set_req_portmap *req = 
-	    (struct ip_set_req_portmap *) data;
+	const struct ip_set_req_portmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_portmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -155,7 +153,7 @@ addport(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-addport_kernel(struct ip_set *set, 
+addport_kernel(struct ip_set *set,
 	       const struct sk_buff *skb,
 	       ip_set_ip_t *hash_port,
 	       const u_int32_t *flags,
@@ -172,7 +170,7 @@ addport_kernel(struct ip_set *set,
 static inline int
 __delport(struct ip_set *set, ip_set_ip_t port, ip_set_ip_t *hash_port)
 {
-	struct ip_set_portmap *map = (struct ip_set_portmap *) set->data;
+	struct ip_set_portmap *map = set->data;
 
 	if (port < map->first_port || port > map->last_port)
 		return -ERANGE;
@@ -188,8 +186,7 @@ static int
 delport(struct ip_set *set, const void *data, size_t size,
         ip_set_ip_t *hash_port)
 {
-	struct ip_set_req_portmap *req =
-	    (struct ip_set_req_portmap *) data;
+	const struct ip_set_req_portmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_portmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -201,7 +198,7 @@ delport(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-delport_kernel(struct ip_set *set, 
+delport_kernel(struct ip_set *set,
 	       const struct sk_buff *skb,
 	       ip_set_ip_t *hash_port,
 	       const u_int32_t *flags,
@@ -218,8 +215,7 @@ delport_kernel(struct ip_set *set,
 static int create(struct ip_set *set, const void *data, size_t size)
 {
 	int newbytes;
-	struct ip_set_req_portmap_create *req =
-	    (struct ip_set_req_portmap_create *) data;
+	const struct ip_set_req_portmap_create *req = data;
 	struct ip_set_portmap *map;
 
 	if (size != sizeof(struct ip_set_req_portmap_create)) {
@@ -265,7 +261,7 @@ static int create(struct ip_set *set, const void *data, size_t size)
 
 static void destroy(struct ip_set *set)
 {
-	struct ip_set_portmap *map = (struct ip_set_portmap *) set->data;
+	struct ip_set_portmap *map = set->data;
 
 	kfree(map->members);
 	kfree(map);
@@ -275,15 +271,14 @@ static void destroy(struct ip_set *set)
 
 static void flush(struct ip_set *set)
 {
-	struct ip_set_portmap *map = (struct ip_set_portmap *) set->data;
+	struct ip_set_portmap *map = set->data;
 	memset(map->members, 0, bitmap_bytes(map->first_port, map->last_port));
 }
 
 static void list_header(const struct ip_set *set, void *data)
 {
-	struct ip_set_portmap *map = (struct ip_set_portmap *) set->data;
-	struct ip_set_req_portmap_create *header =
-	    (struct ip_set_req_portmap_create *) data;
+	const struct ip_set_portmap *map = set->data;
+	struct ip_set_req_portmap_create *header = data;
 
 	DP("list_header %u %u", map->first_port, map->last_port);
 
@@ -293,14 +288,14 @@ static void list_header(const struct ip_set *set, void *data)
 
 static int list_members_size(const struct ip_set *set)
 {
-	struct ip_set_portmap *map = (struct ip_set_portmap *) set->data;
+	const struct ip_set_portmap *map = set->data;
 
 	return bitmap_bytes(map->first_port, map->last_port);
 }
 
 static void list_members(const struct ip_set *set, void *data)
 {
-	struct ip_set_portmap *map = (struct ip_set_portmap *) set->data;
+	const struct ip_set_portmap *map = set->data;
 	int bytes = bitmap_bytes(map->first_port, map->last_port);
 
 	memcpy(data, map->members, bytes);

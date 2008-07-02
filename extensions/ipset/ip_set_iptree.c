@@ -2,7 +2,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* Kernel module implementing an IP set type: the iptree type */
@@ -31,8 +31,8 @@ static int limit = MAX_RANGE;
 
 /* Garbage collection interval in seconds: */
 #define IPTREE_GC_TIME		5*60
-/* Sleep so many milliseconds before trying again 
- * to delete the gc timer at destroying/flushing a set */ 
+/* Sleep so many milliseconds before trying again
+ * to delete the gc timer at destroying/flushing a set */
 #define IPTREE_DESTROY_SLEEP	100
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,21)
@@ -71,7 +71,7 @@ static kmem_cache_t *leaf_cachep;
 static inline int
 __testip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	struct ip_set_iptree *map = set->data;
 	struct ip_set_iptreeb *btree;
 	struct ip_set_iptreec *ctree;
 	struct ip_set_iptreed *dtree;
@@ -96,8 +96,7 @@ static int
 testip(struct ip_set *set, const void *data, size_t size,
        ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_iptree *req = 
-	    (struct ip_set_req_iptree *) data;
+	const struct ip_set_req_iptree *req = data;
 
 	if (size != sizeof(struct ip_set_req_iptree)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -109,7 +108,7 @@ testip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-testip_kernel(struct ip_set *set, 
+testip_kernel(struct ip_set *set,
 	      const struct sk_buff *skb,
 	      ip_set_ip_t *hash_ip,
 	      const u_int32_t *flags,
@@ -128,12 +127,12 @@ testip_kernel(struct ip_set *set,
 #endif
 
 	res =  __testip(set,
-			ntohl(flags[index] & IPSET_SRC 
+			ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-				? skb->nh.iph->saddr 
+				? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 			hash_ip);
@@ -159,7 +158,7 @@ static inline int
 __addip(struct ip_set *set, ip_set_ip_t ip, unsigned int timeout,
 	ip_set_ip_t *hash_ip)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	struct ip_set_iptree *map = set->data;
 	struct ip_set_iptreeb *btree;
 	struct ip_set_iptreec *ctree;
 	struct ip_set_iptreed *dtree;
@@ -194,9 +193,8 @@ static int
 addip(struct ip_set *set, const void *data, size_t size,
       ip_set_ip_t *hash_ip)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
-	struct ip_set_req_iptree *req = 
-		(struct ip_set_req_iptree *) data;
+	struct ip_set_iptree *map = set->data;
+	const struct ip_set_req_iptree *req = data;
 
 	if (size != sizeof(struct ip_set_req_iptree)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -211,21 +209,21 @@ addip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-addip_kernel(struct ip_set *set, 
+addip_kernel(struct ip_set *set,
 	     const struct sk_buff *skb,
 	     ip_set_ip_t *hash_ip,
 	     const u_int32_t *flags,
 	     unsigned char index)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	struct ip_set_iptree *map = set->data;
 
 	return __addip(set,
-		       ntohl(flags[index] & IPSET_SRC 
+		       ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-		       		? skb->nh.iph->saddr 
+		       		? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 		       map->timeout,
@@ -239,10 +237,10 @@ addip_kernel(struct ip_set *set,
 		return -EEXIST;			\
 } while (0)
 
-static inline int 
+static inline int
 __delip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	struct ip_set_iptree *map = set->data;
 	struct ip_set_iptreeb *btree;
 	struct ip_set_iptreec *ctree;
 	struct ip_set_iptreed *dtree;
@@ -269,8 +267,7 @@ static int
 delip(struct ip_set *set, const void *data, size_t size,
       ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_iptree *req =
-	    (struct ip_set_req_iptree *) data;
+	const struct ip_set_req_iptree *req = data;
 
 	if (size != sizeof(struct ip_set_req_iptree)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -282,19 +279,19 @@ delip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-delip_kernel(struct ip_set *set, 
+delip_kernel(struct ip_set *set,
 	     const struct sk_buff *skb,
 	     ip_set_ip_t *hash_ip,
 	     const u_int32_t *flags,
 	     unsigned char index)
 {
 	return __delip(set,
-		       ntohl(flags[index] & IPSET_SRC 
+		       ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-		       		? skb->nh.iph->saddr 
+		       		? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 		       hash_ip);
@@ -310,8 +307,8 @@ delip_kernel(struct ip_set *set,
 
 static void ip_tree_gc(unsigned long ul_set)
 {
-	struct ip_set *set = (void *) ul_set;
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	struct ip_set *set = (struct ip_set *) ul_set;
+	struct ip_set_iptree *map = set->data;
 	struct ip_set_iptreeb *btree;
 	struct ip_set_iptreec *ctree;
 	struct ip_set_iptreed *dtree;
@@ -380,7 +377,7 @@ static void ip_tree_gc(unsigned long ul_set)
 
 static inline void init_gc_timer(struct ip_set *set)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	struct ip_set_iptree *map = set->data;
 
 	/* Even if there is no timeout for the entries,
 	 * we still have to call gc because delete
@@ -395,8 +392,7 @@ static inline void init_gc_timer(struct ip_set *set)
 
 static int create(struct ip_set *set, const void *data, size_t size)
 {
-	struct ip_set_req_iptree_create *req =
-	    (struct ip_set_req_iptree_create *) data;
+	const struct ip_set_req_iptree_create *req = data;
 	struct ip_set_iptree *map;
 
 	if (size != sizeof(struct ip_set_req_iptree_create)) {
@@ -443,7 +439,7 @@ static void __flush(struct ip_set_iptree *map)
 
 static void destroy(struct ip_set *set)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	struct ip_set_iptree *map = set->data;
 
 	/* gc might be running */
 	while (!del_timer(&map->gc))
@@ -455,7 +451,7 @@ static void destroy(struct ip_set *set)
 
 static void flush(struct ip_set *set)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	struct ip_set_iptree *map = set->data;
 	unsigned int timeout = map->timeout;
 	
 	/* gc might be running */
@@ -470,16 +466,15 @@ static void flush(struct ip_set *set)
 
 static void list_header(const struct ip_set *set, void *data)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
-	struct ip_set_req_iptree_create *header =
-	    (struct ip_set_req_iptree_create *) data;
+	const struct ip_set_iptree *map = set->data;
+	struct ip_set_req_iptree_create *header = data;
 
 	header->timeout = map->timeout;
 }
 
 static int list_members_size(const struct ip_set *set)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	const struct ip_set_iptree *map = set->data;
 	struct ip_set_iptreeb *btree;
 	struct ip_set_iptreec *ctree;
 	struct ip_set_iptreed *dtree;
@@ -504,7 +499,7 @@ static int list_members_size(const struct ip_set *set)
 
 static void list_members(const struct ip_set *set, void *data)
 {
-	struct ip_set_iptree *map = (struct ip_set_iptree *) set->data;
+	const struct ip_set_iptree *map = set->data;
 	struct ip_set_iptreeb *btree;
 	struct ip_set_iptreec *ctree;
 	struct ip_set_iptreed *dtree;
@@ -518,9 +513,9 @@ static void list_members(const struct ip_set *set, void *data)
 	for (d = 0; d < 256; d++) {
 		if (dtree->expires[d]
 		    && (!map->timeout || time_after(dtree->expires[d], jiffies))) {
-		    	entry = (struct ip_set_req_iptree *)(data + offset);
+		    	entry = data + offset;
 		    	entry->ip = ((a << 24) | (b << 16) | (c << 8) | d);
-		    	entry->timeout = !map->timeout ? 0 
+		    	entry->timeout = !map->timeout ? 0
 				: (dtree->expires[d] - jiffies)/HZ;
 			offset += sizeof(struct ip_set_req_iptree);
 		}

@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* Kernel module to match an IP set. */
@@ -76,8 +76,7 @@ checkentry(const char *tablename,
 #endif
 	   unsigned int hook_mask)
 {
-	struct ipt_set_info_match *info = 
-		(struct ipt_set_info_match *) matchinfo;
+	struct ipt_set_info_match *info = matchinfo;
 	ip_set_id_t index;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)

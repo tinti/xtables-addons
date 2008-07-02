@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* ipt_SET.c - netfilter target to manipulate IP sets */
@@ -78,12 +78,11 @@ checkentry(const char *tablename,
 #endif
 	   void *targinfo,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-	   unsigned int targinfosize, 
+	   unsigned int targinfosize,
 #endif
 	   unsigned int hook_mask)
 {
-	struct ipt_set_info_target *info = 
-		(struct ipt_set_info_target *) targinfo;
+	struct ipt_set_info_target *info = targinfo;
 	ip_set_id_t index;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)

@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* Kernel module implementing an IP set type: the single bitmap type */
@@ -31,7 +31,7 @@ ip_to_id(const struct ip_set_ipmap *map, ip_set_ip_t ip)
 static inline int
 __testip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_ipmap *map = (struct ip_set_ipmap *) set->data;
+	struct ip_set_ipmap *map = set->data;
 	
 	if (ip < map->first_ip || ip > map->last_ip)
 		return -ERANGE;
@@ -46,8 +46,7 @@ static int
 testip(struct ip_set *set, const void *data, size_t size,
        ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_ipmap *req = 
-	    (struct ip_set_req_ipmap *) data;
+	const struct ip_set_req_ipmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_ipmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -59,7 +58,7 @@ testip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-testip_kernel(struct ip_set *set, 
+testip_kernel(struct ip_set *set,
 	      const struct sk_buff *skb,
 	      ip_set_ip_t *hash_ip,
 	      const u_int32_t *flags,
@@ -68,10 +67,10 @@ testip_kernel(struct ip_set *set,
 	int res =  __testip(set,
 			ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-				? skb->nh.iph->saddr 
+				? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 			hash_ip);
@@ -81,7 +80,7 @@ testip_kernel(struct ip_set *set,
 static inline int
 __addip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_ipmap *map = (struct ip_set_ipmap *) set->data;
+	struct ip_set_ipmap *map = set->data;
 
 	if (ip < map->first_ip || ip > map->last_ip)
 		return -ERANGE;
@@ -98,8 +97,7 @@ static int
 addip(struct ip_set *set, const void *data, size_t size,
       ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_ipmap *req = 
-	    (struct ip_set_req_ipmap *) data;
+	const struct ip_set_req_ipmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_ipmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -112,28 +110,28 @@ addip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-addip_kernel(struct ip_set *set, 
+addip_kernel(struct ip_set *set,
 	     const struct sk_buff *skb,
 	     ip_set_ip_t *hash_ip,
 	     const u_int32_t *flags,
 	     unsigned char index)
 {
 	return __addip(set,
-		       ntohl(flags[index] & IPSET_SRC 
+		       ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-		       		? skb->nh.iph->saddr 
+		       		? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 		       hash_ip);
 }
 
-static inline int 
+static inline int
 __delip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_ipmap *map = (struct ip_set_ipmap *) set->data;
+	struct ip_set_ipmap *map = set->data;
 
 	if (ip < map->first_ip || ip > map->last_ip)
 		return -ERANGE;
@@ -150,8 +148,7 @@ static int
 delip(struct ip_set *set, const void *data, size_t size,
       ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_ipmap *req =
-	    (struct ip_set_req_ipmap *) data;
+	const struct ip_set_req_ipmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_ipmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -170,12 +167,12 @@ delip_kernel(struct ip_set *set,
 	     unsigned char index)
 {
 	return __delip(set,
-		       ntohl(flags[index] & IPSET_SRC 
+		       ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-				? skb->nh.iph->saddr 
+				? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 		       hash_ip);
@@ -184,8 +181,7 @@ delip_kernel(struct ip_set *set,
 static int create(struct ip_set *set, const void *data, size_t size)
 {
 	int newbytes;
-	struct ip_set_req_ipmap_create *req =
-	    (struct ip_set_req_ipmap_create *) data;
+	const struct ip_set_req_ipmap_create *req = data;
 	struct ip_set_ipmap *map;
 
 	if (size != sizeof(struct ip_set_req_ipmap_create)) {
@@ -256,7 +252,7 @@ static int create(struct ip_set *set, const void *data, size_t size)
 
 static void destroy(struct ip_set *set)
 {
-	struct ip_set_ipmap *map = (struct ip_set_ipmap *) set->data;
+	struct ip_set_ipmap *map = set->data;
 	
 	kfree(map->members);
 	kfree(map);
@@ -266,15 +262,14 @@ static void destroy(struct ip_set *set)
 
 static void flush(struct ip_set *set)
 {
-	struct ip_set_ipmap *map = (struct ip_set_ipmap *) set->data;
+	struct ip_set_ipmap *map = set->data;
 	memset(map->members, 0, bitmap_bytes(0, map->sizeid - 1));
 }
 
 static void list_header(const struct ip_set *set, void *data)
 {
-	struct ip_set_ipmap *map = (struct ip_set_ipmap *) set->data;
-	struct ip_set_req_ipmap_create *header =
-	    (struct ip_set_req_ipmap_create *) data;
+	const struct ip_set_ipmap *map = set->data;
+	struct ip_set_req_ipmap_create *header = data;
 
 	header->from = map->first_ip;
 	header->to = map->last_ip;
@@ -283,14 +278,14 @@ static void list_header(const struct ip_set *set, void *data)
 
 static int list_members_size(const struct ip_set *set)
 {
-	struct ip_set_ipmap *map = (struct ip_set_ipmap *) set->data;
+	const struct ip_set_ipmap *map = set->data;
 
 	return bitmap_bytes(0, map->sizeid - 1);
 }
 
 static void list_members(const struct ip_set *set, void *data)
 {
-	struct ip_set_ipmap *map = (struct ip_set_ipmap *) set->data;
+	const struct ip_set_ipmap *map = set->data;
 	int bytes = bitmap_bytes(0, map->sizeid - 1);
 
 	memcpy(data, map->members, bytes);

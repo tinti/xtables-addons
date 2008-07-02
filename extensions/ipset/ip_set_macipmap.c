@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* Kernel module implementing an IP set type: the macipmap type */
@@ -29,9 +29,9 @@
 static int
 testip(struct ip_set *set, const void *data, size_t size, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_macipmap *map = (struct ip_set_macipmap *) set->data;
-	struct ip_set_macip *table = (struct ip_set_macip *) map->members;	
-	struct ip_set_req_macipmap *req = (struct ip_set_req_macipmap *) data;
+	struct ip_set_macipmap *map = set->data;
+	struct ip_set_macip *table = map->members;	
+	const struct ip_set_req_macipmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_macipmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -57,21 +57,19 @@ testip(struct ip_set *set, const void *data, size_t size, ip_set_ip_t *hash_ip)
 }
 
 static int
-testip_kernel(struct ip_set *set, 
+testip_kernel(struct ip_set *set,
 	      const struct sk_buff *skb,
 	      ip_set_ip_t *hash_ip,
 	      const u_int32_t *flags,
 	      unsigned char index)
 {
-	struct ip_set_macipmap *map =
-	    (struct ip_set_macipmap *) set->data;
-	struct ip_set_macip *table =
-	    (struct ip_set_macip *) map->members;
+	struct ip_set_macipmap *map = set->data;
+	struct ip_set_macip *table = map->members;
 	ip_set_ip_t ip;
 	
 	ip = ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-			? ip_hdr(skb)->saddr 
+			? ip_hdr(skb)->saddr
 			: ip_hdr(skb)->daddr);
 #else
 			? skb->nh.iph->saddr
@@ -105,17 +103,15 @@ testip_kernel(struct ip_set *set,
 
 /* returns 0 on success */
 static inline int
-__addip(struct ip_set *set, 
-	ip_set_ip_t ip, unsigned char *ethernet, ip_set_ip_t *hash_ip)
+__addip(struct ip_set *set,
+	ip_set_ip_t ip, const unsigned char *ethernet, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_macipmap *map =
-	    (struct ip_set_macipmap *) set->data;
-	struct ip_set_macip *table =
-	    (struct ip_set_macip *) map->members;
+	struct ip_set_macipmap *map = set->data;
+	struct ip_set_macip *table = map->members;
 
 	if (ip < map->first_ip || ip > map->last_ip)
 		return -ERANGE;
-	if (test_and_set_bit(IPSET_MACIP_ISSET, 
+	if (test_and_set_bit(IPSET_MACIP_ISSET,
 			     (void *) &table[ip - map->first_ip].flags))
 		return -EEXIST;
 
@@ -129,8 +125,7 @@ static int
 addip(struct ip_set *set, const void *data, size_t size,
       ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_macipmap *req =
-	    (struct ip_set_req_macipmap *) data;
+	const struct ip_set_req_macipmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_macipmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -142,7 +137,7 @@ addip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-addip_kernel(struct ip_set *set, 
+addip_kernel(struct ip_set *set,
 	     const struct sk_buff *skb,
 	     ip_set_ip_t *hash_ip,
 	     const u_int32_t *flags,
@@ -152,7 +147,7 @@ addip_kernel(struct ip_set *set,
 	
 	ip = ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-			? ip_hdr(skb)->saddr 
+			? ip_hdr(skb)->saddr
 			: ip_hdr(skb)->daddr);
 #else
 			? skb->nh.iph->saddr
@@ -174,14 +169,12 @@ addip_kernel(struct ip_set *set,
 static inline int
 __delip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_macipmap *map =
-	    (struct ip_set_macipmap *) set->data;
-	struct ip_set_macip *table =
-	    (struct ip_set_macip *) map->members;
+	struct ip_set_macipmap *map = set->data;
+	struct ip_set_macip *table = map->members;
 
 	if (ip < map->first_ip || ip > map->last_ip)
 		return -ERANGE;
-	if (!test_and_clear_bit(IPSET_MACIP_ISSET, 
+	if (!test_and_clear_bit(IPSET_MACIP_ISSET,
 				(void *)&table[ip - map->first_ip].flags))
 		return -EEXIST;
 
@@ -194,8 +187,7 @@ static int
 delip(struct ip_set *set, const void *data, size_t size,
      ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_macipmap *req =
-	    (struct ip_set_req_macipmap *) data;
+	const struct ip_set_req_macipmap *req = data;
 
 	if (size != sizeof(struct ip_set_req_macipmap)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -214,12 +206,12 @@ delip_kernel(struct ip_set *set,
 	     unsigned char index)
 {
 	return __delip(set,
-		       ntohl(flags[index] & IPSET_SRC 
+		       ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-		       		? skb->nh.iph->saddr 
+		       		? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 		       hash_ip);
@@ -233,8 +225,7 @@ static inline size_t members_size(ip_set_ip_t from, ip_set_ip_t to)
 static int create(struct ip_set *set, const void *data, size_t size)
 {
 	size_t newbytes;
-	struct ip_set_req_macipmap_create *req =
-	    (struct ip_set_req_macipmap_create *) data;
+	const struct ip_set_req_macipmap_create *req = data;
 	struct ip_set_macipmap *map;
 
 	if (size != sizeof(struct ip_set_req_macipmap_create)) {
@@ -283,8 +274,7 @@ static int create(struct ip_set *set, const void *data, size_t size)
 
 static void destroy(struct ip_set *set)
 {
-	struct ip_set_macipmap *map =
-	    (struct ip_set_macipmap *) set->data;
+	struct ip_set_macipmap *map = set->data;
 
 	ip_set_free(map->members, members_size(map->first_ip, map->last_ip));
 	kfree(map);
@@ -294,17 +284,14 @@ static void destroy(struct ip_set *set)
 
 static void flush(struct ip_set *set)
 {
-	struct ip_set_macipmap *map =
-	    (struct ip_set_macipmap *) set->data;
+	struct ip_set_macipmap *map = set->data;
 	memset(map->members, 0, members_size(map->first_ip, map->last_ip));
 }
 
 static void list_header(const struct ip_set *set, void *data)
 {
-	struct ip_set_macipmap *map =
-	    (struct ip_set_macipmap *) set->data;
-	struct ip_set_req_macipmap_create *header =
-	    (struct ip_set_req_macipmap_create *) data;
+	const struct ip_set_macipmap *map = set->data;
+	struct ip_set_req_macipmap_create *header = data;
 
 	DP("list_header %x %x %u", map->first_ip, map->last_ip,
 	   map->flags);
@@ -316,8 +303,7 @@ static void list_header(const struct ip_set *set, void *data)
 
 static int list_members_size(const struct ip_set *set)
 {
-	struct ip_set_macipmap *map =
-	    (struct ip_set_macipmap *) set->data;
+	const struct ip_set_macipmap *map = set->data;
 
 	DP("%u", members_size(map->first_ip, map->last_ip));
 	return members_size(map->first_ip, map->last_ip);
@@ -325,8 +311,7 @@ static int list_members_size(const struct ip_set *set)
 
 static void list_members(const struct ip_set *set, void *data)
 {
-	struct ip_set_macipmap *map =
-	    (struct ip_set_macipmap *) set->data;
+	const struct ip_set_macipmap *map = set->data;
 
 	int bytes = members_size(map->first_ip, map->last_ip);
 

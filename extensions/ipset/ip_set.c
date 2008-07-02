@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* Kernel module for IP set management */
@@ -41,14 +41,16 @@ static ip_set_id_t ip_set_bindings_hash_size =  CONFIG_IP_NF_SET_HASHSIZE;
 static struct list_head *ip_set_hash;		/* hash of bindings */
 static unsigned int ip_set_hash_random;		/* random seed */
 
+#define SETNAME_EQ(a,b)		(strncmp(a,b,IP_SET_MAXNAMELEN) == 0)
+
 /*
  * Sets are identified either by the index in ip_set_list or by id.
- * The id never changes and is used to find a key in the hash. 
- * The index may change by swapping and used at all other places 
+ * The id never changes and is used to find a key in the hash.
+ * The index may change by swapping and used at all other places
  * (set/SET netfilter modules, binding value, etc.)
  *
  * Userspace requests are serialized by ip_set_mutex and sets can
- * be deleted only from userspace. Therefore ip_set_list locking 
+ * be deleted only from userspace. Therefore ip_set_list locking
  * must obey the following rules:
  *
  * - kernel requests: read and write locking mandatory
@@ -86,7 +88,7 @@ __ip_set_find(u_int32_t key, ip_set_id_t id, ip_set_ip_t ip)
 static ip_set_id_t
 ip_set_find_in_hash(ip_set_id_t id, ip_set_ip_t ip)
 {
-	u_int32_t key = jhash_2words(id, ip, ip_set_hash_random) 
+	u_int32_t key = jhash_2words(id, ip, ip_set_hash_random)
 				% ip_set_bindings_hash_size;
 	struct ip_set_hash *set_hash;
 
@@ -96,14 +98,14 @@ ip_set_find_in_hash(ip_set_id_t id, ip_set_ip_t ip)
 	
 	set_hash = __ip_set_find(key, id, ip);
 	
-	DP("set: %s, ip: %u.%u.%u.%u, binding: %s", ip_set_list[id]->name, 
+	DP("set: %s, ip: %u.%u.%u.%u, binding: %s", ip_set_list[id]->name,
 	   HIPQUAD(ip),
 	   set_hash != NULL ? ip_set_list[set_hash->binding]->name : "");
 
 	return (set_hash != NULL ? set_hash->binding : IP_SET_INVALID_ID);
 }
 
-static inline void 
+static inline void
 __set_hash_del(struct ip_set_hash *set_hash)
 {
 	ASSERT_WRITE_LOCK(&ip_set_lock);
@@ -135,7 +137,7 @@ ip_set_hash_del(ip_set_id_t id, ip_set_ip_t ip)
 	return 0;
 }
 
-static int 
+static int
 ip_set_hash_add(ip_set_id_t id, ip_set_ip_t ip, ip_set_id_t binding)
 {
 	u_int32_t key = jhash_2words(id, ip, ip_set_hash_random)
@@ -145,7 +147,7 @@ ip_set_hash_add(ip_set_id_t id, ip_set_ip_t ip, ip_set_id_t binding)
 	
 	IP_SET_ASSERT(ip_set_list[id]);
 	IP_SET_ASSERT(ip_set_list[binding]);
-	DP("set: %s, ip: %u.%u.%u.%u, binding: %s", ip_set_list[id]->name, 
+	DP("set: %s, ip: %u.%u.%u.%u, binding: %s", ip_set_list[id]->name,
 	   HIPQUAD(ip), ip_set_list[binding]->name);
 	write_lock_bh(&ip_set_lock);
 	set_hash = __ip_set_find(key, id, ip);
@@ -224,8 +226,8 @@ ip_set_testip_kernel(ip_set_id_t index,
 		res = set->type->testip_kernel(set, skb, &ip, flags, i++);
 		read_unlock_bh(&set->lock);
 		i += !!(set->type->features & IPSET_DATA_DOUBLE);
-	} while (res > 0 
-		 && flags[i] 
+	} while (res > 0
+		 && flags[i]
 		 && follow_bindings(index, set, ip));
 	read_unlock_bh(&ip_set_lock);
 
@@ -254,7 +256,7 @@ ip_set_addip_kernel(ip_set_id_t index,
 		write_unlock_bh(&set->lock);
 		i += !!(set->type->features & IPSET_DATA_DOUBLE);
 	} while ((res == 0 || res == -EEXIST)
-		 && flags[i] 
+		 && flags[i]
 		 && follow_bindings(index, set, ip));
 	read_unlock_bh(&ip_set_lock);
 
@@ -285,7 +287,7 @@ ip_set_delip_kernel(ip_set_id_t index,
 		write_unlock_bh(&set->lock);
 		i += !!(set->type->features & IPSET_DATA_DOUBLE);
 	} while ((res == 0 || res == -EEXIST)
-		 && flags[i] 
+		 && flags[i]
 		 && follow_bindings(index, set, ip));
 	read_unlock_bh(&ip_set_lock);
 }
@@ -303,7 +305,7 @@ find_set_type(const char *name)
 	return NULL;
 }
 
-int 
+int
 ip_set_register_set_type(struct ip_set_type *set_type)
 {
 	int ret = 0;
@@ -319,7 +321,7 @@ ip_set_register_set_type(struct ip_set_type *set_type)
 	write_lock_bh(&ip_set_lock);
 	if (find_set_type(set_type->typename)) {
 		/* Duplicate! */
-		ip_set_printk("'%s' already registered!", 
+		ip_set_printk("'%s' already registered!",
 			      set_type->typename);
 		ret = -EINVAL;
 		goto unlock;
@@ -369,7 +371,7 @@ ip_set_get_byname(const char *name)
 	down(&ip_set_app_mutex);
 	for (i = 0; i < ip_set_max; i++) {
 		if (ip_set_list[i] != NULL
-		    && strcmp(ip_set_list[i]->name, name) == 0) {
+		    && SETNAME_EQ(ip_set_list[i]->name, name)) {
 			__ip_set_get(i);
 			index = i;
 			break;
@@ -422,7 +424,7 @@ ip_set_find_byname(const char *name)
 	
 	for (i = 0; i < ip_set_max; i++) {
 		if (ip_set_list[i] != NULL
-		    && strcmp(ip_set_list[i]->name, name) == 0) {
+		    && SETNAME_EQ(ip_set_list[i]->name, name)) {
 			index = i;
 			break;
 		}
@@ -534,7 +536,7 @@ ip_set_bindip(ip_set_id_t index,
 	      size_t size)
 {
 	struct ip_set *set = ip_set_list[index];
-	struct ip_set_req_bind *req_bind;
+	const struct ip_set_req_bind *req_bind;
 	ip_set_id_t binding;
 	ip_set_ip_t ip;
 	int res;
@@ -543,18 +545,16 @@ ip_set_bindip(ip_set_id_t index,
 	if (size < sizeof(struct ip_set_req_bind))
 		return -EINVAL;
 		
-	req_bind = (struct ip_set_req_bind *) data;
-	req_bind->binding[IP_SET_MAXNAMELEN - 1] = '\0';
+	req_bind = data;
 
-	if (strcmp(req_bind->binding, IPSET_TOKEN_DEFAULT) == 0) {
+	if (SETNAME_EQ(req_bind->binding, IPSET_TOKEN_DEFAULT)) {
 		/* Default binding of a set */
-		char *binding_name;
+		const char *binding_name;
 		
 		if (size != sizeof(struct ip_set_req_bind) + IP_SET_MAXNAMELEN)
 			return -EINVAL;
 
-		binding_name = (char *)(data + sizeof(struct ip_set_req_bind));	
-		binding_name[IP_SET_MAXNAMELEN - 1] = '\0';
+		binding_name = data + sizeof(struct ip_set_req_bind);
 
 		binding = ip_set_find_byname(binding_name);
 		if (binding == IP_SET_INVALID_ID)
@@ -622,7 +622,7 @@ ip_set_unbindip(ip_set_id_t index,
 	        size_t size)
 {
 	struct ip_set *set;
-	struct ip_set_req_bind *req_bind;
+	const struct ip_set_req_bind *req_bind;
 	ip_set_ip_t ip;
 	int res;
 
@@ -630,19 +630,18 @@ ip_set_unbindip(ip_set_id_t index,
 	if (size < sizeof(struct ip_set_req_bind))
 		return -EINVAL;
 		
-	req_bind = (struct ip_set_req_bind *) data;
-	req_bind->binding[IP_SET_MAXNAMELEN - 1] = '\0';
+	req_bind = data;
 	
 	DP("%u %s", index, req_bind->binding);
 	if (index == IP_SET_INVALID_ID) {
 		/* unbind :all: */
-		if (strcmp(req_bind->binding, IPSET_TOKEN_DEFAULT) == 0) {
+		if (SETNAME_EQ(req_bind->binding, IPSET_TOKEN_DEFAULT)) {
 			/* Default binding of sets */
 			write_lock_bh(&ip_set_lock);
 			FOREACH_SET_DO(__unbind_default);
 			write_unlock_bh(&ip_set_lock);
 			return 0;
-		} else if (strcmp(req_bind->binding, IPSET_TOKEN_ALL) == 0) {
+		} else if (SETNAME_EQ(req_bind->binding, IPSET_TOKEN_ALL)) {
 			/* Flush all bindings of all sets*/
 			write_lock_bh(&ip_set_lock);
 			FOREACH_HASH_RW_DO(__set_hash_del);
@@ -655,7 +654,7 @@ ip_set_unbindip(ip_set_id_t index,
 	
 	set = ip_set_list[index];
 	IP_SET_ASSERT(set);
-	if (strcmp(req_bind->binding, IPSET_TOKEN_DEFAULT) == 0) {
+	if (SETNAME_EQ(req_bind->binding, IPSET_TOKEN_DEFAULT)) {
 		/* Default binding of set */
 		ip_set_id_t binding = ip_set_find_byindex(set->binding);
 
@@ -669,7 +668,7 @@ ip_set_unbindip(ip_set_id_t index,
 		write_unlock_bh(&ip_set_lock);
 
 		return 0;
-	} else if (strcmp(req_bind->binding, IPSET_TOKEN_ALL) == 0) {
+	} else if (SETNAME_EQ(req_bind->binding, IPSET_TOKEN_ALL)) {
 		/* Flush all bindings */
 
 		write_lock_bh(&ip_set_lock);
@@ -696,7 +695,7 @@ ip_set_testbind(ip_set_id_t index,
 	        size_t size)
 {
 	struct ip_set *set = ip_set_list[index];
-	struct ip_set_req_bind *req_bind;
+	const struct ip_set_req_bind *req_bind;
 	ip_set_id_t binding;
 	ip_set_ip_t ip;
 	int res;
@@ -705,18 +704,16 @@ ip_set_testbind(ip_set_id_t index,
 	if (size < sizeof(struct ip_set_req_bind))
 		return -EINVAL;
 		
-	req_bind = (struct ip_set_req_bind *) data;
-	req_bind->binding[IP_SET_MAXNAMELEN - 1] = '\0';
+	req_bind = data;
 
-	if (strcmp(req_bind->binding, IPSET_TOKEN_DEFAULT) == 0) {
+	if (SETNAME_EQ(req_bind->binding, IPSET_TOKEN_DEFAULT)) {
 		/* Default binding of set */
-		char *binding_name;
+		const char *binding_name;
 		
 		if (size != sizeof(struct ip_set_req_bind) + IP_SET_MAXNAMELEN)
 			return -EINVAL;
 
-		binding_name = (char *)(data + sizeof(struct ip_set_req_bind));	
-		binding_name[IP_SET_MAXNAMELEN - 1] = '\0';
+		binding_name = data + sizeof(struct ip_set_req_bind);
 
 		binding = ip_set_find_byname(binding_name);
 		if (binding == IP_SET_INVALID_ID)
@@ -737,7 +734,7 @@ ip_set_testbind(ip_set_id_t index,
 			      &ip);
 	DP("set %s, ip: %u.%u.%u.%u, binding %s",
 	   set->name, HIPQUAD(ip), ip_set_list[binding]->name);
-	   
+	
 	if (res >= 0)
 		res = (ip_set_find_in_hash(set->id, ip) == binding)
 			? -EEXIST : 0;
@@ -770,7 +767,7 @@ find_free_id(const char *name,
 		if (ip_set_list[i] == NULL) {
 			if (*id == IP_SET_INVALID_ID)
 				*id = *index = i;
-		} else if (strcmp(name, ip_set_list[i]->name) == 0)
+		} else if (SETNAME_EQ(name, ip_set_list[i]->name))
 			/* Name clash */
 			return -EEXIST;
 	}
@@ -858,7 +855,7 @@ ip_set_create(const char *name,
 
 	/*
 	 * Here, we have a valid, constructed set. &ip_set_lock again,
-	 * find free id/index and check that it is not already in 
+	 * find free id/index and check that it is not already in
 	 * ip_set_list.
 	 */
 	write_lock_bh(&ip_set_lock);
@@ -873,7 +870,7 @@ ip_set_create(const char *name,
 		res = -ERANGE;
 		goto cleanup;
 	}
-	 
+	
 	/*
 	 * Finally! Add our shiny new set to the list, and be done.
 	 */
@@ -932,7 +929,7 @@ ip_set_destroy(ip_set_id_t index)
 		ip_set_destroy_set(index);
 	} else {
 		for (i = 0; i < ip_set_max; i++) {
-			if (ip_set_list[i] != NULL 
+			if (ip_set_list[i] != NULL
 			    && (atomic_read(&ip_set_list[i]->ref)))
 			    	return -EBUSY;
 		}
@@ -955,7 +952,7 @@ ip_set_flush_set(struct ip_set *set)
 	write_unlock_bh(&set->lock);
 }
 
-/* 
+/*
  * Flush data in a set - or in all sets
  */
 static int
@@ -982,9 +979,7 @@ ip_set_rename(ip_set_id_t index, const char *name)
 	write_lock_bh(&ip_set_lock);
 	for (i = 0; i < ip_set_max; i++) {
 		if (ip_set_list[i] != NULL
-		    && strncmp(ip_set_list[i]->name, 
-			       name,
-			       IP_SET_MAXNAMELEN - 1) == 0) {
+		    && SETNAME_EQ(ip_set_list[i]->name, name)) {
 			res = -EEXIST;
 			goto unlock;
 		}
@@ -1054,8 +1049,7 @@ __set_hash_bindings(struct ip_set_hash *set_hash,
 		    ip_set_id_t id, void *data, int *used)
 {
 	if (set_hash->id == id) {
-		struct ip_set_hash_list *hash_list = 
-			(struct ip_set_hash_list *)(data + *used);
+		struct ip_set_hash_list *hash_list = data + *used;
 
 		hash_list->ip = set_hash->ip;
 		hash_list->binding = set_hash->binding;
@@ -1072,7 +1066,7 @@ static int ip_set_list_set(ip_set_id_t index,
 	struct ip_set_list *set_list;
 
 	/* Pointer to our header */
-	set_list = (struct ip_set_list *) (data + *used);
+	set_list = data + *used;
 
 	DP("set: %s, used: %d %p %p", set->name, *used, data, data + *used);
 
@@ -1139,7 +1133,7 @@ static int ip_set_save_set(ip_set_id_t index,
 	struct ip_set_save *set_save;
 
 	/* Pointer to our header */
-	set_save = (struct ip_set_save *) (data + *used);
+	set_save = data + *used;
 
 	/* Get and ensure header size */
 	if (*used + sizeof(struct ip_set_save) > len)
@@ -1147,7 +1141,7 @@ static int ip_set_save_set(ip_set_id_t index,
 	*used += sizeof(struct ip_set_save);
 
 	set = ip_set_list[index];
-	DP("set: %s, used: %u(%u) %p %p", set->name, *used, len, 
+	DP("set: %s, used: %u(%u) %p %p", set->name, *used, len,
 	   data, data + *used);
 
 	read_lock_bh(&set->lock);
@@ -1196,8 +1190,7 @@ __set_hash_save_bindings(struct ip_set_hash *set_hash,
 {
 	if (*res == 0
 	    && (id == IP_SET_INVALID_ID || set_hash->id == id)) {
-		struct ip_set_hash_save *hash_save = 
-			(struct ip_set_hash_save *)(data + *used);
+		struct ip_set_hash_save *hash_save = data + *used;
 		/* Ensure bindings size */
 		if (*used + sizeof(struct ip_set_hash_save) > len) {
 			*res = -ENOMEM;
@@ -1224,7 +1217,7 @@ static int ip_set_save_bindings(ip_set_id_t index,
 		return -ENOMEM;
 
 	/* Marker */
-	set_save = (struct ip_set_save *) (data + *used);
+	set_save = data + *used;
 	set_save->index = IP_SET_INVALID_ID;
 	set_save->header_size = 0;
 	set_save->members_size = 0;
@@ -1261,12 +1254,12 @@ static int ip_set_restore(void *data,
 		/* Get and ensure header size */
 		if (used + sizeof(struct ip_set_restore) > len)
 			return line;
-		set_restore = (struct ip_set_restore *) (data + used);
+		set_restore = data + used;
 		used += sizeof(struct ip_set_restore);
 
 		/* Ensure data size */
-		if (used 
-		    + set_restore->header_size 
+		if (used
+		    + set_restore->header_size
 		    + set_restore->members_size > len)
 			return line;
 
@@ -1304,7 +1297,7 @@ static int ip_set_restore(void *data,
 			res = __ip_set_addip(index,
 					   data + used + members_size,
 					   set->type->reqsize);
-			if (!(res == 0 || res == -EEXIST)) 
+			if (!(res == 0 || res == -EEXIST))
 				return line;
 			members_size += set->type->reqsize;
 		}
@@ -1325,7 +1318,7 @@ static int ip_set_restore(void *data,
 		/* Get and ensure size */
 		if (used + sizeof(struct ip_set_hash_save) > len)
 			return line;
-		hash_save = (struct ip_set_hash_save *) (data + used);
+		hash_save = data + used;
 		used += sizeof(struct ip_set_hash_save);
 		
 		/* hash_save->id is used to store the index */
@@ -1341,7 +1334,7 @@ static int ip_set_restore(void *data,
 		set = ip_set_list[hash_save->id];
 		/* Null valued IP means default binding */
 		if (hash_save->ip)
-			res = ip_set_hash_add(set->id, 
+			res = ip_set_hash_add(set->id,
 					      hash_save->ip,
 					      hash_save->binding);
 		else {
@@ -1408,8 +1401,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 	
 	if (*op < IP_SET_OP_VERSION) {
 		/* Check the version at the beginning of operations */
-		struct ip_set_req_version *req_version =
-			(struct ip_set_req_version *) data;
+		struct ip_set_req_version *req_version = data;
 		if (req_version->version != IP_SET_PROTOCOL_VERSION) {
 			res = -EPROTO;
 			goto done;
@@ -1418,8 +1410,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 
 	switch (*op) {
 	case IP_SET_OP_CREATE:{
-		struct ip_set_req_create *req_create
-			= (struct ip_set_req_create *) data;
+		struct ip_set_req_create *req_create = data;
 		
 		if (len < sizeof(struct ip_set_req_create)) {
 			ip_set_printk("short CREATE data (want >=%zu, got %u)",
@@ -1437,8 +1428,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 		goto done;
 	}
 	case IP_SET_OP_DESTROY:{
-		struct ip_set_req_std *req_destroy
-			= (struct ip_set_req_std *) data;
+		struct ip_set_req_std *req_destroy = data;
 		
 		if (len != sizeof(struct ip_set_req_std)) {
 			ip_set_printk("invalid DESTROY data (want %zu, got %u)",
@@ -1446,7 +1436,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 			res = -EINVAL;
 			goto done;
 		}
-		if (strcmp(req_destroy->name, IPSET_TOKEN_ALL) == 0) {
+		if (SETNAME_EQ(req_destroy->name, IPSET_TOKEN_ALL)) {
 			/* Destroy all sets */
 			index = IP_SET_INVALID_ID;
 		} else {
@@ -1463,8 +1453,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 		goto done;
 	}
 	case IP_SET_OP_FLUSH:{
-		struct ip_set_req_std *req_flush =
-			(struct ip_set_req_std *) data;
+		struct ip_set_req_std *req_flush = data;
 
 		if (len != sizeof(struct ip_set_req_std)) {
 			ip_set_printk("invalid FLUSH data (want %zu, got %u)",
@@ -1472,7 +1461,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 			res = -EINVAL;
 			goto done;
 		}
-		if (strcmp(req_flush->name, IPSET_TOKEN_ALL) == 0) {
+		if (SETNAME_EQ(req_flush->name, IPSET_TOKEN_ALL)) {
 			/* Flush all sets */
 			index = IP_SET_INVALID_ID;
 		} else {
@@ -1488,8 +1477,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 		goto done;
 	}
 	case IP_SET_OP_RENAME:{
-		struct ip_set_req_create *req_rename
-			= (struct ip_set_req_create *) data;
+		struct ip_set_req_create *req_rename = data;
 
 		if (len != sizeof(struct ip_set_req_create)) {
 			ip_set_printk("invalid RENAME data (want %zu, got %u)",
@@ -1510,8 +1498,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 		goto done;
 	}
 	case IP_SET_OP_SWAP:{
-		struct ip_set_req_create *req_swap
-			= (struct ip_set_req_create *) data;
+		struct ip_set_req_create *req_swap = data;
 		ip_set_id_t to_index;
 
 		if (len != sizeof(struct ip_set_req_create)) {
@@ -1537,7 +1524,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 		res = ip_set_swap(index, to_index);
 		goto done;
 	}
-	default: 
+	default:
 		break;	/* Set identified by id */
 	}
 	
@@ -1554,10 +1541,10 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 		res = -EINVAL;
 		goto done;
 	}
-	req_adt = (struct ip_set_req_adt *) data;
+	req_adt = data;
 
 	/* -U :all: :all:|:default: uses IP_SET_INVALID_ID */
-	if (!(*op == IP_SET_OP_UNBIND_SET 
+	if (!(*op == IP_SET_OP_UNBIND_SET
 	      && req_adt->index == IP_SET_INVALID_ID)) {
 		index = ip_set_find_byindex(req_adt->index);
 		if (index == IP_SET_INVALID_ID) {
@@ -1576,7 +1563,7 @@ ip_set_sockfn_set(struct sock *sk, int optval, void *user, unsigned int len)
 	return res;
 }
 
-static int 
+static int
 ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 {
 	int res = 0;
@@ -1614,8 +1601,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 
 	if (*op < IP_SET_OP_VERSION) {
 		/* Check the version at the beginning of operations */
-		struct ip_set_req_version *req_version =
-			(struct ip_set_req_version *) data;
+		struct ip_set_req_version *req_version = data;
 		if (req_version->version != IP_SET_PROTOCOL_VERSION) {
 			res = -EPROTO;
 			goto done;
@@ -1624,8 +1610,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 
 	switch (*op) {
 	case IP_SET_OP_VERSION: {
-		struct ip_set_req_version *req_version =
-		    (struct ip_set_req_version *) data;
+		struct ip_set_req_version *req_version = data;
 
 		if (*len != sizeof(struct ip_set_req_version)) {
 			ip_set_printk("invalid VERSION (want %zu, got %d)",
@@ -1641,8 +1626,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		goto done;
 	}
 	case IP_SET_OP_GET_BYNAME: {
-		struct ip_set_req_get_set *req_get
-			= (struct ip_set_req_get_set *) data;
+		struct ip_set_req_get_set *req_get = data;
 
 		if (*len != sizeof(struct ip_set_req_get_set)) {
 			ip_set_printk("invalid GET_BYNAME (want %zu, got %d)",
@@ -1656,8 +1640,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		goto copy;
 	}
 	case IP_SET_OP_GET_BYINDEX: {
-		struct ip_set_req_get_set *req_get
-			= (struct ip_set_req_get_set *) data;
+		struct ip_set_req_get_set *req_get = data;
 
 		if (*len != sizeof(struct ip_set_req_get_set)) {
 			ip_set_printk("invalid GET_BYINDEX (want %zu, got %d)",
@@ -1673,8 +1656,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		goto copy;
 	}
 	case IP_SET_OP_ADT_GET: {
-		struct ip_set_req_adt_get *req_get
-			= (struct ip_set_req_adt_get *) data;
+		struct ip_set_req_adt_get *req_get = data;
 
 		if (*len != sizeof(struct ip_set_req_adt_get)) {
 			ip_set_printk("invalid ADT_GET (want %zu, got %d)",
@@ -1696,8 +1678,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		goto copy;
 	}
 	case IP_SET_OP_MAX_SETS: {
-		struct ip_set_req_max_sets *req_max_sets
-			= (struct ip_set_req_max_sets *) data;
+		struct ip_set_req_max_sets *req_max_sets = data;
 		ip_set_id_t i;
 
 		if (*len != sizeof(struct ip_set_req_max_sets)) {
@@ -1707,11 +1688,11 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 			goto done;
 		}
 
-		if (strcmp(req_max_sets->set.name, IPSET_TOKEN_ALL) == 0) {
+		if (SETNAME_EQ(req_max_sets->set.name, IPSET_TOKEN_ALL)) {
 			req_max_sets->set.index = IP_SET_INVALID_ID;
 		} else {
 			req_max_sets->set.name[IP_SET_MAXNAMELEN - 1] = '\0';
-			req_max_sets->set.index = 
+			req_max_sets->set.index =
 				ip_set_find_byname(req_max_sets->set.name);
 			if (req_max_sets->set.index == IP_SET_INVALID_ID) {
 				res = -ENOENT;
@@ -1726,10 +1707,9 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		}
 		goto copy;
 	}
-	case IP_SET_OP_LIST_SIZE: 
+	case IP_SET_OP_LIST_SIZE:
 	case IP_SET_OP_SAVE_SIZE: {
-		struct ip_set_req_setnames *req_setnames
-			= (struct ip_set_req_setnames *) data;
+		struct ip_set_req_setnames *req_setnames = data;
 		struct ip_set_name_list *name_list;
 		struct ip_set *set;
 		ip_set_id_t i;
@@ -1747,8 +1727,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		for (i = 0; i < ip_set_max; i++) {
 			if (ip_set_list[i] == NULL)
 				continue;
-			name_list = (struct ip_set_name_list *) 
-				(data + used);
+			name_list = data + used;
 			used += sizeof(struct ip_set_name_list);
 			if (used > copylen) {
 				res = -EAGAIN;
@@ -1777,7 +1756,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 					+ set->type->header_size
 					+ set->type->list_members_size(set);
 				/* Sets are identified by id in the hash */
-				FOREACH_HASH_DO(__set_hash_bindings_size_list, 
+				FOREACH_HASH_DO(__set_hash_bindings_size_list,
 						set->id, &req_setnames->size);
 				break;
 			}
@@ -1800,8 +1779,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		goto copy;
 	}
 	case IP_SET_OP_LIST: {
-		struct ip_set_req_list *req_list
-			= (struct ip_set_req_list *) data;
+		struct ip_set_req_list *req_list = data;
 		ip_set_id_t i;
 		int used;
 
@@ -1837,8 +1815,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		goto copy;
 	}
 	case IP_SET_OP_SAVE: {
-		struct ip_set_req_list *req_save
-			= (struct ip_set_req_list *) data;
+		struct ip_set_req_list *req_save = data;
 		ip_set_id_t i;
 		int used;
 
@@ -1877,8 +1854,7 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		goto copy;
 	}
 	case IP_SET_OP_RESTORE: {
-		struct ip_set_req_setnames *req_restore
-			= (struct ip_set_req_setnames *) data;
+		struct ip_set_req_setnames *req_restore = data;
 		int line;
 
 		if (*len < sizeof(struct ip_set_req_setnames)

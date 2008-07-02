@@ -2,7 +2,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* Kernel module implementing an ip+port hash set */
@@ -94,8 +94,7 @@ static inline __u32
 hash_id(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t port,
 	ip_set_ip_t *hash_ip)
 {
-	struct ip_set_ipporthash *map = 
-		(struct ip_set_ipporthash *) set->data;
+	struct ip_set_ipporthash *map = set->data;
 	__u32 id;
 	u_int16_t i;
 	ip_set_ip_t *elem;
@@ -120,7 +119,7 @@ static inline int
 __testip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t port,
 	 ip_set_ip_t *hash_ip)
 {
-	struct ip_set_ipporthash *map = (struct ip_set_ipporthash *) set->data;
+	struct ip_set_ipporthash *map = set->data;
 	
 	if (ip < map->first_ip || ip > map->last_ip)
 		return -ERANGE;
@@ -132,8 +131,7 @@ static int
 testip(struct ip_set *set, const void *data, size_t size,
        ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_ipporthash *req = 
-	    (struct ip_set_req_ipporthash *) data;
+	const struct ip_set_req_ipporthash *req = data;
 
 	if (size != sizeof(struct ip_set_req_ipporthash)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -145,7 +143,7 @@ testip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-testip_kernel(struct ip_set *set, 
+testip_kernel(struct ip_set *set,
 	      const struct sk_buff *skb,
 	      ip_set_ip_t *hash_ip,
 	      const u_int32_t *flags,
@@ -169,18 +167,18 @@ testip_kernel(struct ip_set *set,
 	   NIPQUAD(skb->nh.iph->daddr));
 #endif
 	DP("flag %s port %u",
-	   flags[index+1] & IPSET_SRC ? "SRC" : "DST", 
+	   flags[index+1] & IPSET_SRC ? "SRC" : "DST",
 	   port);	
 	if (port == INVALID_PORT)
 		return 0;	
 
 	res =  __testip(set,
-			ntohl(flags[index] & IPSET_SRC 
+			ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-					? ip_hdr(skb)->saddr 
+					? ip_hdr(skb)->saddr
 					: ip_hdr(skb)->daddr),
 #else
-					? skb->nh.iph->saddr 
+					? skb->nh.iph->saddr
 					: skb->nh.iph->daddr),
 #endif
 			port,
@@ -229,8 +227,7 @@ static int
 addip(struct ip_set *set, const void *data, size_t size,
         ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_ipporthash *req = 
-	    (struct ip_set_req_ipporthash *) data;
+	const struct ip_set_req_ipporthash *req = data;
 
 	if (size != sizeof(struct ip_set_req_ipporthash)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -238,12 +235,11 @@ addip(struct ip_set *set, const void *data, size_t size,
 			      size);
 		return -EINVAL;
 	}
-	return __addip((struct ip_set_ipporthash *) set->data, 
-			req->ip, req->port, hash_ip);
+	return __addip(set->data, req->ip, req->port, hash_ip);
 }
 
 static int
-addip_kernel(struct ip_set *set, 
+addip_kernel(struct ip_set *set,
 	     const struct sk_buff *skb,
 	     ip_set_ip_t *hash_ip,
 	     const u_int32_t *flags,
@@ -265,19 +261,19 @@ addip_kernel(struct ip_set *set,
 	   NIPQUAD(skb->nh.iph->saddr),
 	   NIPQUAD(skb->nh.iph->daddr));
 #endif
-	DP("flag %s port %u", 
-	   flags[index+1] & IPSET_SRC ? "SRC" : "DST", 
+	DP("flag %s port %u",
+	   flags[index+1] & IPSET_SRC ? "SRC" : "DST",
 	   port);	
 	if (port == INVALID_PORT)
 		return -EINVAL;	
 
-	return __addip((struct ip_set_ipporthash *) set->data,
-		       ntohl(flags[index] & IPSET_SRC 
+	return __addip(set->data,
+		       ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-		       		? skb->nh.iph->saddr 
+		       		? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 		       port,
@@ -286,7 +282,7 @@ addip_kernel(struct ip_set *set,
 
 static int retry(struct ip_set *set)
 {
-	struct ip_set_ipporthash *map = (struct ip_set_ipporthash *) set->data;
+	struct ip_set_ipporthash *map = set->data;
 	ip_set_ip_t *elem;
 	void *members;
 	u_int32_t i, hashsize = map->hashsize;
@@ -308,7 +304,7 @@ static int retry(struct ip_set *set)
 		      "hashsize grows from %u to %u",
 		      set->name, map->hashsize, hashsize);
 
-	tmp = kmalloc(sizeof(struct ip_set_ipporthash) 
+	tmp = kmalloc(sizeof(struct ip_set_ipporthash)
 		      + map->probes * sizeof(uint32_t), GFP_ATOMIC);
 	if (!tmp) {
 		DP("out of memory for %d bytes",
@@ -331,7 +327,7 @@ static int retry(struct ip_set *set)
 	memcpy(tmp->initval, map->initval, map->probes * sizeof(uint32_t));
 	
 	write_lock_bh(&set->lock);
-	map = (struct ip_set_ipporthash *) set->data; /* Play safe */
+	map = set->data; /* Play safe */
 	for (i = 0; i < map->hashsize && res == 0; i++) {
 		elem = HARRAY_ELEM(map->members, ip_set_ip_t *, i);	
 		if (*elem)
@@ -362,7 +358,7 @@ static inline int
 __delip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t port,
 	ip_set_ip_t *hash_ip)
 {
-	struct ip_set_ipporthash *map = (struct ip_set_ipporthash *) set->data;
+	struct ip_set_ipporthash *map = set->data;
 	ip_set_ip_t id;
 	ip_set_ip_t *elem;
 
@@ -385,8 +381,7 @@ static int
 delip(struct ip_set *set, const void *data, size_t size,
         ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_ipporthash *req =
-	    (struct ip_set_req_ipporthash *) data;
+	const struct ip_set_req_ipporthash *req = data;
 
 	if (size != sizeof(struct ip_set_req_ipporthash)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -398,7 +393,7 @@ delip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-delip_kernel(struct ip_set *set, 
+delip_kernel(struct ip_set *set,
 	     const struct sk_buff *skb,
 	     ip_set_ip_t *hash_ip,
 	     const u_int32_t *flags,
@@ -421,18 +416,18 @@ delip_kernel(struct ip_set *set,
 	   NIPQUAD(skb->nh.iph->daddr));
 #endif
 	DP("flag %s port %u",
-	   flags[index+1] & IPSET_SRC ? "SRC" : "DST", 
+	   flags[index+1] & IPSET_SRC ? "SRC" : "DST",
 	   port);	
 	if (port == INVALID_PORT)
 		return -EINVAL;	
 
 	return __delip(set,
-		       ntohl(flags[index] & IPSET_SRC 
+		       ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-		       		? skb->nh.iph->saddr 
+		       		? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 		       port,
@@ -441,8 +436,7 @@ delip_kernel(struct ip_set *set,
 
 static int create(struct ip_set *set, const void *data, size_t size)
 {
-	struct ip_set_req_ipporthash_create *req =
-	    (struct ip_set_req_ipporthash_create *) data;
+	const struct ip_set_req_ipporthash_create *req = data;
 	struct ip_set_ipporthash *map;
 	uint16_t i;
 
@@ -463,7 +457,7 @@ static int create(struct ip_set *set, const void *data, size_t size)
 		return -ENOEXEC;
 	}
 
-	map = kmalloc(sizeof(struct ip_set_ipporthash) 
+	map = kmalloc(sizeof(struct ip_set_ipporthash)
 		      + req->probes * sizeof(uint32_t), GFP_KERNEL);
 	if (!map) {
 		DP("out of memory for %d bytes",
@@ -492,7 +486,7 @@ static int create(struct ip_set *set, const void *data, size_t size)
 
 static void destroy(struct ip_set *set)
 {
-	struct ip_set_ipporthash *map = (struct ip_set_ipporthash *) set->data;
+	struct ip_set_ipporthash *map = set->data;
 
 	harray_free(map->members);
 	kfree(map);
@@ -502,16 +496,15 @@ static void destroy(struct ip_set *set)
 
 static void flush(struct ip_set *set)
 {
-	struct ip_set_ipporthash *map = (struct ip_set_ipporthash *) set->data;
+	struct ip_set_ipporthash *map = set->data;
 	harray_flush(map->members, map->hashsize, sizeof(ip_set_ip_t));
 	map->elements = 0;
 }
 
 static void list_header(const struct ip_set *set, void *data)
 {
-	struct ip_set_ipporthash *map = (struct ip_set_ipporthash *) set->data;
-	struct ip_set_req_ipporthash_create *header =
-	    (struct ip_set_req_ipporthash_create *) data;
+	const struct ip_set_ipporthash *map = set->data;
+	struct ip_set_req_ipporthash_create *header = data;
 
 	header->hashsize = map->hashsize;
 	header->probes = map->probes;
@@ -522,14 +515,14 @@ static void list_header(const struct ip_set *set, void *data)
 
 static int list_members_size(const struct ip_set *set)
 {
-	struct ip_set_ipporthash *map = (struct ip_set_ipporthash *) set->data;
+	const struct ip_set_ipporthash *map = set->data;
 
 	return (map->hashsize * sizeof(ip_set_ip_t));
 }
 
 static void list_members(const struct ip_set *set, void *data)
 {
-	struct ip_set_ipporthash *map = (struct ip_set_ipporthash *) set->data;
+	const struct ip_set_ipporthash *map = set->data;
 	ip_set_ip_t i, *elem;
 
 	for (i = 0; i < map->hashsize; i++) {

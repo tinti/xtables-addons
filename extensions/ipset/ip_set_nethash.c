@@ -2,7 +2,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.  
+ * published by the Free Software Foundation.
  */
 
 /* Kernel module implementing a cidr nethash set */
@@ -59,7 +59,7 @@ hash_id_cidr(struct ip_set_nethash *map,
 static inline __u32
 hash_id(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	struct ip_set_nethash *map = set->data;
 	__u32 id = UINT_MAX;
 	int i;
 
@@ -75,7 +75,7 @@ static inline int
 __testip_cidr(struct ip_set *set, ip_set_ip_t ip, unsigned char cidr,
 	      ip_set_ip_t *hash_ip)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	struct ip_set_nethash *map = set->data;
 
 	return (ip && hash_id_cidr(map, ip, cidr, hash_ip) != UINT_MAX);
 }
@@ -90,8 +90,7 @@ static int
 testip(struct ip_set *set, const void *data, size_t size,
        ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_nethash *req = 
-	    (struct ip_set_req_nethash *) data;
+	const struct ip_set_req_nethash *req = data;
 
 	if (size != sizeof(struct ip_set_req_nethash)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -104,19 +103,19 @@ testip(struct ip_set *set, const void *data, size_t size,
 }
 
 static int
-testip_kernel(struct ip_set *set, 
+testip_kernel(struct ip_set *set,
 	      const struct sk_buff *skb,
 	      ip_set_ip_t *hash_ip,
 	      const u_int32_t *flags,
 	      unsigned char index)
 {
 	return __testip(set,
-			ntohl(flags[index] & IPSET_SRC 
+			ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr 
+				? ip_hdr(skb)->saddr
 				: ip_hdr(skb)->daddr),
 #else
-				? skb->nh.iph->saddr 
+				? skb->nh.iph->saddr
 				: skb->nh.iph->daddr),
 #endif
 			hash_ip);
@@ -180,8 +179,7 @@ static int
 addip(struct ip_set *set, const void *data, size_t size,
         ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_nethash *req = 
-	    (struct ip_set_req_nethash *) data;
+	const struct ip_set_req_nethash *req = data;
 	int ret;
 
 	if (size != sizeof(struct ip_set_req_nethash)) {
@@ -190,28 +188,26 @@ addip(struct ip_set *set, const void *data, size_t size,
 			      size);
 		return -EINVAL;
 	}
-	ret = __addip((struct ip_set_nethash *) set->data, 
-		      req->ip, req->cidr, hash_ip);
+	ret = __addip(set->data, req->ip, req->cidr, hash_ip);
 	
 	if (ret == 0)
-		update_cidr_sizes((struct ip_set_nethash *) set->data,
-				  req->cidr);
+		update_cidr_sizes(set->data, req->cidr);
 	
 	return ret;
 }
 
 static int
-addip_kernel(struct ip_set *set, 
+addip_kernel(struct ip_set *set,
 	     const struct sk_buff *skb,
 	     ip_set_ip_t *hash_ip,
 	     const u_int32_t *flags,
 	     unsigned char index)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	struct ip_set_nethash *map = set->data;
 	int ret = -ERANGE;
-	ip_set_ip_t ip = ntohl(flags[index] & IPSET_SRC 
+	ip_set_ip_t ip = ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-					? ip_hdr(skb)->saddr 
+					? ip_hdr(skb)->saddr
 					: ip_hdr(skb)->daddr);
 #else
 					? skb->nh.iph->saddr
@@ -226,7 +222,7 @@ addip_kernel(struct ip_set *set,
 
 static int retry(struct ip_set *set)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	struct ip_set_nethash *map = set->data;
 	ip_set_ip_t *elem;
 	void *members;
 	u_int32_t i, hashsize = map->hashsize;
@@ -248,7 +244,7 @@ static int retry(struct ip_set *set)
 		      "hashsize grows from %u to %u",
 		      set->name, map->hashsize, hashsize);
 
-	tmp = kmalloc(sizeof(struct ip_set_nethash) 
+	tmp = kmalloc(sizeof(struct ip_set_nethash)
 		      + map->probes * sizeof(uint32_t), GFP_ATOMIC);
 	if (!tmp) {
 		DP("out of memory for %d bytes",
@@ -270,7 +266,7 @@ static int retry(struct ip_set *set)
 	memcpy(tmp->cidr, map->cidr, 30 * sizeof(unsigned char));
 	
 	write_lock_bh(&set->lock);
-	map = (struct ip_set_nethash *) set->data; /* Play safe */
+	map = set->data; /* Play safe */
 	for (i = 0; i < map->hashsize && res == 0; i++) {
 		elem = HARRAY_ELEM(map->members, ip_set_ip_t *, i);	
 		if (*elem)
@@ -320,8 +316,7 @@ static int
 delip(struct ip_set *set, const void *data, size_t size,
         ip_set_ip_t *hash_ip)
 {
-	struct ip_set_req_nethash *req =
-	    (struct ip_set_req_nethash *) data;
+	const struct ip_set_req_nethash *req = data;
 
 	if (size != sizeof(struct ip_set_req_nethash)) {
 		ip_set_printk("data length wrong (want %zu, have %zu)",
@@ -330,22 +325,21 @@ delip(struct ip_set *set, const void *data, size_t size,
 		return -EINVAL;
 	}
 	/* TODO: no garbage collection in map->cidr */		
-	return __delip((struct ip_set_nethash *) set->data, 
-		       req->ip, req->cidr, hash_ip);
+	return __delip(set->data, req->ip, req->cidr, hash_ip);
 }
 
 static int
-delip_kernel(struct ip_set *set, 
+delip_kernel(struct ip_set *set,
 	     const struct sk_buff *skb,
 	     ip_set_ip_t *hash_ip,
 	     const u_int32_t *flags,
 	     unsigned char index)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	struct ip_set_nethash *map = set->data;
 	int ret = -ERANGE;
-	ip_set_ip_t ip = ntohl(flags[index] & IPSET_SRC 
+	ip_set_ip_t ip = ntohl(flags[index] & IPSET_SRC
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-					? ip_hdr(skb)->saddr 
+					? ip_hdr(skb)->saddr
 					: ip_hdr(skb)->daddr);
 #else
 					? skb->nh.iph->saddr
@@ -360,8 +354,7 @@ delip_kernel(struct ip_set *set,
 
 static int create(struct ip_set *set, const void *data, size_t size)
 {
-	struct ip_set_req_nethash_create *req =
-	    (struct ip_set_req_nethash_create *) data;
+	const struct ip_set_req_nethash_create *req = data;
 	struct ip_set_nethash *map;
 	uint16_t i;
 
@@ -409,7 +402,7 @@ static int create(struct ip_set *set, const void *data, size_t size)
 
 static void destroy(struct ip_set *set)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	struct ip_set_nethash *map = set->data;
 
 	harray_free(map->members);
 	kfree(map);
@@ -419,7 +412,7 @@ static void destroy(struct ip_set *set)
 
 static void flush(struct ip_set *set)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	struct ip_set_nethash *map = set->data;
 	harray_flush(map->members, map->hashsize, sizeof(ip_set_ip_t));
 	memset(map->cidr, 0, 30 * sizeof(unsigned char));
 	map->elements = 0;
@@ -427,9 +420,8 @@ static void flush(struct ip_set *set)
 
 static void list_header(const struct ip_set *set, void *data)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
-	struct ip_set_req_nethash_create *header =
-	    (struct ip_set_req_nethash_create *) data;
+	const struct ip_set_nethash *map = set->data;
+	struct ip_set_req_nethash_create *header = data;
 
 	header->hashsize = map->hashsize;
 	header->probes = map->probes;
@@ -438,14 +430,14 @@ static void list_header(const struct ip_set *set, void *data)
 
 static int list_members_size(const struct ip_set *set)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	struct ip_set_nethash *map = set->data;
 
 	return (map->hashsize * sizeof(ip_set_ip_t));
 }
 
 static void list_members(const struct ip_set *set, void *data)
 {
-	struct ip_set_nethash *map = (struct ip_set_nethash *) set->data;
+	const struct ip_set_nethash *map = set->data;
 	ip_set_ip_t i, *elem;
 
 	for (i = 0; i < map->hashsize; i++) {
