@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
-SUBDIRS          = extensions
+SUBDIRS          = extensions extensions/ipset
 
 man_MANS := xtables-addons.8
 

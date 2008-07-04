@@ -8,7 +8,6 @@ modules.order
 
 /*.so
 /*.oo
-/GNUmakefile
 /matches.man
 /targets.man
 /.manpages.lst
