@@ -2,9 +2,10 @@
 #define _XT_QUOTA_H
 
 enum xt_quota_flags {
-	XT_QUOTA_INVERT = 0x1,
-	XT_QUOTA_GROW   = 0x2,
-	XT_QUOTA_MASK   = 0x3,
+	XT_QUOTA_INVERT = 1 << 0,
+	XT_QUOTA_GROW   = 1 << 1,
+	XT_QUOTA_PACKET = 1 << 2,
+	XT_QUOTA_MASK   = 0x7,
 
 	XT_QUOTA_COUNTER_NAME_LENGTH = 31,
 };

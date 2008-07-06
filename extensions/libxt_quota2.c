@@ -13,15 +13,17 @@
 #include "xt_quota2.h"
 
 enum {
-	FL_QUOTA = 1 << 0,
-	FL_NAME  = 1 << 1,
-	FL_GROW  = 1 << 2,
+	FL_QUOTA  = 1 << 0,
+	FL_NAME   = 1 << 1,
+	FL_GROW   = 1 << 2,
+	FL_PACKET = 1 << 3,
 };
 
 static const struct option quota_mt2_opts[] = {
-	{.name = "grow",  .has_arg = false, .val = 'g'},
-	{.name = "name",  .has_arg = true,  .val = 'n'},
-	{.name = "quota", .has_arg = true,  .val = 'q'},
+	{.name = "grow",    .has_arg = false, .val = 'g'},
+	{.name = "name",    .has_arg = true,  .val = 'n'},
+	{.name = "quota",   .has_arg = true,  .val = 'q'},
+	{.name = "packets", .has_arg = true,  .val = 'p'},
 	{NULL},
 };
 
@@ -31,7 +33,8 @@ static void quota_mt2_help(void)
 	"quota match options:\n"
 	"    --grow           provide an increasing counter\n"
 	"    --name name      name for the file in sysfs\n"
-	"[!] --quota quota    quota (bytes)\n"
+	"[!] --quota quota    initial quota (bytes or packets)\n"
+	"    --packets        count packets instead of bytes\n"
 	);
 }
 
@@ -56,6 +59,12 @@ quota_mt2_parse(int c, char **argv, int invert, unsigned int *flags,
 		strncpy(info->name, optarg, sizeof(info->name));
 		*flags |= FL_NAME;
 		return true;
+	case 'p':
+		param_act(P_ONLY_ONCE, "quota", "--packets", *flags & FL_PACKETS);
+		param_act(P_NO_INVERT, "quota", "--packets", invert);
+		info->flags |= XT_QUOTA_PACKET;
+		*flags |= FL_PACKET;
+		return true;
 	case 'q':
 		param_act(P_ONLY_ONCE, "quota", "--quota", *flags & FL_QUOTA);
 		if (invert)
@@ -79,6 +88,8 @@ quota_mt2_save(const void *ip, const struct xt_entry_match *match)
 		printf("! ");
 	if (q->flags & XT_QUOTA_GROW)
 		printf("--grow ");
+	if (q->flags & XT_QUOTA_PACKET)
+		printf("--packets ");
 	if (*q->name != '\0')
 		printf("--name %s ", q->name);
 	printf("--quota %llu ", (unsigned long long)q->quota);
@@ -97,7 +108,11 @@ static void quota_mt2_print(const void *ip, const struct xt_entry_match *match,
 		printf("quota");
 	if (*q->name != '\0')
 		printf(" %s:", q->name);
-	printf(" %llu bytes", (unsigned long long)q->quota);
+	printf(" %llu ", (unsigned long long)q->quota);
+	if (q->flags & XT_QUOTA_PACKET)
+		printf("packets ");
+	else
+		printf("bytes ");
 }
 
 static struct xtables_match quota_mt2_reg = {

@@ -1,7 +1,11 @@
 /*
- * netfilter module to enforce network quotas
+ * xt_quota2 - enhanced xt_quota that can count upwards and in packets
+ * as a minimal accounting match.
+ * by Jan Engelhardt <jengelh@medozas.de>, 2008
  *
- * Sam Johnston <samj@samj.net>
+ * Originally based on xt_quota.c:
+ * 	netfilter module to enforce network quotas
+ * 	Sam Johnston <samj@samj.net>
  */
 #include <linux/list.h>
 #include <linux/proc_fs.h>
@@ -167,14 +171,14 @@ quota_mt2(const struct sk_buff *skb, const struct net_device *in,
 
 	if (q->flags & XT_QUOTA_GROW) {
 		spin_lock_bh(&e->lock);
-		e->quota += skb->len;
+		e->quota += (q->flags & XT_QUOTA_PACKET) ? 1 : skb->len;
 		q->quota = e->quota;
 		spin_unlock_bh(&e->lock);
 		ret = true;
 	} else {
 		spin_lock_bh(&e->lock);
 		if (e->quota >= skb->len) {
-			e->quota -= skb->len;
+			e->quota -= (q->flags & XT_QUOTA_PACKET) ? 1 : skb->len;
 			ret = !ret;
 		} else {
 			/* we do not allow even small packets from now on */
