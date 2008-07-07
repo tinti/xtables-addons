@@ -30,7 +30,7 @@
 #define IPTREEMAP_DEFAULT_GC_TIME (5 * 60)
 #define IPTREEMAP_DESTROY_SLEEP (100)
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,21)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
 static struct kmem_cache *cachep_b;
 static struct kmem_cache *cachep_c;
 static struct kmem_cache *cachep_d;

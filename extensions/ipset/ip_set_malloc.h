@@ -5,7 +5,7 @@
 
 static size_t max_malloc_size = 0, max_page_size = 0;
 
-static inline bool init_max_page_size(void)
+static inline unsigned int init_max_page_size(void)
 {
 	size_t page_size = 0;
 	

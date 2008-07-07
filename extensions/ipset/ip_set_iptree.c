@@ -35,7 +35,7 @@ static int limit = MAX_RANGE;
  * to delete the gc timer at destroying/flushing a set */
 #define IPTREE_DESTROY_SLEEP	100
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,21)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
 static struct kmem_cache *branch_cachep;
 static struct kmem_cache *leaf_cachep;
 #else
