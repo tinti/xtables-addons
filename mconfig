@@ -11,3 +11,4 @@ build_condition=m
 build_geoip=m
 build_ipp2p=m
 build_portscan=m
+build_quota2=m

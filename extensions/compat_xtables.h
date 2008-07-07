@@ -44,8 +44,10 @@
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 #	define init_net               xtnu_ip_route_output_key /* yes */
 #	define init_net__loopback_dev (&loopback_dev)
+#	define init_net__proc_net     proc_net
 #else
 #	define init_net__loopback_dev init_net.loopback_dev
+#	define init_net__proc_net     init_net.proc_net
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)

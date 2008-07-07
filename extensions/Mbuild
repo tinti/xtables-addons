@@ -9,3 +9,4 @@ obj-${build_condition} += libxt_condition.so
 obj-${build_geoip}    += libxt_geoip.so
 obj-${build_ipp2p}    += libxt_ipp2p.so
 obj-${build_portscan} += libxt_portscan.so
+obj-${build_quota2}    += libxt_quota2.so
