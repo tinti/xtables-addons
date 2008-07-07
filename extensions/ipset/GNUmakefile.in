@@ -1,0 +1,84 @@
+# -*- Makefile -*-
+
+top_srcdir      := @top_srcdir@
+srcdir          := @srcdir@
+abstop_srcdir   := $(shell readlink -e ${top_srcdir})
+abssrcdir       := $(shell readlink -e ${srcdir})
+
+ifeq (${abstop_srcdir},)
+$(error Path resolution of ${top_srcdir} failed)
+endif
+ifeq (${abssrcdir},)
+$(error Path resolution of ${srcdir} failed)
+endif
+
+prefix          := @prefix@
+exec_prefix     := @exec_prefix@
+sbindir         := @sbindir@
+libdir          := @libdir@
+libexecdir      := @libexecdir@
+xtlibdir        := @xtlibdir@
+kbuilddir       := @kbuilddir@
+man8dir         := @mandir@/man8
+
+CC              := @CC@
+CCLD            := ${CC}
+CFLAGS          := @CFLAGS@
+LDFLAGS         := @LDFLAGS@
+regular_CFLAGS  := @regular_CFLAGS@
+kinclude_CFLAGS := @kinclude_CFLAGS@
+xtables_CFLAGS  := @xtables_CFLAGS@
+
+AM_CFLAGS      := ${regular_CFLAGS} -I${top_srcdir}/include ${xtables_CFLAGS} ${kinclude_CFLAGS} -DXTABLES_LIBDIR=\"${xtlibdir}\"
+AM_DEPFLAGS     = -Wp,-MMD,$(@D)/.$(@F).d,-MT,$@
+
+ifeq (${V},)
+AM_LIBTOOL_SILENT = --silent
+AM_VERBOSE_CC     = @echo "  CC      " $@;
+AM_VERBOSE_CCLD   = @echo "  CCLD    " $@;
+AM_VERBOSE_CXX    = @echo "  CXX     " $@;
+AM_VERBOSE_CXXLD  = @echo "  CXXLD   " $@;
+AM_VERBOSE_AR     = @echo "  AR      " $@;
+AM_VERBOSE_GEN    = @echo "  GEN     " $@;
+endif
+
+#
+#	Building blocks
+#
+targets := $(addsuffix .so,$(addprefix libipset_,iphash ipmap ipporthash iptree iptreemap macipmap nethash portmap))
+
+.SECONDARY:
+
+.PHONY: all install clean distclean FORCE
+
+all: ipset ${targets}
+
+install: all
+	@mkdir -p "${DESTDIR}${sbindir}" "${DESTDIR}${xtlibdir}" "${DESTDIR}${man8dir}";
+	install -pm0755 ipset "${DESTDIR}${sbindir}/";
+	install -pm0755 ${targets} "${DESTDIR}${xtlibdir}/";
+	install -pm0644 ipset.8 "${DESTDIR}${man8dir}/";
+
+clean:
+	rm -f *.oo *.so *.o ipset;
+
+distclean: clean
+	rm -f .*.d;
+
+-include .*.d
+
+
+ipset: ipset.o
+	${AM_VERBOSE_CCLD} ${CCLD} ${AM_LDFLAGS} ${LDFLAGS} -o $@ $< -ldl -rdynamic;
+
+#
+#	Shared libraries
+#
+lib%.so: lib%.oo
+	${AM_VERBOSE_CCLD} ${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $<;
+
+libipset_%.oo: ${srcdir}/ipset_%.c
+	${AM_VERBOSE_CC} ${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} -DPIC -fPIC ${CFLAGS} -o $@ -c $<;
+
+%.o: %.c
+	${AM_VERBOSE_CC} ${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} ${CFLAGS} -o $@ -c $<;
