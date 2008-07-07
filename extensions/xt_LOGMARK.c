@@ -42,7 +42,7 @@ logmark_tg(struct sk_buff *skb, const struct net_device *in,
 	printk("<%u>%.*s""hook=%s nfmark=0x%x secmark=0x%x classify=0x%x",
 	       info->level, (unsigned int)sizeof(info->prefix), info->prefix,
 	       hook_names[hooknum],
-	       skb_nfmark(skb), skb->secmark, skb->priority);
+	       skb_nfmark(skb), skb_secmark(skb), skb->priority);
 
 	ct = nf_ct_get(skb, &ctinfo);
 	printk(" ctdir=%s", dir_names[ctinfo >= IP_CT_IS_REPLY]);

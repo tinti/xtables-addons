@@ -19,6 +19,9 @@ Prerequirements
 	  - or the xtables-combined tarball that is currently distributed
 
 	* kernel-source >= 2.6.18.5 with prepared build/output directory
+	  - CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK
+	  - CONFIG_NF_CONNTRACK_MARK or CONFIG_IP_NF_CONNTRACK_MARK
+	    enabled =y or as module (=m)
 
 
 Selecting extensions

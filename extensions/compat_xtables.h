@@ -10,13 +10,13 @@
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
-#	if !defined(CONFIG_NF_CONNTRACK_MARK) || !defined(CONFIG_NF_CONNTRACK_SECMARK)
-#		warning You have CONFIG_NF_CONNTRACK enabled, but CONFIG_NF_CONNTRACK_MARK or CONFIG_NF_CONNTRACK_SECMARK are not (please enable).
+#	if !defined(CONFIG_NF_CONNTRACK_MARK)
+#		warning You have CONFIG_NF_CONNTRACK enabled, but CONFIG_NF_CONNTRACK_MARK is not (please enable).
 #	endif
 #	include <net/netfilter/nf_conntrack.h>
 #elif defined(CONFIG_IP_NF_CONNTRACK) || defined(CONFIG_IP_NF_CONNTRACK_MODULE)
-#	if !defined(CONFIG_IP_NF_CONNTRACK_MARK) || !defined(CONFIG_IP_NF_CONNTRACK_SECMARK)
-#		warning You have CONFIG_IP_NF_CONNTRACK enabled, but CONFIG_IP_NF_CONNTRACK_MARK or CONFIG_IP_NF_CONNTRACK_SECMARK are not (please enable).
+#	if !defined(CONFIG_IP_NF_CONNTRACK_MARK)
+#		warning You have CONFIG_IP_NF_CONNTRACK enabled, but CONFIG_IP_NF_CONNTRACK_MARK is not (please enable).
 #	endif
 #	include <linux/netfilter_ipv4/ip_conntrack.h>
 #	define nf_conn ip_conntrack

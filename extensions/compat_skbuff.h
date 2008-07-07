@@ -10,6 +10,12 @@ struct udphdr;
 #	define skb_nfmark(skb) (((struct sk_buff *)(skb))->mark)
 #endif
 
+#ifdef CONFIG_NETWORK_SECMARK
+#	define skb_secmark(skb) ((skb)->secmark)
+#else
+#	define skb_secmark(skb) 0
+#endif
+
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 21)
 #	define ip_hdr(skb) ((skb)->nh.iph)
 #	define ip_hdrlen(skb) (ip_hdr(skb)->ihl * 4)
