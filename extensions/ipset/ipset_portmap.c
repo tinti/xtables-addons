@@ -34,14 +34,14 @@
 #define OPT_ADDDEL_PORT      0x01U
 
 /* Initialize the create. */
-void create_init(void *data)
+static void create_init(void *data)
 {
 	DP("create INIT");
 	/* Nothing */
 }
 
 /* Function which parses command options; returns true if it ate an option */
-int create_parse(int c, char *argv[], void *data, unsigned *flags)
+static int create_parse(int c, char *argv[], void *data, unsigned int *flags)
 {
 	struct ip_set_req_portmap_create *mydata =
 	    (struct ip_set_req_portmap_create *) data;
@@ -77,7 +77,7 @@ int create_parse(int c, char *argv[], void *data, unsigned *flags)
 }
 
 /* Final check; exit if not ok. */
-void create_final(void *data, unsigned int flags)
+static void create_final(void *data, unsigned int flags)
 {
 	struct ip_set_req_portmap_create *mydata =
 	    (struct ip_set_req_portmap_create *) data;
@@ -107,19 +107,19 @@ void create_final(void *data, unsigned int flags)
 }
 
 /* Create commandline options */
-static struct option create_opts[] = {
+static const struct option create_opts[] = {
 	{"from", 1, 0, '1'},
 	{"to", 1, 0, '2'},
-	{0}
+	{NULL},
 };
 
 /* Add, del, test parser */
-ip_set_ip_t adt_parser(unsigned cmd, const char *optarg, void *data)
+static ip_set_ip_t adt_parser(unsigned int cmd, const char *arg, void *data)
 {
 	struct ip_set_req_portmap *mydata =
 	    (struct ip_set_req_portmap *) data;
 
-	parse_port(optarg, &mydata->port);
+	parse_port(arg, &mydata->port);
 	DP("%s", port_tostring(mydata->port, 0));
 
 	return 1;	
@@ -129,7 +129,7 @@ ip_set_ip_t adt_parser(unsigned cmd, const char *optarg, void *data)
  * Print and save
  */
 
-void initheader(struct set *set, const void *data)
+static void initheader(struct set *set, const void *data)
 {
 	struct ip_set_req_portmap_create *header =
 	    (struct ip_set_req_portmap_create *) data;
@@ -141,7 +141,7 @@ void initheader(struct set *set, const void *data)
 	map->last_port = header->to;
 }
 
-void printheader(struct set *set, unsigned options)
+static void printheader(struct set *set, unsigned int options)
 {
 	struct ip_set_portmap *mysetdata =
 	    (struct ip_set_portmap *) set->settype->header;
@@ -150,7 +150,8 @@ void printheader(struct set *set, unsigned options)
 	printf(" to: %s\n", port_tostring(mysetdata->last_port, options));
 }
 
-void printports_sorted(struct set *set, void *data, size_t len, unsigned options)
+static void printports_sorted(struct set *set, void *data, size_t len,
+    unsigned int options)
 {
 	struct ip_set_portmap *mysetdata =
 	    (struct ip_set_portmap *) set->settype->header;
@@ -164,12 +165,13 @@ void printports_sorted(struct set *set, void *data, size_t len, unsigned options
 	}
 }
 
-char * binding_port_tostring(struct set *set, ip_set_ip_t ip, unsigned options)
+static char *binding_port_tostring(struct set *set, ip_set_ip_t ip,
+    unsigned int options)
 {
 	return port_tostring(ip, options);
 }
 
-void saveheader(struct set *set, unsigned options)
+static void saveheader(struct set *set, unsigned int options)
 {
 	struct ip_set_portmap *mysetdata =
 	    (struct ip_set_portmap *) set->settype->header;
@@ -182,7 +184,8 @@ void saveheader(struct set *set, unsigned options)
 	       port_tostring(mysetdata->last_port, options));
 }
 
-void saveports(struct set *set, void *data, size_t len, unsigned options)
+static void saveports(struct set *set, void *data, size_t len,
+    unsigned int options)
 {
 	struct ip_set_portmap *mysetdata =
 	    (struct ip_set_portmap *) set->settype->header;
@@ -197,7 +200,7 @@ void saveports(struct set *set, void *data, size_t len, unsigned options)
 	}
 }
 
-void usage(void)
+static void usage(void)
 {
 	printf
 	    ("-N set portmap --from PORT --to PORT\n"
