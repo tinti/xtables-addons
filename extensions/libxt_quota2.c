@@ -23,7 +23,7 @@ static const struct option quota_mt2_opts[] = {
 	{.name = "grow",    .has_arg = false, .val = 'g'},
 	{.name = "name",    .has_arg = true,  .val = 'n'},
 	{.name = "quota",   .has_arg = true,  .val = 'q'},
-	{.name = "packets", .has_arg = true,  .val = 'p'},
+	{.name = "packets", .has_arg = false, .val = 'p'},
 	{NULL},
 };
 
@@ -60,7 +60,7 @@ quota_mt2_parse(int c, char **argv, int invert, unsigned int *flags,
 		*flags |= FL_NAME;
 		return true;
 	case 'p':
-		param_act(P_ONLY_ONCE, "quota", "--packets", *flags & FL_PACKETS);
+		param_act(P_ONLY_ONCE, "quota", "--packets", *flags & FL_PACKET);
 		param_act(P_NO_INVERT, "quota", "--packets", invert);
 		info->flags |= XT_QUOTA_PACKET;
 		*flags |= FL_PACKET;
