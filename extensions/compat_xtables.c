@@ -12,11 +12,12 @@
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
 
-static inline int unable(const char *cause)
+static inline int unable(const char *cause, unsigned int c)
 {
 	if (net_ratelimit())
 		printk(KERN_ERR KBUILD_MODNAME
-		       ": compat layer limits reached (%s) - dropping packets\n", cause);
+		       ": compat layer limits reached (%s) - "
+		       "dropping packets (%u so far)\n", cause, c);
 	return -1;
 }
 
@@ -296,6 +297,7 @@ EXPORT_SYMBOL_GPL(xtnu_request_find_match);
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)
 {
+	static unsigned int rmh_counter;
 	struct sk_buff *nskb = skb;
 	int ret;
 
@@ -306,19 +308,20 @@ int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)
 	ret = ip_route_me_harder(&nskb, addr_type);
 #endif
 	if (nskb != skb)
-		return unable(__func__);
+		return unable(__func__, ++rmh_counter);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
 
 int xtnu_skb_make_writable(struct sk_buff *skb, unsigned int len)
 {
+	static unsigned int mkw_counter;
 	struct sk_buff *nskb = skb;
 	int ret;
 
 	ret = skb_make_writable(&skb, len);
 	if (nskb != skb)
-		return unable(__func__);
+		return unable(__func__, ++mkw_counter) <= 0 ? false : true;
 	return ret;
 }
 EXPORT_SYMBOL_GPL(xtnu_skb_make_writable);
