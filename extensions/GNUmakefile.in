@@ -60,7 +60,9 @@ targets_install := ${obj-m}
 
 .PHONY: all install clean distclean FORCE
 
-all: modules ${targets} matches.man targets.man
+all: modules user matches.man targets.man
+
+user: ${targets}
 
 install: modules_install ${targets_install}
 	@mkdir -p "${DESTDIR}${xtlibdir}";

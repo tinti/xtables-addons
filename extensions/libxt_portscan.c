@@ -7,6 +7,7 @@
  *	2 or 3 as published by the Free Software Foundation.
  */
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
