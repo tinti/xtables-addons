@@ -1,6 +1,6 @@
 /*
- *	DELUDE target
- *	Copyright © CC Computer Consultants GmbH, 2007 - 2008
+ *	"DELUDE" target extension for Xtables
+ *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2007 - 2008
  *
  *	Based upon linux-2.6.18.5/net/ipv4/netfilter/ipt_REJECT.c:
  *	(C) 1999-2001 Paul `Rusty' Russell

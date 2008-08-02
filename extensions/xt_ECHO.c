@@ -1,11 +1,14 @@
 /*
- *	ECHO target (RFC 862)
- *	Copyright © CC Computer Consultants GmbH, 2008
+ *	"ECHO" (RFC 862) target extension for Xtables
+ *	Sample module for "Writing your own Netfilter Modules"
+ *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008
  *
  *	This program is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License
- *	version 2 or 3 as published by the Free Software Foundation.
+ *	modify it under the terms of the GNU General Public License; either
+ *	version 2 of the License, or any later version, as published by the
+ *	Free Software Foundation.
  */
+
 #include <linux/ip.h>
 #include <linux/module.h>
 #include <linux/skbuff.h>

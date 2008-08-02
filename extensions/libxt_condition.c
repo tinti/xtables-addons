@@ -1,4 +1,13 @@
-/* Shared library add-on to iptables for condition match */
+/*
+ *	"condition" match extension for iptables
+ *	Stephane Ouellette <ouellettes [at] videotron ca>, 2002-10-22
+ *	Massimiliano Hofer <max [at] nucleus it>, 2006-05-15
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *
+ *	This program is free software; you can redistribute it and/or modify it
+ *	under the terms of the GNU General Public License; either version 2
+ *	or 3 of the License, as published by the Free Software Foundation.
+ */
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>

@@ -1,3 +1,13 @@
+/*
+ *	"IPMARK" target extension for Xtables
+ *	Copyright © Grzegorz Janoszka <Grzegorz.Janoszka@pro.onet.pl>, 2003
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License; either
+ *	version 2 of the License, or any later version, as published by the
+ *	Free Software Foundation.
+ */
 #include <linux/ip.h>
 #include <linux/ipv6.h>
 #include <linux/module.h>

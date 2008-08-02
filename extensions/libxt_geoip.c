@@ -1,16 +1,13 @@
-/* Shared library add-on to iptables to add geoip match support.
+/*
+ *	"geoip" match extension for iptables
+ *	Copyright © Samuel Jean <peejix [at] people netfilter org>, 2004 - 2008
+ *	Copyright © Nicolas Bouliane <acidfu [at] people netfilter org>, 2004 - 2008
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2008
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * Copyright (c) 2004, 2005, 2006, 2007, 2008
- * Samuel Jean & Nicolas Bouliane
- *
- * For comments, bugs or suggestions, please contact
- * Samuel Jean       <peejix@people.netfilter.org>
- * Nicolas Bouliane  <peejix@people.netfilter.org>
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License; either
+ *	version 2 of the License, or any later version, as published by the
+ *	Free Software Foundation.
  */
 #include <sys/stat.h>
 #include <sys/types.h>

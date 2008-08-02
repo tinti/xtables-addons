@@ -1,3 +1,12 @@
+/*
+ *	"LOGMARK" target extension for iptables
+ *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License; either
+ *	version 2 of the License, or any later version, as published by the
+ *	Free Software Foundation.
+ */
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>

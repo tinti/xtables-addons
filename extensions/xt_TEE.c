@@ -1,12 +1,14 @@
 /*
- * This implements the TEE target.
+ *	"TEE" target extension for Xtables
+ *	Copyright © Sebastian Claßen <sebastian.classen [at] freenet de>, 2007
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2007
  *
- * Copyright (C) 2007 Sebastian Claßen <sebastian.classen@freenet.de> and
- * CC Computer Consultants GmbH, 2007
+ *	based on ipt_ROUTE.c from Cédric de Launois
+ *	<delaunois [at] info ucl ac be>
  *
- * based on ipt_ROUTE.c from Cédric de Launois <delaunois@info.ucl.ac.be>
- *
- * This software is distributed under GNU GPL v2, 1991
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License
+ *	version 2, as published by the Free Software Foundation.
  */
 #include <linux/ip.h>
 #include <linux/module.h>

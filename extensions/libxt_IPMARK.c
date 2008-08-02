@@ -1,9 +1,12 @@
-/* Shared library add-on to iptables to add IPMARK target support.
- * (C) 2003 by Grzegorz Janoszka <Grzegorz.Janoszka@pro.onet.pl>
+/*
+ *	"IPMARK" target extension for iptables
+ *	Copyright © Grzegorz Janoszka <Grzegorz.Janoszka@pro.onet.pl>, 2003
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2008
  *
- * based on original MARK target
- *
- * This program is distributed under the terms of GNU GPL
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License; either
+ *	version 2 of the License, or any later version, as published by the
+ *	Free Software Foundation.
  */
 #include <getopt.h>
 #include <stdio.h>

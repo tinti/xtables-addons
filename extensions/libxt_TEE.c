@@ -1,9 +1,12 @@
 /*
- *	libxt_TEE
+ *	"TEE" target extension for iptables
+ *	Copyright © Sebastian Claßen <sebastian.classen [at] freenet.ag>, 2007
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2007 - 2008
  *
- *	Copyright © Sebastian Claßen <sebastian.classen@freenet.ag>, 2007
- *	Copyright © CC Computer Consultants GmbH, 2007 - 2008
- *	Jan Engelhardt <jengelh@computergmbh.de>
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License; either
+ *	version 2 of the License, or any later version, as published by the
+ *	Free Software Foundation.
  */
 #include <sys/socket.h>
 #include <getopt.h>

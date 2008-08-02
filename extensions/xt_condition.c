@@ -1,14 +1,16 @@
 /*
- *	xt_condition
+ *	"condition" match extension for Xtables
  *
  *	Description: This module allows firewall rules to match using
  *	condition variables available through procfs.
  *
  *	Authors:
- *	Stephane Ouellette <ouellettes@videotron.ca>, 2002-10-22
- *	Massimiliano Hofer <max@nucleus.it>, 2006-05-15
+ *	Stephane Ouellette <ouellettes [at] videotron ca>, 2002-10-22
+ *	Massimiliano Hofer <max [at] nucleus it>, 2006-05-15
  *
- *	This software is distributed under the terms of the GNU GPL.
+ *	This program is free software; you can redistribute it and/or modify it
+ *	under the terms of the GNU General Public License; either version 2
+ *	or 3 of the License, as published by the Free Software Foundation.
  */
 #include <linux/kernel.h>
 #include <linux/list.h>

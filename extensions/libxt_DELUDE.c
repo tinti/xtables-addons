@@ -1,10 +1,11 @@
 /*
- *	DELUDE target for Xtables
- *	Copyright © CC Computer Consultants GmbH, 2006 - 2008
+ *	"DELUDE" target extension for iptables
+ *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2006 - 2008
  *
- *	This program is free software; you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License; either version
- *	2 or 3 as published by the Free Software Foundation.
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License; either
+ *	version 2 of the License, or any later version, as published by the
+ *	Free Software Foundation.
  */
 #include <getopt.h>
 #include <stdio.h>

@@ -1,3 +1,7 @@
+/*
+ *	"TARPIT" target extension to iptables
+ *	this file is in the Public Domain
+ */
 #include <stdio.h>
 #include <getopt.h>
 #include <xtables.h>
