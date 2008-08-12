@@ -20,15 +20,6 @@
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
 
-static inline int unable(const char *cause, unsigned int c)
-{
-	if (net_ratelimit())
-		printk(KERN_ERR KBUILD_MODNAME
-		       ": compat layer limits reached (%s) - "
-		       "dropping packets (%u so far)\n", cause, c);
-	return -1;
-}
-
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_run(const struct sk_buff *skb,
     const struct net_device *in, const struct net_device *out,
@@ -161,15 +152,21 @@ static unsigned int xtnu_target_run(struct sk_buff **pskb,
 static unsigned int xtnu_target_run(struct sk_buff **pskb,
     const struct net_device *in, const struct net_device *out,
     unsigned int hooknum, const struct xt_target *ct, const void *targinfo)
+#else
+static unsigned int xtnu_target_run(struct sk_buff *skb,
+    const struct net_device *in, const struct net_device *out,
+    unsigned int hooknum, const struct xt_target *ct, const void *targinfo)
 #endif
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 {
 	struct xtnu_target *nt = xtcompat_nutarget(ct);
 	if (nt != NULL && nt->target != NULL)
-		return nt->target(*pskb, in, out, hooknum, nt, targinfo);
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+		return nt->target(pskb, in, out, hooknum, nt, targinfo);
+#else
+		return nt->target(&skb, in, out, hooknum, nt, targinfo);
+#endif
 	return XT_CONTINUE;
 }
-#endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
 static int xtnu_target_check(const char *table, const void *entry,
@@ -178,11 +175,10 @@ static int xtnu_target_check(const char *table, const void *entry,
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_target_check(const char *table, const void *entry,
     const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#else
 static bool xtnu_target_check(const char *table, const void *entry,
     const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
 #endif
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 {
 	struct xtnu_target *nt = xtcompat_nutarget(ct);
 	if (nt == NULL)
@@ -192,23 +188,19 @@ static bool xtnu_target_check(const char *table, const void *entry,
 		return true;
 	return nt->checkentry(table, entry, nt, targinfo, hook_mask);
 }
-#endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
 static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo,
     unsigned int targinfosize)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#else
 static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo)
 #endif
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 {
 	struct xtnu_target *nt = xtcompat_nutarget(ct);
 	if (nt != NULL && nt->destroy != NULL)
 		nt->destroy(nt, targinfo);
 }
-#endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 int xtnu_register_target(struct xtnu_target *nt)
 {
 	struct xt_target *ct;
@@ -276,7 +268,6 @@ void xtnu_unregister_targets(struct xtnu_target *nt, unsigned int num)
 		xtnu_unregister_target(&nt[i]);
 }
 EXPORT_SYMBOL_GPL(xtnu_unregister_targets);
-#endif
 
 struct xt_match *xtnu_request_find_match(unsigned int af, const char *name,
     uint8_t revision)
@@ -302,38 +293,28 @@ struct xt_match *xtnu_request_find_match(unsigned int af, const char *name,
 }
 EXPORT_SYMBOL_GPL(xtnu_request_find_match);
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-int xtnu_ip_route_me_harder(struct sk_buff *skb, unsigned int addr_type)
+int xtnu_ip_route_me_harder(struct sk_buff **pskb, unsigned int addr_type)
 {
-	static unsigned int rmh_counter;
-	struct sk_buff *nskb = skb;
-	int ret;
-
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 17)
 	/* Actually this one is valid up to 2.6.18.4, but changed in 2.6.18.5 */
-	ret = ip_route_me_harder(&skb);
+	return ip_route_me_harder(pskb);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-	ret = ip_route_me_harder(&nskb, addr_type);
+	return ip_route_me_harder(pskb, addr_type);
+#else
+	return ip_route_me_harder(*pskb, addr_type);
 #endif
-	if (nskb != skb)
-		return unable(__func__, ++rmh_counter);
-	return ret;
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
 
-int xtnu_skb_make_writable(struct sk_buff *skb, unsigned int len)
+int xtnu_skb_make_writable(struct sk_buff **pskb, unsigned int len)
 {
-	static unsigned int mkw_counter;
-	struct sk_buff *nskb = skb;
-	int ret;
-
-	ret = skb_make_writable(&skb, len);
-	if (nskb != skb)
-		return unable(__func__, ++mkw_counter) <= 0 ? false : true;
-	return ret;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+	return skb_make_writable(pskb, len);
+#else
+	return skb_make_writable(*pskb, len);
+#endif
 }
 EXPORT_SYMBOL_GPL(xtnu_skb_make_writable);
-#endif
 
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 24)
 static int __xtnu_ip_local_out(struct sk_buff *skb)

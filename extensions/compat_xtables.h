@@ -6,7 +6,7 @@
 #include "compat_xtnu.h"
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18)
-#	warning Kernels below 2.6.18 not supported.
+#	warning Kernels below 2.6.18.5 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -59,15 +59,13 @@
 #	define xt_unregister_matches xtnu_unregister_matches
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-#	define xt_target             xtnu_target
-#	define ip_route_me_harder    xtnu_ip_route_me_harder
-#	define skb_make_writable     xtnu_skb_make_writable
-#	define xt_register_target    xtnu_register_target
-#	define xt_unregister_target  xtnu_unregister_target
-#	define xt_register_targets   xtnu_register_targets
-#	define xt_unregister_targets xtnu_unregister_targets
-#endif
+#define ip_route_me_harder    xtnu_ip_route_me_harder
+#define skb_make_writable     xtnu_skb_make_writable
+#define xt_target             xtnu_target
+#define xt_register_target    xtnu_register_target
+#define xt_unregister_target  xtnu_unregister_target
+#define xt_register_targets   xtnu_register_targets
+#define xt_unregister_targets xtnu_unregister_targets
 
 #define xt_request_find_match xtnu_request_find_match
 

@@ -30,10 +30,11 @@ static const char *const dir_names[] = {
 };
 
 static unsigned int
-logmark_tg(struct sk_buff *skb, const struct net_device *in,
+logmark_tg(struct sk_buff **pskb, const struct net_device *in,
            const struct net_device *out, unsigned int hooknum,
            const struct xt_target *target, const void *targinfo)
 {
+	const struct sk_buff *skb = *pskb;
 	const struct xt_logmark_tginfo *info = targinfo;
 	const struct nf_conn *ct;
 	enum ip_conntrack_info ctinfo;

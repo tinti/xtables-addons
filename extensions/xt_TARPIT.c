@@ -49,7 +49,7 @@
 #include <net/tcp.h>
 #include "compat_xtables.h"
 
-static inline void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
+static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 {
 	struct tcphdr _otcph, *oth, *tcph;
 	unsigned int addr_type;
@@ -157,8 +157,10 @@ static inline void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 #endif
 		addr_type = RTN_LOCAL;
 
-	if (ip_route_me_harder(nskb, addr_type))
+	if (ip_route_me_harder(&nskb, addr_type))
 		goto free_nskb;
+	else
+		niph = ip_hdr(nskb);
 
 	nskb->ip_summed = CHECKSUM_NONE;
 
@@ -184,10 +186,11 @@ static inline void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 }
 
 static unsigned int
-tarpit_tg(struct sk_buff *skb, const struct net_device *in,
+tarpit_tg(struct sk_buff **pskb, const struct net_device *in,
           const struct net_device *out, unsigned int hooknum,
           const struct xt_target *target, const void *targinfo)
 {
+	const struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
 	const struct rtable *rt = (const void *)skb->dst;
 
@@ -215,7 +218,7 @@ tarpit_tg(struct sk_buff *skb, const struct net_device *in,
 	if (iph->frag_off & htons(IP_OFFSET))
 		return NF_DROP;
 
-	tarpit_tcp(skb, hooknum);
+	tarpit_tcp(*pskb, hooknum);
 	return NF_DROP;
 }
 

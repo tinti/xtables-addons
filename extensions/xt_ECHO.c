@@ -20,10 +20,11 @@
 #include <net/ip.h>
 #include "compat_xtables.h"
 
-static unsigned int echo_tg4(struct sk_buff *oldskb,
+static unsigned int echo_tg4(struct sk_buff **poldskb,
     const struct net_device *in, const struct net_device *out,
     unsigned int hooknum, const struct xt_target *target, const void *targinfo)
 {
+	const struct sk_buff *oldskb = *poldskb;
 	const struct udphdr *oldudp;
 	const struct iphdr *oldip;
 	struct udphdr *newudp, oldudp_buf;

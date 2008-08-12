@@ -142,11 +142,12 @@ static void tee_ip_direct_send(struct sk_buff *skb)
  * packets when we see they already have that ->nfct.
  */
 static unsigned int
-tee_tg(struct sk_buff *skb, const struct net_device *in,
+tee_tg(struct sk_buff **pskb, const struct net_device *in,
        const struct net_device *out, unsigned int hooknum,
        const struct xt_target *target, const void *targinfo)
 {
 	const struct xt_tee_tginfo *info = targinfo;
+	struct sk_buff *skb = *pskb;
 
 #ifdef WITH_CONNTRACK
 	if (skb->nfct == &tee_track.ct_general) {
@@ -160,8 +161,9 @@ tee_tg(struct sk_buff *skb, const struct net_device *in,
 	}
 #endif
 
-	if (!skb_make_writable(skb, sizeof(struct iphdr)))
+	if (!skb_make_writable(pskb, sizeof(struct iphdr)))
 		return NF_DROP;
+	skb = *pskb;
 
 	/*
 	 * If we are in INPUT, the checksum must be recalculated since

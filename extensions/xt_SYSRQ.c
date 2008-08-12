@@ -58,10 +58,11 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	return NF_ACCEPT;
 }
 
-static unsigned int sysrq_tg4(struct sk_buff *skb, const struct net_device *in,
-    const struct net_device *out, unsigned int hooknum,
-    const struct xt_target *target, const void *targinfo)
+static unsigned int sysrq_tg4(struct sk_buff **pskb,
+    const struct net_device *in, const struct net_device *out,
+    unsigned int hooknum, const struct xt_target *target, const void *targinfo)
 {
+	struct sk_buff *skb = *pskb;
 	const struct iphdr *iph;
 	const struct udphdr *udph;
 	uint16_t len;
@@ -79,10 +80,11 @@ static unsigned int sysrq_tg4(struct sk_buff *skb, const struct net_device *in,
 	return sysrq_tg((void *)udph + sizeof(struct udphdr), len);
 }
 
-static unsigned int sysrq_tg6(struct sk_buff *skb, const struct net_device *in,
-    const struct net_device *out, unsigned int hooknum,
-    const struct xt_target *target, const void *targinfo)
+static unsigned int sysrq_tg6(struct sk_buff **pskb,
+    const struct net_device *in, const struct net_device *out,
+    unsigned int hooknum, const struct xt_target *target, const void *targinfo)
 {
+	struct sk_buff *skb = *pskb;
 	const struct ipv6hdr *iph;
 	const struct udphdr *udph;
 	uint16_t len;

@@ -75,9 +75,9 @@ static void xt_chaos_total(const struct xt_chaos_tginfo *info,
 	return;
 }
 
-static unsigned int chaos_tg(struct sk_buff *skb, const struct net_device *in,
-    const struct net_device *out, unsigned int hooknum,
-    const struct xt_target *target, const void *targinfo)
+static unsigned int chaos_tg(struct sk_buff **pskb,
+    const struct net_device *in, const struct net_device *out,
+    unsigned int hooknum, const struct xt_target *target, const void *targinfo)
 {
 	/*
 	 * Equivalent to:
@@ -88,18 +88,19 @@ static unsigned int chaos_tg(struct sk_buff *skb, const struct net_device *in,
 	 * -A chaos -j DROP;
 	 */
 	const struct xt_chaos_tginfo *info = targinfo;
+	struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
 
 	if ((unsigned int)net_random() <= reject_percentage)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-		return xt_reject->target(&skb, in, out, hooknum,
+		return xt_reject->target(pskb, in, out, hooknum,
 		       target->__compat_target, &reject_params, NULL);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-		return xt_reject->target(&skb, in, out, hooknum,
+		return xt_reject->target(pskb, in, out, hooknum,
 		       target->__compat_target, &reject_params);
 #else
-		return xt_reject->target(skb, in, out, hooknum, target,
-		       &reject_params);
+		return xt_reject->target(skb, in, out, hooknum,
+		       target->__compat_target, &reject_params);
 #endif
 
 	/* TARPIT/DELUDE may not be called from the OUTPUT chain */

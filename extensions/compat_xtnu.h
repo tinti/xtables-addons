@@ -38,7 +38,7 @@ struct xtnu_match {
 struct xtnu_target {
 	struct list_head list;
 	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
-	unsigned int (*target)(struct sk_buff *, const struct net_device *,
+	unsigned int (*target)(struct sk_buff **, const struct net_device *,
 		const struct net_device *, unsigned int,
 		const struct xtnu_target *, const void *);
 	bool (*checkentry)(const char *, const void *,
@@ -68,8 +68,8 @@ static inline struct xtnu_target *xtcompat_nutarget(const struct xt_target *t)
 }
 
 extern int xtnu_ip_local_out(struct sk_buff *);
-extern int xtnu_ip_route_me_harder(struct sk_buff *, unsigned int);
-extern int xtnu_skb_make_writable(struct sk_buff *, unsigned int);
+extern int xtnu_ip_route_me_harder(struct sk_buff **, unsigned int);
+extern int xtnu_skb_make_writable(struct sk_buff **, unsigned int);
 extern int xtnu_register_match(struct xtnu_match *);
 extern int xtnu_ip_route_output_key(void *, struct rtable **, struct flowi *);
 extern void xtnu_unregister_match(struct xtnu_match *);
