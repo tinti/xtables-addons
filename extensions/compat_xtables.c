@@ -36,7 +36,7 @@ static int xtnu_match_run(const struct sk_buff *skb,
     unsigned int protoff, int *hotdrop)
 {
 	struct xtnu_match *nm = xtcompat_numatch(cm);
-	bool lo_drop, lo_ret;
+	bool lo_drop = false, lo_ret;
 
 	if (nm == NULL || nm->match == NULL)
 		return false;
