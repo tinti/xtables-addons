@@ -173,35 +173,37 @@ static int geoip_parse(int c, char **argv, int invert, unsigned int *flags,
 {
 	struct xt_geoip_match_info *info = (void *)(*match)->data;
 
-	switch(c) {
-		case '1':
-		// Ensure that XT_GEOIP_SRC *OR* XT_GEOIP_DST haven't been used yet.
+	switch (c) {
+	case '1':
 		if (*flags & (XT_GEOIP_SRC | XT_GEOIP_DST))
 			exit_error(PARAMETER_PROBLEM,
-				"geoip: only use --source-country *OR* --destination-country once!");
+				"geoip: Only exactly one of --source-country "
+				"or --destination-country must be specified!");
 
 		*flags |= XT_GEOIP_SRC;
-		break;
+		if (invert)
+			*flags |= XT_GEOIP_INV;
+
+		info->count = parse_geoip_cc(argv[optind-1], info->cc, info->mem);
+		info->flags = *flags;
+		return true;
 
 	case '2':
-		// Ensure that XT_GEOIP_SRC *OR* XT_GEOIP_DST haven't been used yet.
 		if (*flags & (XT_GEOIP_SRC | XT_GEOIP_DST))
 			exit_error(PARAMETER_PROBLEM,
-				"geoip: only use --source-country *OR* --destination-country once!");
+				"geoip: Only exactly one of --source-country "
+				"or --destination-country must be specified!");
 
 		*flags |= XT_GEOIP_DST;
-		break;
+		if (invert)
+			*flags |= XT_GEOIP_INV;
 
-	default:
-		return 0;
+		info->count = parse_geoip_cc(argv[optind-1], info->cc, info->mem);
+		info->flags = *flags;
+		return true;
 	}
 
-	if (invert)
-		*flags |= XT_GEOIP_INV;
-
-	info->count = parse_geoip_cc(argv[optind-1], info->cc, info->mem);
-	info->flags = *flags;
-	return 1;
+	return false;
 }
 
 static void
