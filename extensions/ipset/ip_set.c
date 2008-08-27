@@ -24,7 +24,11 @@
 #include <linux/errno.h>
 #include <asm/uaccess.h>
 #include <asm/bitops.h>
-#include <asm/semaphore.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
+#	include <linux/semaphore.h>
+#else
+#	include <asm/semaphore.h>
+#endif
 #include <linux/spinlock.h>
 #include <linux/vmalloc.h>
 
