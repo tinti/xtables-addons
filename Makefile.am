@@ -11,6 +11,9 @@ xtables-addons.8: ${srcdir}/xtables-addons.8.in extensions/matches.man extension
 extensions/%:
 	${MAKE} ${AM_MAKEFLAGS} -C $(@D) $(@F)
 
+install-exec-local:
+	depmod -a || :;
+
 .PHONY: tarball
 tarball:
 	rm -Rf /tmp/xtables-addons-${PACKAGE_VERSION};
