@@ -28,6 +28,7 @@
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
 #	define neigh_hh_output xtnu_neigh_hh_output
+#	define IPPROTO_UDPLITE 136
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)

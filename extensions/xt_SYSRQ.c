@@ -50,7 +50,11 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 		return NF_DROP;
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 	handle_sysrq(c, NULL);
+#else
+	handle_sysrq(c, NULL, NULL);
+#endif
 	return NF_ACCEPT;
 }
 
