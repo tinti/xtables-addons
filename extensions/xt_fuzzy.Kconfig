@@ -1,0 +1,6 @@
+config NETFILTER_XT_MATCH_FUZZY
+	tristate '"fuzzy" match support'
+	depends on NETFILTER_XTABLES && NETFILTER_ADVANCED
+	---help---
+	This extension allows you to match on packets according to a fuzzy
+	logic based law.

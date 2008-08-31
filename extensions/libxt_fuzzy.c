@@ -1,0 +1,139 @@
+/*
+ *	"fuzzy" match extension for iptables
+ *	Hime Aguiar e Oliveira Jr. <hime@engineer.com>, 2002 - 2003
+ *
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License;
+ *	either version 2 of the License, or any later version, as
+ *	published by the Free Software Foundation.
+ */
+#include <getopt.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <xtables.h>
+#include "xt_fuzzy.h"
+
+static void fuzzy_mt_help(void)
+{
+	printf(
+"fuzzy v%s options:\n"
+"                      --lower-limit number (in packets per second)\n"
+"                      --upper-limit number\n"
+,XTABLES_VERSION);
+};
+
+static struct option fuzzy_mt_opts[] = {
+	{ "lower-limit", 1 , 0 , '1' } ,
+	{ "upper-limit", 1 , 0 , '2' } ,
+	{ 0 }
+};
+
+/* Initialize data structures */
+static void fuzzy_mt_init(struct xt_entry_match *m)
+{
+	struct xt_fuzzy_mtinfo *info = (void *)m->data;
+
+	/*
+	 * Default rates (I will improve this very soon with something based
+	 * on real statistics of the running machine).
+	 */
+
+	info->minimum_rate = 1000;
+	info->maximum_rate = 2000;
+}
+
+#define IPT_FUZZY_OPT_MINIMUM	0x01
+#define IPT_FUZZY_OPT_MAXIMUM	0x02
+
+static int fuzzy_mt_parse(int c, char **argv, int invert, unsigned int *flags,
+                          const void *entry, struct xt_entry_match **match)
+{
+	struct xt_fuzzy_mtinfo *info = (void *)(*match)->data;
+
+	uint32_t num;
+
+	switch (c) {
+
+	case '1':
+			
+		if (invert)
+			exit_error(PARAMETER_PROBLEM,"Can't specify ! --lower-limit");
+
+		if (*flags & IPT_FUZZY_OPT_MINIMUM)
+			exit_error(PARAMETER_PROBLEM,"Can't specify --lower-limit twice");
+	
+		if (string_to_number(optarg,1,FUZZY_MAX_RATE,&num) == -1 || num < 1)
+			exit_error(PARAMETER_PROBLEM,"BAD --lower-limit");
+
+		info->minimum_rate = num;
+
+		*flags |= IPT_FUZZY_OPT_MINIMUM;
+		
+		break;
+
+	case '2':
+
+		if (invert)
+			exit_error(PARAMETER_PROBLEM,"Can't specify ! --upper-limit");
+
+		if (*flags & IPT_FUZZY_OPT_MAXIMUM)
+			exit_error(PARAMETER_PROBLEM,"Can't specify --upper-limit twice");
+
+		if (string_to_number(optarg,1,FUZZY_MAX_RATE,&num) == -1 || num < 1)
+			exit_error(PARAMETER_PROBLEM,"BAD --upper-limit");
+
+		info->maximum_rate = num;
+
+		*flags |= IPT_FUZZY_OPT_MAXIMUM;
+
+		break;
+
+	default:
+		return 0;
+	}
+	return 1;
+}
+
+static void fuzzy_mt_check(unsigned int flags)
+{
+}
+
+static void fuzzy_mt_print(const void *ip, const struct xt_entry_match *match,
+                           int numeric)
+{
+	const struct xt_fuzzy_mtinfo *info = (const void *)match->data;
+
+	printf(" fuzzy: lower limit = %u pps - upper limit = %u pps ",info->minimum_rate,info->maximum_rate);
+
+}
+
+/* Saves the union ipt_targinfo in parsable form to stdout. */
+static void fuzzy_mt_save(const void *ip, const struct xt_entry_match *match)
+{
+	const struct xt_fuzzy_mtinfo *info = (const void *)match->data;
+
+	printf("--lower-limit %u ", info->minimum_rate);
+	printf("--upper-limit %u ", info->maximum_rate);
+
+}
+
+static struct xtables_match fuzzy_mt_reg = { 
+	.name          = "fuzzy",
+	.version       = XTABLES_VERSION,
+	.size          = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
+	.userspacesize = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
+	.help          = fuzzy_mt_help,
+	.init          = fuzzy_mt_init,
+	.parse         = fuzzy_mt_parse,
+	.final_check   = fuzzy_mt_check,
+	.print         = fuzzy_mt_print,
+	.save          = fuzzy_mt_save,
+	.extra_opts    = fuzzy_mt_opts,
+};
+
+static void _init(void)
+{
+	xtables_register_match(&fuzzy_mt_reg);
+}
