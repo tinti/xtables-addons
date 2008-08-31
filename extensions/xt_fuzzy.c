@@ -35,26 +35,26 @@
 #define PAR_HIGH	1
 
 MODULE_AUTHOR("Hime Aguiar e Oliveira Junior <hime@engineer.com>");
-MODULE_DESCRIPTION("IP tables Fuzzy Logic Controller match module");
+MODULE_DESCRIPTION("Xtables: Fuzzy Logic Controller match");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_fuzzy");
 
-static  uint8_t mf_high(uint32_t tx,uint32_t mini,uint32_t maxi)
+static uint8_t mf_high(uint32_t tx, uint32_t mini, uint32_t maxi)
 {
-	if (tx >= maxi) return 100;
-
-	if (tx <= mini) return 0;
-
-	return ((100 * (tx-mini)) / (maxi-mini));
+	if (tx >= maxi)
+		return 100;
+	if (tx <= mini)
+		return 0;
+	return 100 * (tx - mini) / (maxi - mini);
 }
 
-static uint8_t mf_low(uint32_t tx,uint32_t mini,uint32_t maxi)
+static uint8_t mf_low(uint32_t tx, uint32_t mini, uint32_t maxi)
 {
-	if (tx <= mini) return 100;
-
-	if (tx >= maxi) return 0;
-
-	return ((100 * (maxi - tx)) / (maxi - mini));
+	if (tx <= mini)
+		return 100;
+	if (tx >= maxi)
+		return 0;
+	return 100 * (maxi - tx) / (maxi - mini);
 
 }
 
@@ -64,44 +64,39 @@ fuzzy_mt(const struct sk_buff *skb, const struct net_device *in,
          const void *matchinfo, int offset, unsigned int protoff,
          bool *hotdrop)
 {
-	/* From userspace */
-
 	struct xt_fuzzy_mtinfo *info = (void *)matchinfo;
-
 	unsigned long amount;
 	uint8_t howhigh, howlow, random_number;
 
 	info->bytes_total += skb->len;
 	++info->packets_total;
-
 	info->present_time = jiffies;
 
-	if (info->present_time >= info->previous_time)
+	if (info->present_time >= info->previous_time) {
 		amount = info->present_time - info->previous_time;
-	else {
+	} else {
 		/*
 		 * There was a transition: I choose to re-sample
 		 * and keep the old acceptance rate...
 	         */
-
 		amount = 0;
 		info->previous_time = info->present_time;
 		info->bytes_total = info->packets_total = 0;
-	     };
+	}
 
-	if ( amount > HZ/10) {/* More than 100 ms elapsed ... */
+	if (amount > HZ / 10) {
+		/* More than 100 ms elapsed ... */
 
-		info->mean_rate = (uint32_t) ((HZ * info->packets_total) \
-		  		        / amount);
-
+		info->mean_rate     = HZ * info->packets_total / amount;
 		info->previous_time = info->present_time;
-		info->bytes_total = info->packets_total = 0;
+		info->bytes_total   = info->packets_total = 0;
 
-		howhigh = mf_high(info->mean_rate,info->minimum_rate,info->maximum_rate);
-		howlow  = mf_low(info->mean_rate,info->minimum_rate,info->maximum_rate);
+		howhigh = mf_high(info->mean_rate, info->minimum_rate,
+		          info->maximum_rate);
+		howlow  = mf_low(info->mean_rate, info->minimum_rate,
+		          info->maximum_rate);
 
-		info->acceptance_rate = (uint8_t) \
-				(howhigh * PAR_LOW + PAR_HIGH * howlow);
+		info->acceptance_rate = howhigh * PAR_LOW + PAR_HIGH * howlow;
 
 		/*
 		 * In fact, the above defuzzification would require a
@@ -112,43 +107,40 @@ fuzzy_mt(const struct sk_buff *skb, const struct net_device *in,
 		 * both mf_high and mf_low - but to keep things understandable,
 		 * I did so.
 		 */
-
 	}
 
-	if (info->acceptance_rate < 100)
-	{
-		get_random_bytes((void *)(&random_number), 1);
+	if (info->acceptance_rate < 100) {
+		get_random_bytes(&random_number, sizeof(random_number));
 
-		if (random_number <= (255 * info->acceptance_rate) / 100)
+		if (random_number <= 255 * info->acceptance_rate / 100)
 			/*
 			 * If within the acceptance, it can pass
 			 * => do not match.
 			 */
-			return 0;
+			return false;
 		else
 			/* It cannot pass (it matches) */
-			return 1;
+			return true;
 	};
 
 	/* acceptance_rate == 100 % => Everything passes ... */
-	return 0;
-
+	return false;
 }
 
 static bool
 fuzzy_mt_check(const char *table, const void *ip, const struct xt_match *match,
                void *matchinfo, unsigned int hook_mask)
 {
-
 	const struct xt_fuzzy_mtinfo *info = matchinfo;
 
-	if ((info->minimum_rate < FUZZY_MIN_RATE) || (info->maximum_rate > FUZZY_MAX_RATE)
-	 || (info->minimum_rate >= info->maximum_rate)) {
-		printk("ip6t_fuzzy: BAD limits , please verify !!!\n");
-		return 0;
+	if (info->minimum_rate < FUZZY_MIN_RATE ||
+	    info->maximum_rate > FUZZY_MAX_RATE ||
+	    info->minimum_rate >= info->maximum_rate) {
+		printk(KERN_INFO KBUILD_MODNAME ": bad values, please check.\n");
+		return false;
 	}
 
-	return 1;
+	return true;
 }
 
 static struct xt_match fuzzy_mt_reg = {
@@ -163,10 +155,7 @@ static struct xt_match fuzzy_mt_reg = {
 
 static int __init fuzzy_mt_init(void)
 {
-	if (xt_register_match(&fuzzy_mt_reg))
-		return -EINVAL;
-
-	return 0;
+	return xt_register_match(&fuzzy_mt_reg);
 }
 
 static void __exit fuzzy_mt_exit(void)
