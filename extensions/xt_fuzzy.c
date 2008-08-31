@@ -21,7 +21,6 @@
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/random.h>
-#include <linux/spinlock.h>
 #include <net/tcp.h>
 #include <linux/netfilter/x_tables.h>
 #include "xt_fuzzy.h"
@@ -34,8 +33,6 @@
 
 #define PAR_LOW		1/100
 #define PAR_HIGH	1
-
-static spinlock_t fuzzy_lock = SPIN_LOCK_UNLOCKED;
 
 MODULE_AUTHOR("Hime Aguiar e Oliveira Junior <hime@engineer.com>");
 MODULE_DESCRIPTION("IP tables Fuzzy Logic Controller match module");
@@ -73,9 +70,6 @@ fuzzy_mt(const struct sk_buff *skb, const struct net_device *in,
 
 	unsigned long amount;
 	uint8_t howhigh, howlow, random_number;
-
-
-	spin_lock_bh(&fuzzy_lock); /* Rise the lock */
 
 	info->bytes_total += skb->len;
 	++info->packets_total;
@@ -120,9 +114,6 @@ fuzzy_mt(const struct sk_buff *skb, const struct net_device *in,
 		 */
 
 	}
-
-	spin_unlock_bh(&fuzzy_lock); /* Release the lock */
-
 
 	if (info->acceptance_rate < 100)
 	{
