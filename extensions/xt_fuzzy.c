@@ -38,6 +38,7 @@ MODULE_AUTHOR("Hime Aguiar e Oliveira Junior <hime@engineer.com>");
 MODULE_DESCRIPTION("Xtables: Fuzzy Logic Controller match");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_fuzzy");
+MODULE_ALIAS("ip6t_fuzzy");
 
 static uint8_t mf_high(uint32_t tx, uint32_t mini, uint32_t maxi)
 {
@@ -143,24 +144,35 @@ fuzzy_mt_check(const char *table, const void *ip, const struct xt_match *match,
 	return true;
 }
 
-static struct xt_match fuzzy_mt_reg = {
-	.name       = "fuzzy",
-	.revision   = 0,
-	.family     = PF_INET,
-	.match      = fuzzy_mt,
-	.checkentry = fuzzy_mt_check,
-	.matchsize  = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
-	.me         = THIS_MODULE,
+static struct xt_match fuzzy_mt_reg[] __read_mostly = {
+	{
+		.name       = "fuzzy",
+		.revision   = 0,
+		.family     = PF_INET,
+		.match      = fuzzy_mt,
+		.checkentry = fuzzy_mt_check,
+		.matchsize  = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
+		.me         = THIS_MODULE,
+	},
+	{
+		.name       = "fuzzy",
+		.revision   = 0,
+		.family     = PF_INET6,
+		.match      = fuzzy_mt,
+		.checkentry = fuzzy_mt_check,
+		.matchsize  = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
+		.me         = THIS_MODULE,
+	},
 };
 
 static int __init fuzzy_mt_init(void)
 {
-	return xt_register_match(&fuzzy_mt_reg);
+	return xt_register_matches(fuzzy_mt_reg, ARRAY_SIZE(fuzzy_mt_reg));
 }
 
 static void __exit fuzzy_mt_exit(void)
 {
-	xt_unregister_match(&fuzzy_mt_reg);
+	xt_unregister_matches(fuzzy_mt_reg, ARRAY_SIZE(fuzzy_mt_reg));
 }
 
 module_init(fuzzy_mt_init);
