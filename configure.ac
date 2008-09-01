@@ -27,8 +27,6 @@ AC_ARG_WITH([xtlibdir],
 	[xtlibdir="$withval"],
 	[xtlibdir='${libexecdir}/xtables'])
 
-AC_CHECK_HEADER([netinet/ip6.h], [], [AC_MSG_ERROR(but we need that for IPv6)])
-
 AC_MSG_CHECKING([xtables.h presence])
 if [[ -n "$xtables_location" ]]; then
 	if [[ -f "$xtables_location/xtables.h" ]]; then
