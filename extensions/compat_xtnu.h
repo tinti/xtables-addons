@@ -82,5 +82,6 @@ extern void xtnu_unregister_targets(struct xtnu_target *, unsigned int);
 extern struct xt_match *xtnu_request_find_match(unsigned int,
 	const char *, uint8_t);
 extern int xtnu_neigh_hh_output(struct hh_cache *, struct sk_buff *);
+extern void xtnu_csum_replace2(__u16 __bitwise *, __be16, __be16);
 
 #endif /* _COMPAT_XTNU_H */

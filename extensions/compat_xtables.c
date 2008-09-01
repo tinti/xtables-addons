@@ -20,6 +20,11 @@
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
+typedef __u16 __bitwise __sum16;
+typedef __u32 __bitwise __wsum;
+#endif
+
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_run(const struct sk_buff *skb,
     const struct net_device *in, const struct net_device *out,
@@ -384,16 +389,21 @@ int xtnu_neigh_hh_output(struct hh_cache *hh, struct sk_buff *skb)
 }
 EXPORT_SYMBOL_GPL(xtnu_neigh_hh_output);
 
-static inline void csum_replace4(__sum16 *sum, __be32 from, __be32 to)
+static inline __wsum xtnu_csum_unfold(__sum16 n)
+{
+	return (__force __wsum)n;
+}
+
+static inline void xtnu_csum_replace4(__sum16 *sum, __be32 from, __be32 to)
 {
 	__be32 diff[] = {~from, to};
 	*sum = csum_fold(csum_partial((char *)diff, sizeof(diff),
-	       ~csum_unfold(*sum)));
+	       ~xtnu_csum_unfold(*sum)));
 }
 
 void xtnu_csum_replace2(__sum16 *sum, __be16 from, __be16 to)
 {
-	csum_replace4(sum, (__force __be32)from, (__force __be32)to);
+	xtnu_csum_replace4(sum, (__force __be32)from, (__force __be32)to);
 }
 EXPORT_SYMBOL_GPL(xtnu_csum_replace2);
 #endif
