@@ -76,7 +76,6 @@ static void chaos_tg_print(const void *ip,
 		printf("TARPIT ");
 		break;
 	}
-	return;
 }
 
 static void chaos_tg_save(const void *ip, const struct xt_entry_target *target)
@@ -91,7 +90,6 @@ static void chaos_tg_save(const void *ip, const struct xt_entry_target *target)
 		printf("--tarpit ");
 		break;
 	}
-	return;
 }
 
 static struct xtables_target chaos_tg_reg = {

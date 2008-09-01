@@ -251,7 +251,6 @@ static int __init portscan_mt_init(void)
 static void __exit portscan_mt_exit(void)
 {
 	xt_unregister_match(&portscan_mt_reg);
-	return;
 }
 
 module_init(portscan_mt_init);

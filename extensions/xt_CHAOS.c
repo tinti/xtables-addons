@@ -72,7 +72,6 @@ static void xt_chaos_total(const struct xt_chaos_tginfo *info,
 #else
 	destiny->target(skb, in, out, hooknum, destiny, NULL);
 #endif
-	return;
 }
 
 static unsigned int chaos_tg(struct sk_buff **pskb,
@@ -200,7 +199,6 @@ static void __exit chaos_tg_exit(void)
 		module_put(xt_delude->me);
 	if (have_tarpit)
 		module_put(xt_tarpit->me);
-	return;
 }
 
 module_init(chaos_tg_init);
