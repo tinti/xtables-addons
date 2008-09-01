@@ -27,9 +27,6 @@
 #ifndef CONFIG_PROC_FS
 #	error "proc file system support is required for this module"
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-#	define proc_net init_net.proc_net
-#endif
 
 /* Defaults, these can be overridden on the module command-line. */
 static unsigned int condition_list_perms = S_IRUGO | S_IWUSR;
@@ -159,7 +156,8 @@ condition_mt_check(const char *tablename, const void *entry,
 	}
 
 	/* Create the condition variable's proc file entry. */
-	var->status_proc = create_proc_entry(info->name, condition_list_perms, proc_net_condition);
+	var->status_proc = create_proc_entry(info->name, condition_list_perms,
+	                   proc_net_condition);
 
 	if (var->status_proc == NULL) {
 		kfree(var);
@@ -238,13 +236,13 @@ static int __init condition_mt_init(void)
 {
 	int ret;
 
-	proc_net_condition = proc_mkdir(dir_name, proc_net);
+	proc_net_condition = proc_mkdir(dir_name, init_net__proc_net);
 	if (proc_net_condition == NULL)
 		return -EACCES;
 
 	ret = xt_register_matches(condition_mt_reg, ARRAY_SIZE(condition_mt_reg));
 	if (ret < 0) {
-		remove_proc_entry(dir_name, proc_net);
+		remove_proc_entry(dir_name, init_net__proc_net);
 		return ret;
 	}
 
@@ -254,7 +252,7 @@ static int __init condition_mt_init(void)
 static void __exit condition_mt_exit(void)
 {
 	xt_unregister_matches(condition_mt_reg, ARRAY_SIZE(condition_mt_reg));
-	remove_proc_entry(dir_name, proc_net);
+	remove_proc_entry(dir_name, init_net__proc_net);
 }
 
 module_init(condition_mt_init);
