@@ -232,30 +232,44 @@ static bool portscan_mt_check(const char *tablename, const void *entry,
 	return true;
 }
 
-static struct xt_match portscan_mt_reg __read_mostly = {
-	.name       = "portscan",
-	.revision   = 0,
-	.family     = AF_INET,
-	.match      = portscan_mt,
-	.checkentry = portscan_mt_check,
-	.matchsize  = sizeof(struct xt_portscan_mtinfo),
-	.proto      = IPPROTO_TCP,
-	.me         = THIS_MODULE,
+static struct xt_match portscan_mt_reg[] __read_mostly = {
+	{
+		.name       = "portscan",
+		.revision   = 0,
+		.family     = PF_INET,
+		.match      = portscan_mt,
+		.checkentry = portscan_mt_check,
+		.matchsize  = sizeof(struct xt_portscan_mtinfo),
+		.proto      = IPPROTO_TCP,
+		.me         = THIS_MODULE,
+	},
+	{
+		.name       = "portscan",
+		.revision   = 0,
+		.family     = PF_INET6,
+		.match      = portscan_mt,
+		.checkentry = portscan_mt_check,
+		.matchsize  = sizeof(struct xt_portscan_mtinfo),
+		.proto      = IPPROTO_TCP,
+		.me         = THIS_MODULE,
+	},
 };
 
 static int __init portscan_mt_init(void)
 {
-	return xt_register_match(&portscan_mt_reg);
+	return xt_register_matches(portscan_mt_reg,
+	       ARRAY_SIZE(portscan_mt_reg));
 }
 
 static void __exit portscan_mt_exit(void)
 {
-	xt_unregister_match(&portscan_mt_reg);
+	xt_unregister_matches(portscan_mt_reg, ARRAY_SIZE(portscan_mt_reg));
 }
 
 module_init(portscan_mt_init);
 module_exit(portscan_mt_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@computergmbh.de>");
-MODULE_DESCRIPTION("netfilter \"portscan\" match");
+MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_DESCRIPTION("Xtables: \"portscan\" match");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_portscan");
+MODULE_ALIAS("ip6t_portscan");
