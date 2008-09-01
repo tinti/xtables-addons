@@ -162,3 +162,5 @@ module_exit(sysrq_tg_exit);
 MODULE_DESCRIPTION("Xtables: triggering SYSRQ remotely");
 MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_LICENSE("GPL");
+MODULE_ALIAS("ipt_SYSRQ");
+MODULE_ALIAS("ip6t_SYSRQ");
