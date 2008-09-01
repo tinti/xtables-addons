@@ -59,6 +59,12 @@
 #	define xt_unregister_matches xtnu_unregister_matches
 #endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
+#	define csum_replace2 xtnu_csum_replace2
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
+#	define csum_replace2 nf_csum_replace2
+#endif
+
 #define ip_route_me_harder    xtnu_ip_route_me_harder
 #define skb_make_writable     xtnu_skb_make_writable
 #define xt_target             xtnu_target

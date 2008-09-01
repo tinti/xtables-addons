@@ -2,6 +2,7 @@
 #
 build_CHAOS=m
 build_DELUDE=m
+build_DHCPADDR=m
 build_ECHO=
 build_IPMARK=m
 build_LOGMARK=m
