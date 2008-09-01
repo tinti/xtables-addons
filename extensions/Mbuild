@@ -7,6 +7,7 @@ obj-${build_SYSRQ}       += libxt_SYSRQ.so
 obj-${build_TARPIT}      += libxt_TARPIT.so
 obj-${build_TEE}         += libxt_TEE.so
 obj-${build_condition}   += libxt_condition.so
+obj-${build_fuzzy}       += libxt_fuzzy.so
 obj-${build_geoip}       += libxt_geoip.so
 obj-${build_ipp2p}       += libxt_ipp2p.so
 obj-${build_portscan}    += libxt_portscan.so

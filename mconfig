@@ -9,6 +9,7 @@ build_SYSRQ=m
 build_TARPIT=m
 build_TEE=m
 build_condition=m
+build_fuzzy=m
 build_geoip=m
 build_ipp2p=m
 build_ipset=m
