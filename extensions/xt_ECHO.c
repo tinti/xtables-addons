@@ -34,7 +34,7 @@ static unsigned int echo_tg4(struct sk_buff **poldskb,
 	void *payload;
 
 	/* This allows us to do the copy operation in fewer lines of code. */
-	if (skb_linearize(oldskb) < 0)
+	if (skb_linearize(*poldskb) < 0)
 		return NF_DROP;
 
 	oldip  = ip_hdr(oldskb);
@@ -87,7 +87,7 @@ static unsigned int echo_tg4(struct sk_buff **poldskb,
 	dst_hold(oldskb->dst);
 	newskb->dst = oldskb->dst;
 
-	if (ip_route_me_harder(newskb, addr_type) < 0)
+	if (ip_route_me_harder(&newskb, addr_type) < 0)
 		goto free_nskb;
 
 	newip->ttl        = dst_metric(newskb->dst, RTAX_HOPLIMIT);
@@ -97,7 +97,7 @@ static unsigned int echo_tg4(struct sk_buff **poldskb,
 	if (newskb->len > dst_mtu(newskb->dst))
 		goto free_nskb;
 
-	nf_ct_attach(newskb, oldskb);
+	nf_ct_attach(newskb, *poldskb);
 	ip_local_out(newskb);
 	return NF_DROP;
 
@@ -129,7 +129,7 @@ static void __exit echo_tg_exit(void)
 
 module_init(echo_tg_init);
 module_exit(echo_tg_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@computergmbh.de>");
+MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_DESCRIPTION("Xtables: ECHO diagnosis target");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_ECHO");
