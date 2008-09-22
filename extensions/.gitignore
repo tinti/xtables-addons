@@ -4,6 +4,7 @@
 *.ko
 *.mod.c
 Module.symvers
+Modules.symvers
 modules.order
 
 /*.so

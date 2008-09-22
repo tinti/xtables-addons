@@ -408,4 +408,12 @@ void xtnu_csum_replace2(__sum16 *sum, __be16 from, __be16 to)
 EXPORT_SYMBOL_GPL(xtnu_csum_replace2);
 #endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 17)
+int xtnu_skb_linearize(struct sk_buff *skb)
+{
+	return skb_linearize(skb, GFP_ATOMIC);
+}
+EXPORT_SYMBOL_GPL(xtnu_skb_linearize);
+#endif
+
 MODULE_LICENSE("GPL");

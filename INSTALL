@@ -12,13 +12,9 @@ in combination with the kernel's Kbuild system.
 Prerequirements
 ===============
 
-	* a recent iptables snapshot
-	  - from the "xtables" git repository at dev.medozas.de
-	    (minimum as per git-describe: v1.4.0-77)
-	  - or the subversion repository at netfilter.org (minimum: r7502)
-	  - or the xtables-combined tarball that is currently distributed
+	* iptables 1.4.1
 
-	* kernel-source >= 2.6.18.5 with prepared build/output directory
+	* kernel-source >= 2.6.17 with prepared build/output directory
 	  - CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK
 	  - CONFIG_NF_CONNTRACK_MARK or CONFIG_IP_NF_CONNTRACK_MARK
 	    enabled =y or as module (=m)

@@ -52,7 +52,7 @@
 static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 {
 	struct tcphdr _otcph, *oth, *tcph;
-	unsigned int addr_type;
+	unsigned int addr_type = RTN_UNSPEC;
 	struct sk_buff *nskb;
 	struct iphdr *niph;
 	u_int16_t tmp;
@@ -96,9 +96,11 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 	skb_nfmark(nskb) = 0;
 	skb_init_secmark(nskb);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
 	skb_shinfo(nskb)->gso_size = 0;
 	skb_shinfo(nskb)->gso_segs = 0;
 	skb_shinfo(nskb)->gso_type = 0;
+#endif
 
 	tcph = (struct tcphdr *)(skb_network_header(nskb) + ip_hdrlen(nskb));
 
