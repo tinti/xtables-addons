@@ -11,9 +11,9 @@
 //#define IPP2P_DEBUG_SOUL
 //#define IPP2P_DEBUG_WINMX
 
-#define get_u8(X,  O)  (*(__u8 *)(X + O))
-#define get_u16(X, O)  get_unaligned((__u16 *)(X + O))
-#define get_u32(X, O)  get_unaligned((__u32 *)(X + O))
+#define get_u8(X,  O)  (*(const __u8 *)((X) + O))
+#define get_u16(X, O)  get_unaligned((const __u16 *)((X) + O))
+#define get_u32(X, O)  get_unaligned((const __u32 *)((X) + O))
 
 MODULE_AUTHOR("Eicke Friedrich/Klaus Degner <ipp2p@ipp2p.org>");
 MODULE_DESCRIPTION("An extension to iptables to identify P2P traffic.");
