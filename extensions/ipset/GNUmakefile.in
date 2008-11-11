@@ -29,7 +29,7 @@ regular_CFLAGS  := @regular_CFLAGS@
 kinclude_CFLAGS := @kinclude_CFLAGS@
 xtables_CFLAGS  := @xtables_CFLAGS@
 
-AM_CFLAGS      := ${regular_CFLAGS} -I${top_srcdir}/include ${xtables_CFLAGS} ${kinclude_CFLAGS} -DXTABLES_LIBDIR=\"${xtlibdir}\"
+AM_CFLAGS      := ${regular_CFLAGS} -I${top_srcdir}/include ${xtables_CFLAGS} ${kinclude_CFLAGS} -DIPSET_LIB_DIR=\"${xtlibdir}\"
 AM_DEPFLAGS     = -Wp,-MMD,$(@D)/.$(@F).d,-MT,$@
 
 ifeq (${V},)

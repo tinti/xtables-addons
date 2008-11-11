@@ -7,23 +7,22 @@
  * published by the Free Software Foundation.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <time.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <arpa/inet.h>
-#include <stdarg.h>
-#include <netdb.h>
-#include <dlfcn.h>
-#include <fcntl.h>
-/* #include <asm/bitops.h> */
+#include <stdio.h>			/* *printf, perror, sscanf, fdopen */
+#include <string.h>			/* mem*, str* */
+#include <errno.h>			/* errno, perror */
+#include <time.h>			/* time, ctime */
+#include <netdb.h>			/* gethostby*, getnetby*, getservby* */
+#include <stdlib.h>			/* exit, malloc, free, strtol, getenv, mkstemp */
+#include <unistd.h>			/* read, close, fork, exec*, unlink */
+#include <sys/types.h>			/* open, wait, socket, *sockopt, umask */
+#include <sys/stat.h>			/* open, umask */
+#include <sys/wait.h>			/* wait */
+#include <sys/socket.h>			/* socket, *sockopt, gethostby*, inet_* */
+#include <netinet/in.h>			/* inet_* */
+#include <fcntl.h>			/* open */
+#include <arpa/inet.h>			/* htonl, inet_* */
+#include <stdarg.h>			/* va_* */
+#include <dlfcn.h>			/* dlopen */
 
 #include "ipset.h"
 
@@ -31,11 +30,11 @@
 #define PROC_SYS_MODPROBE "/proc/sys/kernel/modprobe"
 #endif
 
-#define IPSET_VERSION "2.3.2a"
+#define IPSET_VERSION "2.4.3"
 
 char program_name[] = "ipset";
 char program_version[] = IPSET_VERSION;
-const char *xtables_libdir = XTABLES_LIBDIR;
+const char *ipset_libdir = IPSET_LIB_DIR;
 
 /* The list of loaded set types */
 static struct settype *all_settypes = NULL;
@@ -53,7 +52,8 @@ void *restore_data = NULL;
 struct ip_set_restore *restore_set = NULL;
 size_t restore_offset = 0;
 socklen_t restore_size;
-unsigned int g_line = 0;
+unsigned restore_line = 0;
+unsigned warn_once = 0;
 
 #define TEMPFILE_PATTERN	"/ipsetXXXXXX"
 
@@ -78,9 +78,10 @@ static const char cmdflags[] = { ' ',			/* CMD_NONE */
 #define OPT_QUIET		0x0004U		/* -q */
 #define OPT_DEBUG		0x0008U		/* -z */
 #define OPT_BINDING		0x0010U		/* -b */
-#define NUMBER_OF_OPT 5
+#define OPT_RESOLVE		0x0020U		/* -r */
+#define NUMBER_OF_OPT 6
 static const char optflags[] =
-    { 'n', 's', 'q', 'z', 'b' };
+    { 'n', 's', 'q', 'z', 'b', 'r' };
 
 static struct option opts_long[] = {
 	/* set operations */
@@ -108,6 +109,7 @@ static struct option opts_long[] = {
 	{"sorted",  0, 0, 's'},
 	{"quiet",   0, 0, 'q'},
 	{"binding", 1, 0, 'b'},
+	{"resolve", 0, 0, 'r'},
 
 #ifdef IPSET_DEBUG
 	/* debug (if compiled with it) */
@@ -119,11 +121,11 @@ static struct option opts_long[] = {
 	{"help",    2, 0, 'H'},
 
 	/* end */
-	{0}
+	{NULL},
 };
 
 static char opts_short[] =
-    "-N:X::F::E:W:L::S::RA:D:T:B:U:nsqzb:Vh::H::";
+    "-N:X::F::E:W:L::S::RA:D:T:B:U:nrsqzb:Vh::H::";
 
 /* Table of legal combinations of commands and options. If any of the
  * given commands make an option legal, that option is legal.
@@ -135,21 +137,21 @@ static char opts_short[] =
 
 static char commands_v_options[NUMBER_OF_CMD][NUMBER_OF_OPT] = {
 	/*            -n   -s   -q   -z   -b  */
-	 /*CREATE*/  {'x', 'x', ' ', ' ', 'x'},
-	 /*DESTROY*/ {'x', 'x', ' ', ' ', 'x'},
-	 /*FLUSH*/   {'x', 'x', ' ', ' ', 'x'},
-	 /*RENAME*/  {'x', 'x', ' ', ' ', 'x'},
-	 /*SWAP*/    {'x', 'x', ' ', ' ', 'x'},
-	 /*LIST*/    {' ', ' ', 'x', ' ', 'x'},
-	 /*SAVE*/    {'x', 'x', ' ', ' ', 'x'},
-	 /*RESTORE*/ {'x', 'x', ' ', ' ', 'x'},
-	 /*ADD*/     {'x', 'x', ' ', ' ', 'x'},
-	 /*DEL*/     {'x', 'x', ' ', ' ', 'x'},
-	 /*TEST*/    {'x', 'x', ' ', ' ', ' '},
-	 /*BIND*/    {'x', 'x', ' ', ' ', '+'},
-	 /*UNBIND*/  {'x', 'x', ' ', ' ', 'x'},
-	 /*HELP*/    {'x', 'x', 'x', ' ', 'x'},
-	 /*VERSION*/ {'x', 'x', 'x', ' ', 'x'},
+	 /*CREATE*/  {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*DESTROY*/ {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*FLUSH*/   {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*RENAME*/  {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*SWAP*/    {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*LIST*/    {' ', ' ', 'x', ' ', 'x', ' '},
+	 /*SAVE*/    {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*RESTORE*/ {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*ADD*/     {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*DEL*/     {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*TEST*/    {'x', 'x', ' ', ' ', ' ', 'x'},
+	 /*BIND*/    {'x', 'x', ' ', ' ', '+', 'x'},
+	 /*UNBIND*/  {'x', 'x', ' ', ' ', 'x', 'x'},
+	 /*HELP*/    {'x', 'x', 'x', ' ', 'x', 'x'},
+	 /*VERSION*/ {'x', 'x', 'x', ' ', 'x', 'x'},
 };
 
 /* Main parser function */
@@ -173,8 +175,8 @@ void exit_error(enum exittype status, const char *msg, ...)
 		vfprintf(stderr, msg, args);
 		va_end(args);
 		fprintf(stderr, "\n");
-		if (g_line)
-			fprintf(stderr, "Restore failed at line %u:\n", g_line);
+		if (restore_line)
+			fprintf(stderr, "Restore failed at line %u:\n", restore_line);
 		if (status == PARAMETER_PROBLEM)
 			exit_tryhelp(status);
 		if (status == VERSION_PROBLEM)
@@ -186,7 +188,7 @@ void exit_error(enum exittype status, const char *msg, ...)
 	exit(status);
 }
 
-static void ipset_printf(const char *msg, ...)
+static void ipset_printf(char *msg, ...)
 {
 	va_list args;
 
@@ -352,11 +354,12 @@ static void kernel_error(unsigned cmd, int err)
 	  { ENOENT, 0, "Unknown set" },
 	  { EAGAIN, 0, "Sets are busy, try again later" },
 	  { ERANGE, CMD_CREATE, "No free slot remained to add a new set" },
-	  { ERANGE, 0, "IP/port is outside of the set" },
+	  { ERANGE, 0, "IP/port/element is outside of the set or set is full" },
 	  { ENOEXEC, CMD_CREATE, "Invalid parameters to create a set" },
 	  { ENOEXEC, CMD_SWAP, "Sets with different types cannot be swapped" },
 	  { EEXIST, CMD_CREATE, "Set already exists" },
 	  { EEXIST, CMD_RENAME, "Set with new name already exists" },
+	  { EEXIST, 0, "Set specified as element does not exist" },
 	  { EBUSY, 0, "Set is in use, operation not permitted" },
 	  };
 	for (i = 0; i < sizeof(table)/sizeof(struct translate_error); i++) {
@@ -432,7 +435,7 @@ static void kernel_sendto(unsigned cmd, void *data, size_t size)
 		kernel_error(cmd, errno);
 }
 
-static int kernel_getfrom_handleerrno(unsigned cmd, void *data, size_t * size)
+static int kernel_getfrom_handleerrno(unsigned cmd, void *data, socklen_t *size)
 {
 	int res = wrapped_getsockopt(data, size);
 
@@ -513,13 +516,12 @@ char *ipset_strdup(const char *s)
 	return p;
 }
 
-void ipset_free(void **data)
+void ipset_free(void *data)
 {
-	if (*data == NULL)
+	if (data == NULL)
 		return;
 
-	free(*data);
-	*data = NULL;
+	free(data);
 }
 
 static struct option *merge_options(struct option *oldopts,
@@ -771,7 +773,8 @@ static struct settype *settype_find(const char *typename)
 
 static struct settype *settype_load(const char *typename)
 {
-	char path[256];
+	char path[strlen(ipset_libdir) + sizeof(IPSET_LIB_NAME) +
+		  strlen(typename)];
 	struct settype *settype;
 
 	/* do some search in list */
@@ -780,8 +783,7 @@ static struct settype *settype_load(const char *typename)
 		return settype;	/* found */
 
 	/* Else we have to load it */
-	snprintf(path, sizeof(path), "%s/libipset_%s.so",
-	         xtables_libdir, typename);
+	sprintf(path, "%s" IPSET_LIB_NAME, ipset_libdir, typename);
 
 	if (dlopen(path, RTLD_NOW)) {
 		/* Found library. */
@@ -859,7 +861,7 @@ void settype_register(struct settype *settype)
 }
 
 /* Find set functions */
-static struct set *set_find_byid(ip_set_id_t id)
+struct set *set_find_byid(ip_set_id_t id)
 {
 	struct set *set = NULL;
 	ip_set_id_t i;
@@ -876,7 +878,7 @@ static struct set *set_find_byid(ip_set_id_t id)
 	return set;
 }
 
-static struct set *set_find_byname(const char *name)
+struct set *set_find_byname(const char *name)
 {
 	struct set *set = NULL;
 	ip_set_id_t i;
@@ -910,7 +912,7 @@ static ip_set_id_t set_find_free_index(const char *name)
    				   name);
 	}
 			
-	if (idx == IP_SET_INVALID_ID)
+	if (idx == IP_SET_INVALID_ID)		
 		exit_error(PARAMETER_PROBLEM,
 	   		   "Set %s cannot be restored, "
 	   		   "max number of set %u reached",
@@ -1137,6 +1139,11 @@ static size_t save_bindings(void *data, size_t offset, size_t len)
 	if (!(set && set_list[hash->binding]))
 		exit_error(OTHER_PROBLEM,
 			   "Save binding failed, try again later.");
+	if (!set->settype->bindip_tostring)
+		exit_error(OTHER_PROBLEM,
+			   "Internal error, binding is not supported with set %s"
+			   " of settype %s\n",
+			   set->name, set->settype->typename);
 	printf("-B %s %s -b %s\n",
 		set->name,
 		set->settype->bindip_tostring(set, hash->ip, OPT_NUMERIC),
@@ -1263,7 +1270,7 @@ static int try_save_sets(const char name[IP_SET_MAXNAMELEN])
 	printf("COMMIT\n");
 	now = time(NULL);
 	printf("# Completed on %s", ctime(&now));
-	ipset_free(&data);
+	ipset_free(data);
 	return res;
 }
 
@@ -1357,7 +1364,7 @@ static void set_restore(char *argv0)
 	char buffer[1024];	
 	char *ptr, *name = NULL;
 	char cmd = ' ';
-	int line = 0, first_pass, i, bindings = 0;
+	int restore_line = 0, first_pass, i, bindings = 0;
 	struct settype *settype = NULL;
 	struct ip_set_req_setnames *header;
 	ip_set_id_t idx;
@@ -1376,7 +1383,7 @@ static void set_restore(char *argv0)
 	DP("restore_size: %u", restore_size);
 	/* First pass: calculate required amount of data */
 	while (fgets(buffer, sizeof(buffer), in)) {
-		line++;
+		restore_line++;
 
 		if (buffer[0] == '\n')
 			continue;
@@ -1399,7 +1406,7 @@ static void set_restore(char *argv0)
 		    || ptr[2] != '\0') {
 			exit_error(PARAMETER_PROBLEM,
 				   "Line %u does not start as a valid restore command\n",
-				   line);
+				   restore_line);
 		}
 		cmd = ptr[1];		
 		/* setname */
@@ -1408,7 +1415,7 @@ static void set_restore(char *argv0)
 		if (ptr == NULL)
 		        exit_error(PARAMETER_PROBLEM,
 		        	   "Missing set name in line %u\n",
-		        	   line);
+		        	   restore_line);
 		DP("cmd %c", cmd);
 		switch (cmd) {
 		case 'N': {
@@ -1418,11 +1425,11 @@ static void set_restore(char *argv0)
 			if (ptr == NULL)
 			        exit_error(PARAMETER_PROBLEM,
 			        	   "Missing settype in line %u\n",
-		        		   line);
+		        		   restore_line);
 			if (bindings)
 			        exit_error(PARAMETER_PROBLEM,
 			        	   "Invalid line %u: create must precede bindings\n",
-		        		   line);
+		        		   restore_line);
 			settype = check_set_typename(ptr);
 			restore_size += sizeof(struct ip_set_restore)
 					+ settype->create_size;
@@ -1435,11 +1442,11 @@ static void set_restore(char *argv0)
 			        exit_error(PARAMETER_PROBLEM,
 			        	   "Add IP to set %s in line %u without "
 					   "preceding corresponding create set line\n",
-		        		   ptr, line);
+		        		   ptr, restore_line);
 			if (bindings)
 			        exit_error(PARAMETER_PROBLEM,
 			        	   "Invalid line %u: adding entries must precede bindings\n",
-		        		   line);
+		        		   restore_line);
 			restore_size += settype->adt_size;
 			DP("restore_size (A): %u", restore_size);
 			break;
@@ -1453,7 +1460,7 @@ static void set_restore(char *argv0)
 		default: {
 			exit_error(PARAMETER_PROBLEM,
 		       		   "Unrecognized restore command in line %u\n",
-				   line);
+				   restore_line);
 		}
 		} /* end of switch */
 	}			
@@ -1470,15 +1477,15 @@ static void set_restore(char *argv0)
 
 	/* Rewind to scan the file again */
 	fseek(in, 0L, SEEK_SET);
-	first_pass = line;
-	line = 0;
+	first_pass = restore_line;
+	restore_line = 0;
 	
 	/* Initialize newargv/newargc */
 	newargv[newargc++] = ipset_strdup(argv0);
 	
 	/* Second pass: build up restore request */
 	while (fgets(buffer, sizeof(buffer), in)) {		
-		line++;
+		restore_line++;
 
 		if (buffer[0] == '\n')
 			continue;
@@ -1488,7 +1495,7 @@ static void set_restore(char *argv0)
 			goto do_restore;
 		DP("restoring: %s", buffer);
 		/* Build faked argv, argc */
-		build_argv(line, buffer);
+		build_argv(restore_line, buffer);
 		for (i = 0; i < newargc; i++)
 			DP("argv[%u]: %s", i, newargv[i]);
 		
@@ -1641,9 +1648,14 @@ static int set_bind(struct set *set, const char *adt,
 	DP("(%s, %s) -> %s", set ? set->name : IPSET_TOKEN_ALL, adt, binding);
 
 	/* Ugly */
-	if (set && strcmp(set->settype->typename, "iptreemap") == 0)
+	if (set != NULL
+	    && ((strcmp(set->settype->typename, "iptreemap") == 0)
+	        || (strcmp(set->settype->typename, "ipportiphash") == 0)
+	        || (strcmp(set->settype->typename, "ipportnethash") == 0)
+	        || (strcmp(set->settype->typename, "setlist") == 0)))
 		exit_error(PARAMETER_PROBLEM,
-			"iptreemap type of sets cannot be used at binding operations\n");
+			"%s type of sets cannot be used at binding operations\n",
+			set->settype->typename);
 	/* Alloc memory for the data to send */
 	size = sizeof(struct ip_set_req_bind);
 	if (op != IP_SET_OP_UNBIND_SET && adt[0] == ':')
@@ -1717,8 +1729,14 @@ static void set_restore_bind(struct set *set,
 	DP("%s -> %s", adt, binding);
 	if (strcmp(adt, IPSET_TOKEN_DEFAULT) == 0)
 		hash_restore->ip = 0;
-	else
+	else {
+		if (!set->settype->bindip_parse)
+			exit_error(OTHER_PROBLEM,
+				   "Internal error, binding is not supported with set %s"
+				   " of settype %s\n",
+				   set->name, set->settype->typename);
 		set->settype->bindip_parse(adt, &hash_restore->ip);
+	}
 	hash_restore->id = set->index;	    		   
 	hash_restore->binding = (set_find_byname(binding))->index;	
 	DP("id %u, ip %u, binding %u",
@@ -1738,6 +1756,12 @@ static void print_bindings(struct set *set,
 	size_t offset = 0;
 	struct ip_set_hash_list *hash;
 
+	if (offset < size && !printip)
+		exit_error(OTHER_PROBLEM,
+			   "Internal error, binding is not supported with set %s"
+			   " of settype %s\n",
+			   set->name, set->settype->typename);
+
 	while (offset < size) {
 		hash = (struct ip_set_hash_list *) (data + offset);
 		printf("%s -> %s\n", 
@@ -1750,7 +1774,7 @@ static void print_bindings(struct set *set,
 /* Help function to set_list() */
 static size_t print_set(void *data, unsigned options)
 {
-	struct ip_set_list *setlist = (struct ip_set_list *) data;
+	struct ip_set_list *setlist = data;
 	struct set *set = set_list[setlist->index];
 	struct settype *settype = set->settype;
 	size_t offset;
@@ -1784,7 +1808,8 @@ static size_t print_set(void *data, unsigned options)
 	/* Print bindings */
 	printf("Bindings:\n");
 	offset += setlist->members_size;
-	print_bindings(set,
+	if (set->settype->bindip_tostring)
+		print_bindings(set,
 		       data + offset, setlist->bindings_size, options,
 		       settype->bindip_tostring);
 
@@ -1800,6 +1825,10 @@ static int try_list_sets(const char name[IP_SET_MAXNAMELEN],
 	ip_set_id_t idx;
 	socklen_t size, req_size;
 	int res = 0;
+
+	/* Default is numeric listing */
+	if (!(options & (OPT_RESOLVE|OPT_NUMERIC)))
+		options |= OPT_NUMERIC;
 
 	DP("%s", name);
 	/* Load set_list from kernel */
@@ -1823,7 +1852,7 @@ static int try_list_sets(const char name[IP_SET_MAXNAMELEN],
 	while (size != req_size)
 		size += print_set(data + size, options);
 
-	ipset_free(&data);
+	ipset_free(data);
 	return res;
 }
 
@@ -1910,7 +1939,8 @@ static void set_help(const struct settype *settype)
 	       "                    Prints version information\n\n"
 	       "Options:\n"
 	       "  --sorted     -s   Numeric sort of the IPs in -L\n"
-	       "  --numeric    -n   Numeric output of addresses in a -L\n"
+	       "  --numeric    -n   Numeric output of addresses in a -L (default)\n"
+	       "  --resolve    -r   Try to resolve addresses in a -L\n"
 	       "  --quiet      -q   Suppress any output to stdout and stderr.\n"
 	       "  --binding    -b   Specifies the binding for -B\n");
 	printf(debughelp);
@@ -2146,6 +2176,11 @@ int parse_commandline(int argc, char *argv[])
 			add_option(&options, OPT_NUMERIC);
 			break;
 
+		case 'r':
+			if (!(options & OPT_NUMERIC))
+				add_option(&options, OPT_RESOLVE);
+			break;
+
 		case 's':
 			add_option(&options, OPT_SORTED);
 			break;
@@ -2272,6 +2307,8 @@ int parse_commandline(int argc, char *argv[])
 		break;
 
 	case CMD_BIND:
+		fprintf(stderr, "Warning: binding will be removed from the next release.\n"
+			        "Please replace bindigs with sets of ipportmap and ipportiphash types\n");
 		if (restore)
 			set_restore_bind(set, adt, binding);
 		else
@@ -2299,10 +2336,10 @@ int parse_commandline(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {	
-	const char *p = getenv("XTABLES_LIBDIR");
+	const char *p;
 
-	if (p != NULL)
-		xtables_libdir = p;
+	if ((p = getenv("IPSET_LIBDIR")) != NULL)
+		ipset_libdir = p;
 
 	return parse_commandline(argc, argv);
 

@@ -2,9 +2,9 @@
 #define __IP_SET_IPMAP_H
 
 #include "ip_set.h"
+#include "ip_set_bitmaps.h"
 
 #define SETTYPE_NAME "ipmap"
-#define MAX_RANGE 0x0000FFFF
 
 struct ip_set_ipmap {
 	void *members;			/* the ipmap proper */
@@ -13,6 +13,7 @@ struct ip_set_ipmap {
 	ip_set_ip_t netmask;		/* subnet netmask */
 	ip_set_ip_t sizeid;		/* size of set in IPs */
 	ip_set_ip_t hosts;		/* number of hosts in a subnet */
+	size_t size;			/* size of the ipmap proper */
 };
 
 struct ip_set_req_ipmap_create {
@@ -25,7 +26,7 @@ struct ip_set_req_ipmap {
 	ip_set_ip_t ip;
 };
 
-static unsigned int
+static inline unsigned int
 mask_to_bits(ip_set_ip_t mask)
 {
 	unsigned int bits = 32;
@@ -41,7 +42,7 @@ mask_to_bits(ip_set_ip_t mask)
 	return bits;
 }
 
-static ip_set_ip_t
+static inline ip_set_ip_t
 range_to_mask(ip_set_ip_t from, ip_set_ip_t to, unsigned int *bits)
 {
 	ip_set_ip_t mask = 0xFFFFFFFE;

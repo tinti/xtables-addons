@@ -2,13 +2,22 @@
 #define _IP_SET_MALLOC_H
 
 #ifdef __KERNEL__
+#include <linux/vmalloc.h> 
 
 static size_t max_malloc_size = 0, max_page_size = 0;
+static size_t default_max_malloc_size = 131072;			/* Guaranteed: slab.c */
 
-static inline unsigned int init_max_page_size(void)
+static inline int init_max_page_size(void)
 {
+/* Compatibility glues to support 2.4.36 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#define __GFP_NOWARN		0
+
+	/* Guaranteed: slab.c */
+	max_malloc_size = max_page_size = default_max_malloc_size;
+#else
 	size_t page_size = 0;
-	
+
 #define CACHE(x) if (max_page_size == 0 || x < max_page_size)	\
 			page_size = x;
 #include <linux/kmalloc_sizes.h>
@@ -21,6 +30,7 @@ static inline unsigned int init_max_page_size(void)
 
 		return 1;
 	}
+#endif
 	return 0;
 }
 
@@ -122,7 +132,7 @@ static inline void * ip_set_malloc(size_t bytes)
 {
 	BUG_ON(max_malloc_size == 0);
 
-	if (bytes > max_malloc_size)
+	if (bytes > default_max_malloc_size)
 		return vmalloc(bytes);
 	else
 		return kmalloc(bytes, GFP_KERNEL | __GFP_NOWARN);
@@ -132,7 +142,7 @@ static inline void ip_set_free(void * data, size_t bytes)
 {
 	BUG_ON(max_malloc_size == 0);
 
-	if (bytes > max_malloc_size)
+	if (bytes > default_max_malloc_size)
 		vfree(data);
 	else
 		kfree(data);

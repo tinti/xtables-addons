@@ -11,34 +11,28 @@
  * index to find the bitmap and the last octet is used as the bit number.
  */
 
-#include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/ip.h>
 #include <linux/skbuff.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
-#include <linux/netfilter_ipv4/ip_tables.h>
-#include "ip_set.h"
 #include <linux/errno.h>
 #include <asm/uaccess.h>
 #include <asm/bitops.h>
 #include <linux/spinlock.h>
+#include <linux/timer.h>
 
+#include "ip_set.h"
+#include "ip_set_bitmaps.h"
 #include "ip_set_iptreemap.h"
 
 #define IPTREEMAP_DEFAULT_GC_TIME (5 * 60)
 #define IPTREEMAP_DESTROY_SLEEP (100)
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
-static struct kmem_cache *cachep_b;
-static struct kmem_cache *cachep_c;
-static struct kmem_cache *cachep_d;
-#else
-static kmem_cache_t *cachep_b;
-static kmem_cache_t *cachep_c;
-static kmem_cache_t *cachep_d;
-#endif
+static __KMEM_CACHE_T__ *cachep_b;
+static __KMEM_CACHE_T__ *cachep_c;
+static __KMEM_CACHE_T__ *cachep_d;
 
 static struct ip_set_iptreemap_d *fullbitmap_d;
 static struct ip_set_iptreemap_c *fullbitmap_c;
@@ -256,7 +250,7 @@ free_b(struct ip_set_iptreemap_b *map)
 }
 
 static inline int
-__testip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
+iptreemap_test(struct ip_set *set, ip_set_ip_t *hash_ip, ip_set_ip_t ip)
 {
 	struct ip_set_iptreemap *map = set->data;
 	struct ip_set_iptreemap_b *btree;
@@ -275,40 +269,13 @@ __testip(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 	return !!test_bit(d, (void *) dtree->bitmap);
 }
 
-static int
-testip(struct ip_set *set, const void *data, size_t size, ip_set_ip_t *hash_ip)
-{
-	const struct ip_set_req_iptreemap *req = data;
+#define KADT_CONDITION
 
-	if (size != sizeof(struct ip_set_req_iptreemap)) {
-		ip_set_printk("data length wrong (want %zu, have %zu)", sizeof(struct ip_set_req_iptreemap), size);
-		return -EINVAL;
-	}
-
-	return __testip(set, req->start, hash_ip);
-}
-
-static int
-testip_kernel(struct ip_set *set, const struct sk_buff *skb, ip_set_ip_t *hash_ip, const u_int32_t *flags, unsigned char index)
-{
-	int res;
-
-	res = __testip(set,
-		       ntohl(flags[index] & IPSET_SRC
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr
-				: ip_hdr(skb)->daddr),
-#else
-				? skb->nh.iph->saddr
-				: skb->nh.iph->daddr),
-#endif
-		       hash_ip);
-
-	return (res < 0 ? 0 : res);
-}
+UADT(iptreemap, test)
+KADT(iptreemap, test, ipaddr)
 
 static inline int
-__addip_single(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
+__addip_single(struct ip_set *set, ip_set_ip_t *hash_ip, ip_set_ip_t ip)
 {
 	struct ip_set_iptreemap *map = (struct ip_set_iptreemap *) set->data;
 	struct ip_set_iptreemap_b *btree;
@@ -333,7 +300,8 @@ __addip_single(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip)
 }
 
 static inline int
-__addip_range(struct ip_set *set, ip_set_ip_t start, ip_set_ip_t end, ip_set_ip_t *hash_ip)
+iptreemap_add(struct ip_set *set, ip_set_ip_t *hash_ip,
+	      ip_set_ip_t start, ip_set_ip_t end)
 {
 	struct ip_set_iptreemap *map = set->data;
 	struct ip_set_iptreemap_b *btree;
@@ -344,7 +312,7 @@ __addip_range(struct ip_set *set, ip_set_ip_t start, ip_set_ip_t end, ip_set_ip_
 	unsigned char a2, b2, c2, d2;
 
 	if (start == end)
-		return __addip_single(set, start, hash_ip);
+		return __addip_single(set, hash_ip, start);
 
 	*hash_ip = start;
 
@@ -365,37 +333,12 @@ __addip_range(struct ip_set *set, ip_set_ip_t start, ip_set_ip_t end, ip_set_ip_
 	return 0;
 }
 
-static int
-addip(struct ip_set *set, const void *data, size_t size, ip_set_ip_t *hash_ip)
-{
-	const struct ip_set_req_iptreemap *req = data;
-
-	if (size != sizeof(struct ip_set_req_iptreemap)) {
-		ip_set_printk("data length wrong (want %zu, have %zu)", sizeof(struct ip_set_req_iptreemap), size);
-		return -EINVAL;
-	}
-
-	return __addip_range(set, min(req->start, req->end), max(req->start, req->end), hash_ip);
-}
-
-static int
-addip_kernel(struct ip_set *set, const struct sk_buff *skb, ip_set_ip_t *hash_ip, const u_int32_t *flags, unsigned char index)
-{
-
-	return __addip_single(set,
-			ntohl(flags[index] & IPSET_SRC
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr
-				: ip_hdr(skb)->daddr),
-#else
-				? skb->nh.iph->saddr
-				: skb->nh.iph->daddr),
-#endif
-			hash_ip);
-}
+UADT0(iptreemap, add, min(req->ip, req->end), max(req->ip, req->end))
+KADT(iptreemap, add, ipaddr, ip)
 
 static inline int
-__delip_single(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip, unsigned int __nocast flags)
+__delip_single(struct ip_set *set, ip_set_ip_t *hash_ip,
+	       ip_set_ip_t ip, unsigned int __nocast flags)
 {
 	struct ip_set_iptreemap *map = set->data;
 	struct ip_set_iptreemap_b *btree;
@@ -420,7 +363,8 @@ __delip_single(struct ip_set *set, ip_set_ip_t ip, ip_set_ip_t *hash_ip, unsigne
 }
 
 static inline int
-__delip_range(struct ip_set *set, ip_set_ip_t start, ip_set_ip_t end, ip_set_ip_t *hash_ip, unsigned int __nocast flags)
+iptreemap_del(struct ip_set *set, ip_set_ip_t *hash_ip,
+	      ip_set_ip_t start, ip_set_ip_t end, unsigned int __nocast flags)
 {
 	struct ip_set_iptreemap *map = set->data;
 	struct ip_set_iptreemap_b *btree;
@@ -431,7 +375,7 @@ __delip_range(struct ip_set *set, ip_set_ip_t start, ip_set_ip_t end, ip_set_ip_
 	unsigned char a2, b2, c2, d2;
 
 	if (start == end)
-		return __delip_single(set, start, hash_ip, flags);
+		return __delip_single(set, hash_ip, start, flags);
 
 	*hash_ip = start;
 
@@ -452,34 +396,8 @@ __delip_range(struct ip_set *set, ip_set_ip_t start, ip_set_ip_t end, ip_set_ip_
 	return 0;
 }
 
-static int
-delip(struct ip_set *set, const void *data, size_t size, ip_set_ip_t *hash_ip)
-{
-	const struct ip_set_req_iptreemap *req = data;
-
-	if (size != sizeof(struct ip_set_req_iptreemap)) {
-		ip_set_printk("data length wrong (want %zu, have %zu)", sizeof(struct ip_set_req_iptreemap), size);
-		return -EINVAL;
-	}
-
-	return __delip_range(set, min(req->start, req->end), max(req->start, req->end), hash_ip, GFP_KERNEL);
-}
-
-static int
-delip_kernel(struct ip_set *set, const struct sk_buff *skb, ip_set_ip_t *hash_ip, const u_int32_t *flags, unsigned char index)
-{
-	return __delip_single(set,
-			ntohl(flags[index] & IPSET_SRC
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-				? ip_hdr(skb)->saddr
-				: ip_hdr(skb)->daddr),
-#else
-				? skb->nh.iph->saddr
-				: skb->nh.iph->daddr),
-#endif
-			hash_ip,
-		        GFP_ATOMIC);
-}
+UADT0(iptreemap, del, min(req->ip, req->end), max(req->ip, req->end), GFP_KERNEL)
+KADT(iptreemap, del, ipaddr, ip, GFP_ATOMIC)
 
 /* Check the status of the bitmap
  * -1 == all bits cleared
@@ -551,15 +469,11 @@ init_gc_timer(struct ip_set *set)
 	add_timer(&map->gc);
 }
 
-static int create(struct ip_set *set, const void *data, size_t size)
+static int
+iptreemap_create(struct ip_set *set, const void *data, size_t size)
 {
 	const struct ip_set_req_iptreemap_create *req = data;
 	struct ip_set_iptreemap *map;
-
-	if (size != sizeof(struct ip_set_req_iptreemap_create)) {
-		ip_set_printk("data length wrong (want %zu, have %zu)", sizeof(struct ip_set_req_iptreemap_create), size);
-		return -EINVAL;
-	}
 
 	map = kzalloc(sizeof(*map), GFP_KERNEL);
 	if (!map)
@@ -573,7 +487,8 @@ static int create(struct ip_set *set, const void *data, size_t size)
 	return 0;
 }
 
-static inline void __flush(struct ip_set_iptreemap *map)
+static inline void
+__flush(struct ip_set_iptreemap *map)
 {
 	struct ip_set_iptreemap_b *btree;
 	unsigned int a;
@@ -584,7 +499,8 @@ static inline void __flush(struct ip_set_iptreemap *map)
 	LOOP_WALK_END();
 }
 
-static void destroy(struct ip_set *set)
+static void
+iptreemap_destroy(struct ip_set *set)
 {
 	struct ip_set_iptreemap *map = set->data;
 
@@ -597,7 +513,8 @@ static void destroy(struct ip_set *set)
 	set->data = NULL;
 }
 
-static void flush(struct ip_set *set)
+static void
+iptreemap_flush(struct ip_set *set)
 {
 	struct ip_set_iptreemap *map = set->data;
 
@@ -611,7 +528,8 @@ static void flush(struct ip_set *set)
 	init_gc_timer(set);
 }
 
-static void list_header(const struct ip_set *set, void *data)
+static void
+iptreemap_list_header(const struct ip_set *set, void *data)
 {
 	struct ip_set_iptreemap *map = set->data;
 	struct ip_set_req_iptreemap_create *header = data;
@@ -619,7 +537,8 @@ static void list_header(const struct ip_set *set, void *data)
 	header->gc_interval = map->gc_interval;
 }
 
-static int list_members_size(const struct ip_set *set)
+static int
+iptreemap_list_members_size(const struct ip_set *set)
 {
 	struct ip_set_iptreemap *map = set->data;
 	struct ip_set_iptreemap_b *btree;
@@ -648,17 +567,19 @@ static int list_members_size(const struct ip_set *set)
 	return (count * sizeof(struct ip_set_req_iptreemap));
 }
 
-static inline size_t add_member(void *data, size_t offset, ip_set_ip_t start, ip_set_ip_t end)
+static inline size_t
+add_member(void *data, size_t offset, ip_set_ip_t start, ip_set_ip_t end)
 {
 	struct ip_set_req_iptreemap *entry = data + offset;
 
-	entry->start = start;
+	entry->ip = start;
 	entry->end = end;
 
 	return sizeof(*entry);
 }
 
-static void list_members(const struct ip_set *set, void *data)
+static void
+iptreemap_list_members(const struct ip_set *set, void *data)
 {
 	struct ip_set_iptreemap *map = set->data;
 	struct ip_set_iptreemap_b *btree;
@@ -695,26 +616,7 @@ static void list_members(const struct ip_set *set, void *data)
 		add_member(data, offset, start, end);
 }
 
-static struct ip_set_type ip_set_iptreemap = {
-	.typename		= SETTYPE_NAME,
-	.features		= IPSET_TYPE_IP | IPSET_DATA_SINGLE,
-	.protocol_version	= IP_SET_PROTOCOL_VERSION,
-	.create			= create,
-	.destroy		= destroy,
-	.flush			= flush,
-	.reqsize		= sizeof(struct ip_set_req_iptreemap),
-	.addip			= addip,
-	.addip_kernel		= addip_kernel,
-	.delip			= delip,
-	.delip_kernel		= delip_kernel,
-	.testip			= testip,
-	.testip_kernel		= testip_kernel,
-	.header_size		= sizeof(struct ip_set_req_iptreemap_create),
-	.list_header		= list_header,
-	.list_members_size	= list_members_size,
-	.list_members		= list_members,
-	.me			= THIS_MODULE,
-};
+IP_SET_TYPE(iptreemap, IPSET_TYPE_IP | IPSET_DATA_SINGLE)
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Sven Wegener <sven.wegener@stealer.net>");
@@ -725,43 +627,22 @@ static int __init ip_set_iptreemap_init(void)
 	int ret = -ENOMEM;
 	int a;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
-	cachep_b = kmem_cache_create("ip_set_iptreemap_b",
-				     sizeof(struct ip_set_iptreemap_b),
-				     0, 0, NULL);
-#else
-	cachep_b = kmem_cache_create("ip_set_iptreemap_b",
-				     sizeof(struct ip_set_iptreemap_b),
-				     0, 0, NULL, NULL);
-#endif
+	cachep_b = KMEM_CACHE_CREATE("ip_set_iptreemap_b",
+				     sizeof(struct ip_set_iptreemap_b));
 	if (!cachep_b) {
 		ip_set_printk("Unable to create ip_set_iptreemap_b slab cache");
 		goto out;
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
-	cachep_c = kmem_cache_create("ip_set_iptreemap_c",
-				     sizeof(struct ip_set_iptreemap_c),
-				     0, 0, NULL);
-#else
-	cachep_c = kmem_cache_create("ip_set_iptreemap_c",
-				     sizeof(struct ip_set_iptreemap_c),
-				     0, 0, NULL, NULL);
-#endif
+	cachep_c = KMEM_CACHE_CREATE("ip_set_iptreemap_c",
+				     sizeof(struct ip_set_iptreemap_c));
 	if (!cachep_c) {
 		ip_set_printk("Unable to create ip_set_iptreemap_c slab cache");
 		goto outb;
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
-	cachep_d = kmem_cache_create("ip_set_iptreemap_d",
-				     sizeof(struct ip_set_iptreemap_d),
-				     0, 0, NULL);
-#else
-	cachep_d = kmem_cache_create("ip_set_iptreemap_d",
-				     sizeof(struct ip_set_iptreemap_d),
-				     0, 0, NULL, NULL);
-#endif
+	cachep_d = KMEM_CACHE_CREATE("ip_set_iptreemap_d",
+				     sizeof(struct ip_set_iptreemap_d));
 	if (!cachep_d) {
 		ip_set_printk("Unable to create ip_set_iptreemap_d slab cache");
 		goto outc;

@@ -1,13 +1,18 @@
-#ifndef __IP_SET_IPPORTHASH_H
-#define __IP_SET_IPPORTHASH_H
+#ifndef __IP_SET_IPPORTIPHASH_H
+#define __IP_SET_IPPORTIPHASH_H
 
 #include "ip_set.h"
 #include "ip_set_hashes.h"
 
-#define SETTYPE_NAME "ipporthash"
+#define SETTYPE_NAME "ipportiphash"
 
-struct ip_set_ipporthash {
-	ip_set_ip_t *members;		/* the ipporthash proper */
+struct ipportip {
+	ip_set_ip_t ip;
+	ip_set_ip_t ip1;
+};
+
+struct ip_set_ipportiphash {
+	struct ipportip *members;	/* the ipportip proper */
 	uint32_t elements;		/* number of elements */
 	uint32_t hashsize;		/* hash size */
 	uint16_t probes;		/* max number of probes  */
@@ -17,7 +22,7 @@ struct ip_set_ipporthash {
 	initval_t initval[0];		/* initvals for jhash_1word */
 };
 
-struct ip_set_req_ipporthash_create {
+struct ip_set_req_ipportiphash_create {
 	uint32_t hashsize;
 	uint16_t probes;
 	uint16_t resize;
@@ -25,9 +30,10 @@ struct ip_set_req_ipporthash_create {
 	ip_set_ip_t to;
 };
 
-struct ip_set_req_ipporthash {
+struct ip_set_req_ipportiphash {
 	ip_set_ip_t ip;
 	ip_set_ip_t port;
+	ip_set_ip_t ip1;
 };
 
-#endif	/* __IP_SET_IPPORTHASH_H */
+#endif	/* __IP_SET_IPPORTIPHASH_H */

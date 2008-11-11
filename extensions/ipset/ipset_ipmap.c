@@ -17,15 +17,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-/* #include <asm/bitops.h> */
+#include <stdio.h>			/* *printf */
+#include <string.h>			/* mem* */
+
+#include "ipset.h"
 
 #include "ip_set_ipmap.h"
-#include "ipset.h"
 
 #define BUFLEN 30;
 
@@ -37,20 +34,20 @@
 #define OPT_ADDDEL_IP      0x01U
 
 /* Initialize the create. */
-static void create_init(void *data)
+static void
+create_init(void *data)
 {
-	struct ip_set_req_ipmap_create *mydata =
-	    (struct ip_set_req_ipmap_create *) data;
+	struct ip_set_req_ipmap_create *mydata = data;
 
 	DP("create INIT");
 	mydata->netmask = 0xFFFFFFFF;
 }
 
 /* Function which parses command options; returns true if it ate an option */
-static int create_parse(int c, char *argv[], void *data, unsigned int *flags)
+static int
+create_parse(int c, char *argv[], void *data, unsigned *flags)
 {
-	struct ip_set_req_ipmap_create *mydata =
-	    (struct ip_set_req_ipmap_create *) data;
+	struct ip_set_req_ipmap_create *mydata = data;
 	unsigned int bits;
 
 	DP("create_parse");
@@ -116,15 +113,12 @@ static int create_parse(int c, char *argv[], void *data, unsigned int *flags)
 	return 1;
 }
 
-#define ERRSTRLEN	256
-
 /* Final check; exit if not ok. */
-static void create_final(void *data, unsigned int flags)
+static void
+create_final(void *data, unsigned int flags)
 {
-	struct ip_set_req_ipmap_create *mydata =
-	    (struct ip_set_req_ipmap_create *) data;
+	struct ip_set_req_ipmap_create *mydata = data;
 	ip_set_ip_t range;
-	char errstr[ERRSTRLEN];
 
 	if (flags == 0)
 		exit_error(PARAMETER_PROBLEM,
@@ -154,7 +148,7 @@ static void create_final(void *data, unsigned int flags)
 	if (flags & OPT_CREATE_NETMASK) {
 		unsigned int mask_bits, netmask_bits;
 		ip_set_ip_t mask;
-		
+
 		if ((mydata->from & mydata->netmask) != mydata->from)
 			exit_error(PARAMETER_PROBLEM,
 				   "%s is not a network address according to netmask %d\n",
@@ -164,26 +158,14 @@ static void create_final(void *data, unsigned int flags)
 		mask = range_to_mask(mydata->from, mydata->to, &mask_bits);
 		if (!mask
 		    && (mydata->from || mydata->to != 0xFFFFFFFF)) {
-			strncpy(errstr, ip_tostring_numeric(mydata->from),
-				ERRSTRLEN-2);
-			errstr[ERRSTRLEN-1] = '\0';
 			exit_error(PARAMETER_PROBLEM,
-				   "%s-%s is not a full network (%x)\n",
-				   errstr,
-				   ip_tostring_numeric(mydata->to), mask);
+				   "You have to define a full network with --from"
+				   " and --to if you specify the --network option\n");
 		}
 		netmask_bits = mask_to_bits(mydata->netmask);
-		
 		if (netmask_bits <= mask_bits) {
-			strncpy(errstr, ip_tostring_numeric(mydata->from),
-				ERRSTRLEN-2);
-			errstr[ERRSTRLEN-1] = '\0';
 			exit_error(PARAMETER_PROBLEM,
-				   "%d netmask specifies larger or equal netblock than %s-%s (%d)\n",
-				   netmask_bits,
-				   errstr,
-				   ip_tostring_numeric(mydata->to),
-				   mask_bits);
+				   "%d netmask specifies larger or equal netblock than the network itself\n");
 		}
 		range = (1<<(netmask_bits - mask_bits)) - 1;
 	} else {
@@ -197,22 +179,22 @@ static void create_final(void *data, unsigned int flags)
 
 /* Create commandline options */
 static const struct option create_opts[] = {
-	{"from", 1, 0, '1'},
-	{"to", 1, 0, '2'},
-	{"network", 1, 0, '3'},
-	{"netmask", 1, 0, '4'},
+	{.name = "from",	.has_arg = required_argument,	.val = '1'},
+	{.name = "to",		.has_arg = required_argument,	.val = '2'},
+	{.name = "network",	.has_arg = required_argument,	.val = '3'},
+	{.name = "netmask",	.has_arg = required_argument,	.val = '4'},
 	{NULL},
 };
 
 /* Add, del, test parser */
-static ip_set_ip_t adt_parser(unsigned int cmd, const char *arg, void *data)
+static ip_set_ip_t
+adt_parser(unsigned cmd, const char *optarg, void *data)
 {
-	struct ip_set_req_ipmap *mydata =
-	    (struct ip_set_req_ipmap *) data;
+	struct ip_set_req_ipmap *mydata = data;
 
-	DP("ipmap: %p %p", arg, data);
+	DP("ipmap: %p %p", optarg, data);
 
-	parse_ip(arg, &mydata->ip);
+	parse_ip(optarg, &mydata->ip);
 	DP("%s", ip_tostring_numeric(mydata->ip));
 
 	return 1;	
@@ -222,12 +204,11 @@ static ip_set_ip_t adt_parser(unsigned int cmd, const char *arg, void *data)
  * Print and save
  */
 
-static void initheader(struct set *set, const void *data)
+static void
+initheader(struct set *set, const void *data)
 {
-	struct ip_set_req_ipmap_create *header =
-	    (struct ip_set_req_ipmap_create *) data;
-	struct ip_set_ipmap *map =
-		(struct ip_set_ipmap *) set->settype->header;
+	const struct ip_set_req_ipmap_create *header = data;
+	struct ip_set_ipmap *map = set->settype->header;
 		
 	memset(map, 0, sizeof(struct ip_set_ipmap));
 	map->first_ip = header->from;
@@ -252,10 +233,10 @@ static void initheader(struct set *set, const void *data)
 	DP("%i %i", map->hosts, map->sizeid );
 }
 
-static void printheader(struct set *set, unsigned int options)
+static void
+printheader(struct set *set, unsigned options)
 {
-	struct ip_set_ipmap *mysetdata =
-	    (struct ip_set_ipmap *) set->settype->header;
+	struct ip_set_ipmap *mysetdata = set->settype->header;
 
 	printf(" from: %s", ip_tostring(mysetdata->first_ip, options));
 	printf(" to: %s", ip_tostring(mysetdata->last_ip, options));
@@ -265,11 +246,10 @@ static void printheader(struct set *set, unsigned int options)
 		printf(" netmask: %d\n", mask_to_bits(mysetdata->netmask));
 }
 
-static void printips_sorted(struct set *set, void *data, size_t len,
-    unsigned int options)
+static void
+printips_sorted(struct set *set, void *data, size_t len, unsigned options)
 {
-	struct ip_set_ipmap *mysetdata =
-	    (struct ip_set_ipmap *) set->settype->header;
+	struct ip_set_ipmap *mysetdata = set->settype->header;
 	ip_set_ip_t id;
 
 	for (id = 0; id < mysetdata->sizeid; id++)
@@ -280,10 +260,10 @@ static void printips_sorted(struct set *set, void *data, size_t len,
 					   options));
 }
 
-static void saveheader(struct set *set, unsigned int options)
+static void
+saveheader(struct set *set, unsigned options)
 {
-	struct ip_set_ipmap *mysetdata =
-	    (struct ip_set_ipmap *) set->settype->header;
+	struct ip_set_ipmap *mysetdata = set->settype->header;
 
 	printf("-N %s %s --from %s",
 	       set->name, set->settype->typename,
@@ -297,11 +277,10 @@ static void saveheader(struct set *set, unsigned int options)
 		       mask_to_bits(mysetdata->netmask));
 }
 
-static void saveips(struct set *set, void *data, size_t len,
-    unsigned int options)
+static void
+saveips(struct set *set, void *data, size_t len, unsigned options)
 {
-	struct ip_set_ipmap *mysetdata =
-	    (struct ip_set_ipmap *) set->settype->header;
+	struct ip_set_ipmap *mysetdata = set->settype->header;
 	ip_set_ip_t id;
 
 	DP("%s", set->name);

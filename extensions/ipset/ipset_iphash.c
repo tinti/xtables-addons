@@ -15,23 +15,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include <errno.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <asm/types.h>
-
-#include "ip_set_iphash.h"
-#include "ip_set_jhash.h"
+#include <limits.h>			/* UINT_MAX */
+#include <stdio.h>			/* *printf */
+#include <string.h>			/* mem* */
 
 #include "ipset.h"
+
+#include "ip_set_iphash.h"
 
 #define BUFLEN 30;
 
@@ -41,10 +31,10 @@
 #define OPT_CREATE_NETMASK	0x08U
 
 /* Initialize the create. */
-static void create_init(void *data)
+static void
+create_init(void *data)
 {
-	struct ip_set_req_iphash_create *mydata =
-	    (struct ip_set_req_iphash_create *) data;
+	struct ip_set_req_iphash_create *mydata = data;
 
 	DP("create INIT");
 
@@ -57,7 +47,8 @@ static void create_init(void *data)
 }
 
 /* Function which parses command options; returns true if it ate an option */
-static int create_parse(int c, char *argv[], void *data, unsigned int *flags)
+static int
+create_parse(int c, char *argv[], void *data, unsigned *flags)
 {
 	struct ip_set_req_iphash_create *mydata =
 	    (struct ip_set_req_iphash_create *) data;
@@ -125,11 +116,11 @@ static int create_parse(int c, char *argv[], void *data, unsigned int *flags)
 }
 
 /* Final check; exit if not ok. */
-static void create_final(void *data, unsigned int flags)
+static void
+create_final(void *data, unsigned int flags)
 {
 #ifdef IPSET_DEBUG
-	struct ip_set_req_iphash_create *mydata =
-	    (struct ip_set_req_iphash_create *) data;
+	struct ip_set_req_iphash_create *mydata = data;
 
 	DP("hashsize %u probes %u resize %u",
 	   mydata->hashsize, mydata->probes, mydata->resize);
@@ -138,23 +129,23 @@ static void create_final(void *data, unsigned int flags)
 
 /* Create commandline options */
 static const struct option create_opts[] = {
-	{"hashsize", 1, 0, '1'},
-	{"probes", 1, 0, '2'},
-	{"resize", 1, 0, '3'},
-	{"netmask", 1, 0, '4'},
+	{.name = "hashsize",	.has_arg = required_argument,	.val = '1'},
+	{.name = "probes",	.has_arg = required_argument,	.val = '2'},
+	{.name = "resize",	.has_arg = required_argument,	.val = '3'},
+	{.name = "netmask",	.has_arg = required_argument,	.val = '4'},
 	{NULL},
 };
 
 /* Add, del, test parser */
-static ip_set_ip_t adt_parser(unsigned int cmd, const char *arg, void *data)
+static ip_set_ip_t
+adt_parser(unsigned cmd, const char *optarg, void *data)
 {
-	struct ip_set_req_iphash *mydata =
-	    (struct ip_set_req_iphash *) data;
+	struct ip_set_req_iphash *mydata = data;
 
-	parse_ip(arg, &mydata->ip);
+	parse_ip(optarg, &mydata->ip);
 	if (!mydata->ip)
 		exit_error(PARAMETER_PROBLEM,
-			   "Zero valued IP address `%s' specified", arg);
+			   "Zero valued IP address `%s' specified", optarg);
 
 	return mydata->ip;	
 };
@@ -163,12 +154,11 @@ static ip_set_ip_t adt_parser(unsigned int cmd, const char *arg, void *data)
  * Print and save
  */
 
-static void initheader(struct set *set, const void *data)
+static void
+initheader(struct set *set, const void *data)
 {
-	struct ip_set_req_iphash_create *header =
-	    (struct ip_set_req_iphash_create *) data;
-	struct ip_set_iphash *map =
-		(struct ip_set_iphash *) set->settype->header;
+	const struct ip_set_req_iphash_create *header = data;
+	struct ip_set_iphash *map = set->settype->header;
 
 	memset(map, 0, sizeof(struct ip_set_iphash));
 	map->hashsize = header->hashsize;
@@ -193,10 +183,10 @@ mask_to_bits(ip_set_ip_t mask)
 	return bits;
 }
 
-static void printheader(struct set *set, unsigned int options)
+static void
+printheader(struct set *set, unsigned options)
 {
-	struct ip_set_iphash *mysetdata =
-	    (struct ip_set_iphash *) set->settype->header;
+	struct ip_set_iphash *mysetdata = set->settype->header;
 
 	printf(" hashsize: %u", mysetdata->hashsize);
 	printf(" probes: %u", mysetdata->probes);
@@ -207,8 +197,8 @@ static void printheader(struct set *set, unsigned int options)
 		printf(" netmask: %d\n", mask_to_bits(mysetdata->netmask));
 }
 
-static void printips(struct set *set, void *data, size_t len,
-    unsigned int options)
+static void
+printips(struct set *set, void *data, size_t len, unsigned options)
 {
 	size_t offset = 0;
 	ip_set_ip_t *ip;
@@ -221,10 +211,10 @@ static void printips(struct set *set, void *data, size_t len,
 	}
 }
 
-static void saveheader(struct set *set, unsigned int options)
+static void
+saveheader(struct set *set, unsigned options)
 {
-	struct ip_set_iphash *mysetdata =
-	    (struct ip_set_iphash *) set->settype->header;
+	struct ip_set_iphash *mysetdata = set->settype->header;
 
 	printf("-N %s %s --hashsize %u --probes %u --resize %u",
 	       set->name, set->settype->typename,
@@ -236,8 +226,8 @@ static void saveheader(struct set *set, unsigned int options)
 }
 
 /* Print save for an IP */
-static void saveips(struct set *set, void *data, size_t len,
-    unsigned int options)
+static void
+saveips(struct set *set, void *data, size_t len, unsigned options)
 {
 	size_t offset = 0;
 	ip_set_ip_t *ip;

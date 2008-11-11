@@ -20,12 +20,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include <getopt.h>
+#include <getopt.h>			/* struct option */
+#include <stdint.h>
 #include <sys/types.h>
-#include <netdb.h>
 
 #include "ip_set.h"
 
+#define IPSET_LIB_NAME "/libipset_%s.so"
 #define PROC_SYS_MODPROBE "/proc/sys/kernel/modprobe"
 
 #define LIST_TRIES 5
@@ -181,7 +182,12 @@ extern int string_to_number(const char *str, unsigned int min, unsigned int max,
 
 extern void *ipset_malloc(size_t size);
 extern char *ipset_strdup(const char *);
-extern void ipset_free(void **data);
+extern void ipset_free(void *data);
+
+extern struct set *set_find_byname(const char *name);
+extern struct set *set_find_byid(ip_set_id_t id);
+
+extern unsigned warn_once;
 
 #define BITSPERBYTE	(8*sizeof(char))
 #define ID2BYTE(id)	((id)/BITSPERBYTE)

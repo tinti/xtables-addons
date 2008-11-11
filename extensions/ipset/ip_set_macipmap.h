@@ -2,9 +2,9 @@
 #define __IP_SET_MACIPMAP_H
 
 #include "ip_set.h"
+#include "ip_set_bitmaps.h"
 
 #define SETTYPE_NAME "macipmap"
-#define MAX_RANGE 0x0000FFFF
 
 /* general flags */
 #define IPSET_MACIP_MATCHUNSET	1
@@ -17,6 +17,7 @@ struct ip_set_macipmap {
 	ip_set_ip_t first_ip;		/* host byte order, included in range */
 	ip_set_ip_t last_ip;		/* host byte order, included in range */
 	u_int32_t flags;
+	size_t size;			/* size of the ipmap proper */
 };
 
 struct ip_set_req_macipmap_create {

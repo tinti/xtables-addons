@@ -15,16 +15,13 @@
  * Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include "ip_set_iptreemap.h"
+#include <limits.h>			/* UINT_MAX */
+#include <stdio.h>			/* *printf */
+#include <string.h>			/* mem* */
 
 #include "ipset.h"
+
+#include "ip_set_iptreemap.h"
 
 #define OPT_CREATE_GC 0x1
 
@@ -61,32 +58,37 @@ create_final(void *data, unsigned int flags)
 }
 
 static const struct option create_opts[] = {
-	{"gc", 1, 0, 'g'},
+	{.name = "gc",	.has_arg = required_argument,	.val = 'g'},
 	{NULL},
 };
 
 static ip_set_ip_t
-adt_parser(unsigned int cmd, const char *arg, void *data)
+adt_parser(unsigned int cmd, const char *optarg, void *data)
 {
 	struct ip_set_req_iptreemap *mydata = data;
 	ip_set_ip_t mask;
 
-	char *saved = ipset_strdup(arg);
+	char *saved = ipset_strdup(optarg);
 	char *ptr, *tmp = saved;
 
 	if (strchr(tmp, '/')) {
-		parse_ipandmask(tmp, &mydata->start, &mask);
-		mydata->end = mydata->start | ~mask;
+		parse_ipandmask(tmp, &mydata->ip, &mask);
+		mydata->end = mydata->ip | ~mask;
 	} else {
-		ptr = strsep(&tmp, ":");
-		parse_ip(ptr, &mydata->start);
+		if ((ptr = strchr(tmp, ':')) != NULL && ++warn_once == 1)
+			fprintf(stderr, "Warning: please use '-' separator token between IP range.\n"
+			        "Next release won't support old separator token.\n");
+		ptr = strsep(&tmp, "-:");
+		parse_ip(ptr, &mydata->ip);
 
 		if (tmp) {
 			parse_ip(tmp, &mydata->end);
 		} else {
-			mydata->end = mydata->start;
+			mydata->end = mydata->ip;
 		}
 	}
+
+	ipset_free(saved);
 
 	return 1;
 }
@@ -120,9 +122,9 @@ printips_sorted(struct set *set, void *data, size_t len, unsigned int options)
 	while (len >= offset + sizeof(struct ip_set_req_iptreemap)) {
 		req = data + offset;
 
-		printf("%s", ip_tostring(req->start, options));
-		if (req->start != req->end)
-			printf(":%s", ip_tostring(req->end, options));
+		printf("%s", ip_tostring(req->ip, options));
+		if (req->ip != req->end)
+			printf("-%s", ip_tostring(req->end, options));
 		printf("\n");
 
 		offset += sizeof(struct ip_set_req_iptreemap);
@@ -151,10 +153,10 @@ saveips(struct set *set, void *data, size_t len, unsigned int options)
 	while (len >= offset + sizeof(struct ip_set_req_iptreemap)) {
 		req = data + offset;
 
-		printf("-A %s %s", set->name, ip_tostring(req->start, options));
+		printf("-A %s %s", set->name, ip_tostring(req->ip, options));
 
-		if (req->start != req->end)
-			printf(":%s", ip_tostring(req->end, options));
+		if (req->ip != req->end)
+			printf("-%s", ip_tostring(req->end, options));
 
 		printf("\n");
 

@@ -15,36 +15,33 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <limits.h>			/* UINT_MAX */
+#include <stdio.h>			/* *printf */
+#include <string.h>			/* mem* */
+
+#include "ipset.h"
 
 #include "ip_set_iptree.h"
-#include "ipset.h"
 
 #define BUFLEN 30;
 
 #define OPT_CREATE_TIMEOUT    0x01U
 
 /* Initialize the create. */
-static void create_init(void *data)
+static void
+create_init(void *data)
 {
-	struct ip_set_req_iptree_create *mydata =
-	    (struct ip_set_req_iptree_create *) data;
+	struct ip_set_req_iptree_create *mydata = data;
 
 	DP("create INIT");
 	mydata->timeout = 0;
 }
 
 /* Function which parses command options; returns true if it ate an option */
-static int create_parse(int c, char *argv[], void *data, unsigned int *flags)
+static int
+create_parse(int c, char *argv[], void *data, unsigned *flags)
 {
-	struct ip_set_req_iptree_create *mydata =
-	    (struct ip_set_req_iptree_create *) data;
+	struct ip_set_req_iptree_create *mydata = data;
 
 	DP("create_parse");
 
@@ -65,27 +62,32 @@ static int create_parse(int c, char *argv[], void *data, unsigned int *flags)
 }
 
 /* Final check; exit if not ok. */
-static void create_final(void *data, unsigned int flags)
+static void
+create_final(void *data, unsigned int flags)
 {
 }
 
 /* Create commandline options */
 static const struct option create_opts[] = {
-	{"timeout", 1, 0, '1'},
+	{.name = "timeout",	.has_arg = required_argument,	.val = '1'},
 	{NULL},
 };
 
 /* Add, del, test parser */
-static ip_set_ip_t adt_parser(unsigned int cmd, const char *arg, void *data)
+static ip_set_ip_t
+adt_parser(unsigned cmd, const char *optarg, void *data)
 {
-	struct ip_set_req_iptree *mydata =
-	    (struct ip_set_req_iptree *) data;
-	char *saved = ipset_strdup(arg);
+	struct ip_set_req_iptree *mydata = data;
+	char *saved = ipset_strdup(optarg);
 	char *ptr, *tmp = saved;
 
-	DP("iptree: %p %p", arg, data);
+	DP("iptree: %p %p", optarg, data);
 
-	ptr = strsep(&tmp, ":%");
+	if (((ptr = strchr(tmp, ':')) || (ptr = strchr(tmp, '%'))) && ++warn_once == 1)
+		fprintf(stderr, "Warning: please use ',' separator token between ip,timeout.\n"
+			        "Next release won't support old separator tokens.\n");
+
+	ptr = strsep(&tmp, ":%,");
 	parse_ip(ptr, &mydata->ip);
 
 	if (tmp)
@@ -93,7 +95,7 @@ static ip_set_ip_t adt_parser(unsigned int cmd, const char *arg, void *data)
 	else
 		mydata->timeout = 0;	
 
-	free(saved);
+	ipset_free(saved);
 	return 1;	
 }
 
@@ -101,38 +103,36 @@ static ip_set_ip_t adt_parser(unsigned int cmd, const char *arg, void *data)
  * Print and save
  */
 
-static void initheader(struct set *set, const void *data)
+static void
+initheader(struct set *set, const void *data)
 {
-	struct ip_set_req_iptree_create *header =
-	    (struct ip_set_req_iptree_create *) data;
-	struct ip_set_iptree *map =
-		(struct ip_set_iptree *) set->settype->header;
+	const struct ip_set_req_iptree_create *header = data;
+	struct ip_set_iptree *map = set->settype->header;
 		
 	map->timeout = header->timeout;
 }
 
-static void printheader(struct set *set, unsigned int options)
+static void
+printheader(struct set *set, unsigned options)
 {
-	struct ip_set_iptree *mysetdata =
-	    (struct ip_set_iptree *) set->settype->header;
+	struct ip_set_iptree *mysetdata = set->settype->header;
 
 	if (mysetdata->timeout)
 		printf(" timeout: %u", mysetdata->timeout);
 	printf("\n");
 }
 
-static void printips_sorted(struct set *set, void *data, size_t len,
-    unsigned int options)
+static void
+printips_sorted(struct set *set, void *data, size_t len, unsigned options)
 {
-	struct ip_set_iptree *mysetdata =
-	    (struct ip_set_iptree *) set->settype->header;
+	struct ip_set_iptree *mysetdata = set->settype->header;
 	struct ip_set_req_iptree *req;
 	size_t offset = 0;
 
 	while (len >= offset + sizeof(struct ip_set_req_iptree)) {
 		req = (struct ip_set_req_iptree *)(data + offset);
 		if (mysetdata->timeout)
-			printf("%s:%u\n", ip_tostring(req->ip, options),
+			printf("%s,%u\n", ip_tostring(req->ip, options),
 					  req->timeout);
 		else
 			printf("%s\n", ip_tostring(req->ip, options));
@@ -140,10 +140,10 @@ static void printips_sorted(struct set *set, void *data, size_t len,
 	}
 }
 
-static void saveheader(struct set *set, unsigned int options)
+static void
+saveheader(struct set *set, unsigned options)
 {
-	struct ip_set_iptree *mysetdata =
-	    (struct ip_set_iptree *) set->settype->header;
+	struct ip_set_iptree *mysetdata = set->settype->header;
 
 	if (mysetdata->timeout)
 		printf("-N %s %s --timeout %u\n",
@@ -154,11 +154,10 @@ static void saveheader(struct set *set, unsigned int options)
 		       set->name, set->settype->typename);
 }
 
-static void saveips(struct set *set, void *data, size_t len,
-    unsigned int options)
+static void
+saveips(struct set *set, void *data, size_t len, unsigned options)
 {
-	struct ip_set_iptree *mysetdata =
-	    (struct ip_set_iptree *) set->settype->header;
+	struct ip_set_iptree *mysetdata = set->settype->header;
 	struct ip_set_req_iptree *req;
 	size_t offset = 0;
 
@@ -167,7 +166,7 @@ static void saveips(struct set *set, void *data, size_t len,
 	while (len >= offset + sizeof(struct ip_set_req_iptree)) {
 		req = (struct ip_set_req_iptree *)(data + offset);
 		if (mysetdata->timeout)
-			printf("-A %s %s:%u\n",
+			printf("-A %s %s,%u\n",
 				set->name, 
 				ip_tostring(req->ip, options),
 				req->timeout);
@@ -183,7 +182,7 @@ static void usage(void)
 {
 	printf
 	    ("-N set iptree [--timeout value]\n"
-	     "-A set IP[:timeout]\n"
+	     "-A set IP[,timeout]\n"
 	     "-D set IP\n"
 	     "-T set IP\n");
 }
