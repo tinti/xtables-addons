@@ -121,7 +121,7 @@ static struct option opts_long[] = {
 	{"help",    2, 0, 'H'},
 
 	/* end */
-	{NULL},
+	{0, 0, 0, 0},
 };
 
 static char opts_short[] =
@@ -165,11 +165,11 @@ static void exit_tryhelp(int status)
 	exit(status);
 }
 
-void exit_error(enum exittype status, const char *msg, ...)
+void exit_error(int status, const char *msg, ...)
 {
-	va_list args;
-
 	if (!option_quiet) {
+		va_list args;
+
 		va_start(args, msg);
 		fprintf(stderr, "%s v%s: ", program_name, program_version);
 		vfprintf(stderr, msg, args);
@@ -188,11 +188,11 @@ void exit_error(enum exittype status, const char *msg, ...)
 	exit(status);
 }
 
-static void ipset_printf(char *msg, ...)
+static void ipset_printf(const char *msg, ...)
 {
-	va_list args;
-
 	if (!option_quiet) {
+		va_list args;
+
 		va_start(args, msg);
 		vfprintf(stdout, msg, args);
 		va_end(args);
@@ -200,7 +200,7 @@ static void ipset_printf(char *msg, ...)
 	}
 }
 
-static void generic_opt_check(int command, int options)
+static void generic_opt_check(int command, unsigned int options)
 {
 	int i, j, legal = 0;
 
@@ -235,7 +235,7 @@ static void generic_opt_check(int command, int options)
 	}
 }
 
-static char opt2char(int option)
+static char opt2char(unsigned int option)
 {
 	const char *ptr;
 	for (ptr = optflags; option > 1; option >>= 1, ptr++);
@@ -243,12 +243,12 @@ static char opt2char(int option)
 	return *ptr;
 }
 
-static char cmd2char(int option)
+static char cmd2char(int cmd)
 {
-	if (option <= CMD_NONE || option > NUMBER_OF_CMD)
+	if (cmd <= CMD_NONE || cmd > NUMBER_OF_CMD)
 		return ' '; 
 
-	return cmdflags[option];
+	return cmdflags[cmd];
 }
 
 /* From iptables.c ... */
@@ -268,6 +268,7 @@ static char *get_modprobe(void)
 		switch (read(procfile, ret, PROCFILE_BUFSIZ)) {
 		case -1: goto fail;
 		case PROCFILE_BUFSIZ: goto fail; /* Partial read.  Wierd */
+		default: ; /* nothing */
 		}
 		if (ret[strlen(ret)-1]=='\n') 
 			ret[strlen(ret)-1]=0;
@@ -297,8 +298,8 @@ static int ipset_insmod(const char *modname, const char *modprobe)
 	
 	switch (fork()) {
 	case 0:
-		argv[0] = (char *)modprobe;
-		argv[1] = (char *)modname;
+		argv[0] = (char *) modprobe;
+		argv[1] = (char *) modname;
 		argv[2] = NULL;
 		execv(argv[0], argv);
 		
@@ -336,7 +337,7 @@ static void kernel_error(unsigned cmd, int err)
 	struct translate_error {
 		int err;
 		unsigned cmd;
-		char *message;
+		const char *message;
 	} table[] =
 	{ /* Generic error codes */
 	  { EPERM, 0, "Missing capability" },
@@ -412,7 +413,7 @@ static void kernel_getfrom(unsigned cmd, void *data, socklen_t * size)
 		kernel_error(cmd, errno);
 }
 
-static int kernel_sendto_handleerrno(unsigned cmd, unsigned op,
+static int kernel_sendto_handleerrno(unsigned cmd,
 				     void *data, socklen_t size)
 {
 	int res = wrapped_setsockopt(data, size);
@@ -474,7 +475,7 @@ static void check_protocolversion(void)
 			   req_version.version, IP_SET_PROTOCOL_VERSION);
 }
 
-static void set_command(unsigned *cmd, const int newcmd)
+static void set_command(int *cmd, int newcmd)
 {
 	if (*cmd != CMD_NONE)
 		exit_error(PARAMETER_PROBLEM, "Can't use -%c with -%c\n",
@@ -526,7 +527,7 @@ void ipset_free(void *data)
 
 static struct option *merge_options(struct option *oldopts,
 				    const struct option *newopts,
-				    unsigned int *option_offset)
+				    int *option_offset)
 {
 	unsigned int num_old, num_new, i;
 	struct option *merge;
@@ -566,7 +567,7 @@ static char *ip_tonetwork(const struct in_addr *addr)
 {
 	struct netent *net;
 
-	if ((net = getnetbyaddr((long) ntohl(addr->s_addr), 
+	if ((net = getnetbyaddr(ntohl(addr->s_addr), 
 				AF_INET)) != NULL) {
 		DP("%s", net->n_name);
 		return (char *) net->n_name;
@@ -593,7 +594,8 @@ char *ip_tostring(ip_set_ip_t ip, unsigned options)
 	return inet_ntoa(addr);
 }
 
-char *binding_ip_tostring(struct set *set, ip_set_ip_t ip, unsigned options)
+char *binding_ip_tostring(struct set *set UNUSED,
+			  ip_set_ip_t ip, unsigned options)
 {
 	return ip_tostring(ip, options);
 }
@@ -638,7 +640,7 @@ void parse_ip(const char *str, ip_set_ip_t * ip)
 void parse_mask(const char *str, ip_set_ip_t * mask)
 {
 	struct in_addr addr;
-	unsigned int bits;
+	int bits;
 
 	DP("%s", str);
 
@@ -713,12 +715,12 @@ int
 string_to_number(const char *str, unsigned int min, unsigned int max,
 		 ip_set_ip_t *port)
 {
-	long number;
+	unsigned long number;
 	char *end;
 
 	/* Handle hex, octal, etc. */
 	errno = 0;
-	number = strtol(str, &end, 0);
+	number = strtoul(str, &end, 0);
 	if (*end == '\0' && end != str) {
 		/* we parsed a number, let's see if we want this */
 		if (errno != ERANGE && min <= number && number <= max) {
@@ -732,14 +734,13 @@ string_to_number(const char *str, unsigned int min, unsigned int max,
 static int
 string_to_port(const char *str, ip_set_ip_t *port)
 {
-	struct servent *service;
-
+	struct servent *service = getservbyname(str, "tcp");
+	
 	if ((service = getservbyname(str, "tcp")) != NULL) {
-		*port = ntohs((unsigned short) service->s_port);
+		*port = ntohs((uint16_t) service->s_port);
 		return 0;
 	}
-	
-	return -1;
+	return - 1;
 }
 
 /* Fills the 'ip' with the parsed port in host byte order */
@@ -773,7 +774,7 @@ static struct settype *settype_find(const char *typename)
 
 static struct settype *settype_load(const char *typename)
 {
-	char path[strlen(ipset_libdir) + sizeof(IPSET_LIB_NAME) +
+	char path[sizeof(IPSET_LIB_DIR) + sizeof(IPSET_LIB_NAME) +
 		  strlen(typename)];
 	struct settype *settype;
 
@@ -783,7 +784,7 @@ static struct settype *settype_load(const char *typename)
 		return settype;	/* found */
 
 	/* Else we have to load it */
-	sprintf(path, "%s" IPSET_LIB_NAME, ipset_libdir, typename);
+	sprintf(path, IPSET_LIB_DIR IPSET_LIB_NAME, typename);
 
 	if (dlopen(path, RTLD_NOW)) {
 		/* Found library. */
@@ -1304,7 +1305,7 @@ static char *newargv[255];
 static int newargc = 0;
 
 /* Build faked argv from parsed line */
-static void build_argv(int line, char *buffer) {
+static void build_argv(unsigned line, char *buffer) {
 	char *ptr;
 	int i;
 
@@ -1316,7 +1317,7 @@ static void build_argv(int line, char *buffer) {
 	ptr = strtok(buffer, " \t\n");
 	newargv[newargc++] = ipset_strdup(ptr);
 	while ((ptr = strtok(NULL, " \t\n")) != NULL) {
-		if ((newargc + 1) < sizeof(newargv)/sizeof(char *))
+		if ((newargc + 1) < (int)(sizeof(newargv)/sizeof(char *)))
 			newargv[newargc++] = ipset_strdup(ptr);
 		else
 			exit_error(PARAMETER_PROBLEM,
@@ -1326,14 +1327,14 @@ static void build_argv(int line, char *buffer) {
 
 static FILE *create_tempfile(void)
 {
-	char buffer[1024];	
+	char buffer[1024], __tmpdir[] = "/tmp";	
 	char *tmpdir = NULL;
 	char *filename;
 	int fd;
 	FILE *file;
 	
 	if (!(tmpdir = getenv("TMPDIR")) && !(tmpdir = getenv("TMP")))
-		tmpdir = "/tmp";
+		tmpdir = __tmpdir;
 	filename = ipset_malloc(strlen(tmpdir) + strlen(TEMPFILE_PATTERN) + 1);
 	strcpy(filename, tmpdir);
 	strcat(filename, TEMPFILE_PATTERN);
@@ -1364,7 +1365,7 @@ static void set_restore(char *argv0)
 	char buffer[1024];	
 	char *ptr, *name = NULL;
 	char cmd = ' ';
-	int restore_line = 0, first_pass, i, bindings = 0;
+	int first_pass, i, bindings = 0;
 	struct settype *settype = NULL;
 	struct ip_set_req_setnames *header;
 	ip_set_id_t idx;
@@ -1378,6 +1379,7 @@ static void set_restore(char *argv0)
 	load_set_list(IPSET_TOKEN_ALL, &idx,
 		      IP_SET_OP_LIST_SIZE, CMD_RESTORE);
 	
+	restore_line = 0;
 	restore_size = sizeof(struct ip_set_req_setnames)/* header */
 		       + sizeof(struct ip_set_restore);  /* marker */
 	DP("restore_size: %u", restore_size);
@@ -1587,7 +1589,7 @@ static int set_adtip(struct set *set, const char *adt,
 	memcpy(data + sizeof(struct ip_set_req_adt),
 	       set->settype->data, set->settype->adt_size);
 	
-	if (kernel_sendto_handleerrno(cmd, op, data, size) == -1)
+	if (kernel_sendto_handleerrno(cmd, data, size) == -1)
 		switch (op) {
 		case IP_SET_OP_ADD_IP:
 			exit_error(OTHER_PROBLEM, "%s is already in set %s.",
@@ -1618,7 +1620,7 @@ static int set_adtip(struct set *set, const char *adt,
 	return res;
 }
 
-static void set_restore_add(struct set *set, const char *adt)
+static void set_restore_add(struct set *set, const char *adt UNUSED)
 {
 	DP("%s %s", set->name, adt);
 	/* Sanity checking */
@@ -1683,7 +1685,7 @@ static int set_bind(struct set *set, const char *adt,
 	}
 
 	if (op == IP_SET_OP_TEST_BIND_SET) {
-		if (kernel_sendto_handleerrno(cmd, op, data, size) == -1) {
+		if (kernel_sendto_handleerrno(cmd, data, size) == -1) {
 			ipset_printf("%s in set %s is bound to %s.",
 				     adt, set->name, binding);
 			res = 0;
@@ -1882,13 +1884,6 @@ static void list_sets(const char name[IP_SET_MAXNAMELEN], unsigned options)
  */
 static void set_help(const struct settype *settype)
 {
-#ifdef IPSET_DEBUG
-	char debughelp[] =
-	       "  --debug      -z   Enable debugging\n\n";
-#else
-	char debughelp[] = "\n";
-#endif
-
 	printf("%s v%s\n\n"
 	       "Usage: %s -N new-set settype [options]\n"
 	       "       %s -[XFLSH] [set] [options]\n"
@@ -1943,7 +1938,11 @@ static void set_help(const struct settype *settype)
 	       "  --resolve    -r   Try to resolve addresses in a -L\n"
 	       "  --quiet      -q   Suppress any output to stdout and stderr.\n"
 	       "  --binding    -b   Specifies the binding for -B\n");
-	printf(debughelp);
+#ifdef IPSET_DEBUG
+	printf("  --debug      -z   Enable debugging\n\n");
+#else
+	printf("\n");
+#endif
 
 	if (settype != NULL) {
 		printf("Type '%s' specific:\n", settype->typename);
@@ -1951,18 +1950,18 @@ static void set_help(const struct settype *settype)
 	}
 }
 
-static int find_cmd(const char option)
+static int find_cmd(int option)
 {
 	int i;
 	
 	for (i = 1; i <= NUMBER_OF_CMD; i++)
-		if (cmdflags[i] == option)
+		if (cmdflags[i] == (char) option)
 			return i;
 			
 	return CMD_NONE;
 }
 
-static int parse_adt_cmdline(unsigned command,
+static int parse_adt_cmdline(int command,
 			     const char *name,
 			     char *adt,
 			     struct set **set,
@@ -2012,7 +2011,7 @@ static int parse_adt_cmdline(unsigned command,
 int parse_commandline(int argc, char *argv[])
 {
 	int res = 0;
-	unsigned command = CMD_NONE;
+	int command = CMD_NONE;
 	unsigned options = 0;
 	int c;
 	
@@ -2204,7 +2203,7 @@ int parse_commandline(int argc, char *argv[])
 
 		case 1:	/* non option */
 			printf("Bad argument `%s'\n", optarg);
-			exit_tryhelp(2);
+			exit_tryhelp(PARAMETER_PROBLEM);
 			break;	/*always good */
 
 		default:{
@@ -2336,11 +2335,6 @@ int parse_commandline(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {	
-	const char *p;
-
-	if ((p = getenv("IPSET_LIBDIR")) != NULL)
-		ipset_libdir = p;
-
 	return parse_commandline(argc, argv);
 
 }
