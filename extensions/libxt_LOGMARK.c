@@ -22,7 +22,7 @@ enum {
 static const struct option logmark_tg_opts[] = {
 	{.name = "log-level",   .has_arg = true,  .val = 'l'},
 	{.name = "log-prefix",  .has_arg = true,  .val = 'p'},
-	{},
+	{NULL},
 };
 
 static void logmark_tg_help(void)

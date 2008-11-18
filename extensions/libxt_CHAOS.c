@@ -25,7 +25,7 @@ enum {
 static const struct option chaos_tg_opts[] = {
 	{.name = "delude", .has_arg = false, .val = 'd'},
 	{.name = "tarpit", .has_arg = false, .val = 't'},
-	{},
+	{NULL},
 };
 
 static void chaos_tg_help(void)

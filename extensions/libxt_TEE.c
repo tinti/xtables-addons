@@ -30,7 +30,7 @@ enum {
 
 static const struct option tee_tg_opts[] = {
 	{.name = "gateway", .has_arg = true, .val = 'g'},
-	{},
+	{NULL},
 };
 
 static void tee_tg_help(void)

@@ -23,7 +23,7 @@ static const struct option portscan_mt_opts[] = {
 	{.name = "synscan", .has_arg = false, .val = 's'},
 	{.name = "cnscan",  .has_arg = false, .val = 'c'},
 	{.name = "grscan",  .has_arg = false, .val = 'g'},
-	{},
+	{NULL},
 };
 
 static void portscan_mt_help(void)
