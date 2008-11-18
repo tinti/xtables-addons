@@ -103,7 +103,7 @@ static struct quota_counter *q2_get_counter(const struct xt_quota_mtinfo2 *q)
 	                      proc_xt_quota);
 	if (p == NULL || IS_ERR(p))
 		goto out;
-		
+
 	p->owner        = THIS_MODULE;
 	p->data         = e;
 	p->read_proc    = quota_proc_read;
@@ -199,7 +199,7 @@ static struct xt_match quota_mt2_reg[] __read_mostly = {
 	{
 		.name       = "quota2",
 		.revision   = 2,
-		.family     = AF_INET,
+		.family     = NFPROTO_IPV4,
 		.checkentry = quota_mt2_check,
 		.match      = quota_mt2,
 		.destroy    = quota_mt2_destroy,  
@@ -209,7 +209,7 @@ static struct xt_match quota_mt2_reg[] __read_mostly = {
 	{
 		.name       = "quota2",
 		.revision   = 2,
-		.family     = AF_INET6,
+		.family     = NFPROTO_IPV6,
 		.checkentry = quota_mt2_check,
 		.match      = quota_mt2,
 		.destroy    = quota_mt2_destroy,  

@@ -148,7 +148,7 @@ static struct xt_match fuzzy_mt_reg[] __read_mostly = {
 	{
 		.name       = "fuzzy",
 		.revision   = 0,
-		.family     = PF_INET,
+		.family     = NFPROTO_IPV4,
 		.match      = fuzzy_mt,
 		.checkentry = fuzzy_mt_check,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
@@ -157,7 +157,7 @@ static struct xt_match fuzzy_mt_reg[] __read_mostly = {
 	{
 		.name       = "fuzzy",
 		.revision   = 0,
-		.family     = PF_INET6,
+		.family     = NFPROTO_IPV6,
 		.match      = fuzzy_mt,
 		.checkentry = fuzzy_mt_check,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),

@@ -101,7 +101,7 @@ static struct xt_target logmark_tg_reg[] __read_mostly = {
 	{
 		.name       = "LOGMARK",
 		.revision   = 0,
-		.family     = AF_INET,
+		.family     = NFPROTO_IPV4,
 		.checkentry = logmark_tg_check,
 		.target     = logmark_tg,
 		.targetsize = sizeof(struct xt_logmark_tginfo),
@@ -110,7 +110,7 @@ static struct xt_target logmark_tg_reg[] __read_mostly = {
 	{
 		.name       = "LOGMARK",
 		.revision   = 0,
-		.family     = AF_INET6,
+		.family     = NFPROTO_IPV6,
 		.checkentry = logmark_tg_check,
 		.target     = logmark_tg,
 		.targetsize = sizeof(struct xt_logmark_tginfo),

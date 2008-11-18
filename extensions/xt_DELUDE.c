@@ -157,7 +157,7 @@ static unsigned int delude_tg(struct sk_buff **pskb,
 static struct xt_target delude_tg_reg __read_mostly = {
 	.name     = "DELUDE",
 	.revision = 0,
-	.family   = AF_INET,
+	.family   = NFPROTO_IPV4,
 	.table    = "filter",
 	.hooks    = (1 << NF_INET_LOCAL_IN) | (1 << NF_INET_FORWARD),
 	.proto    = IPPROTO_TCP,

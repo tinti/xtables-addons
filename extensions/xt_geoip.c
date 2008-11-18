@@ -223,8 +223,9 @@ static void xt_geoip_mt_destroy(const struct xt_match *match, void *matchinfo)
 }
 
 static struct xt_match xt_geoip_match __read_mostly = {
-	.family     = AF_INET,
 	.name       = "geoip",
+	.revision   = 0,
+	.family     = NFPROTO_IPV4,
 	.match      = xt_geoip_mt,
 	.checkentry = xt_geoip_mt_checkentry,
 	.destroy    = xt_geoip_mt_destroy,

@@ -211,7 +211,7 @@ static struct xt_match condition_mt_reg[] __read_mostly = {
 	{
 		.name       = "condition",
 		.revision   = 0,
-		.family     = PF_INET,
+		.family     = NFPROTO_IPV4,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
 		.match      = condition_mt,
 		.checkentry = condition_mt_check,
@@ -221,7 +221,7 @@ static struct xt_match condition_mt_reg[] __read_mostly = {
 	{
 		.name       = "condition",
 		.revision   = 0,
-		.family     = PF_INET6,
+		.family     = NFPROTO_IPV6,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
 		.match      = condition_mt,
 		.checkentry = condition_mt_check,

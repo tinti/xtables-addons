@@ -105,14 +105,14 @@ static unsigned int sysrq_tg6(struct sk_buff **pskb,
 static bool sysrq_tg_check(const char *table, const void *ventry,
     const struct xt_target *target, void *targinfo, unsigned int hook_mask)
 {
-	if (target->family == PF_INET) {
+	if (target->family == NFPROTO_IPV4) {
 		const struct ipt_entry *entry = ventry;
 
 		if ((entry->ip.proto != IPPROTO_UDP &&
 		    entry->ip.proto != IPPROTO_UDPLITE) ||
 		    entry->ip.invflags & XT_INV_PROTO)
 			goto out;
-	} else if (target->family == PF_INET6) {
+	} else if (target->family == NFPROTO_IPV6) {
 		const struct ip6t_entry *entry = ventry;
 
 		if ((entry->ipv6.proto != IPPROTO_UDP &&
@@ -131,16 +131,16 @@ static bool sysrq_tg_check(const char *table, const void *ventry,
 static struct xt_target sysrq_tg_reg[] __read_mostly = {
 	{
 		.name       = "SYSRQ",
-		.family     = PF_INET,
 		.revision   = 0,
+		.family     = NFPROTO_IPV4,
 		.target     = sysrq_tg4,
 		.checkentry = sysrq_tg_check,
 		.me         = THIS_MODULE,
 	},
 	{
 		.name       = "SYSRQ",
-		.family     = PF_INET6,
 		.revision   = 0,
+		.family     = NFPROTO_IPV6,
 		.target     = sysrq_tg6,
 		.checkentry = sysrq_tg_check,
 		.me         = THIS_MODULE,

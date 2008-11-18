@@ -236,7 +236,7 @@ static struct xt_match portscan_mt_reg[] __read_mostly = {
 	{
 		.name       = "portscan",
 		.revision   = 0,
-		.family     = PF_INET,
+		.family     = NFPROTO_IPV4,
 		.match      = portscan_mt,
 		.checkentry = portscan_mt_check,
 		.matchsize  = sizeof(struct xt_portscan_mtinfo),
@@ -246,7 +246,7 @@ static struct xt_match portscan_mt_reg[] __read_mostly = {
 	{
 		.name       = "portscan",
 		.revision   = 0,
-		.family     = PF_INET6,
+		.family     = NFPROTO_IPV6,
 		.match      = portscan_mt,
 		.checkentry = portscan_mt_check,
 		.matchsize  = sizeof(struct xt_portscan_mtinfo),

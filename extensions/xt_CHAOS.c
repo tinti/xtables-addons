@@ -131,7 +131,8 @@ static bool chaos_tg_check(const char *tablename, const void *entry,
 
 static struct xt_target chaos_tg_reg = {
 	.name       = "CHAOS",
-	.family     = AF_INET,
+	.revision   = 0,
+	.family     = NFPROTO_IPV4,
 	.table      = "filter",
 	.hooks      = (1 << NF_INET_LOCAL_IN) | (1 << NF_INET_FORWARD) |
 	              (1 << NF_INET_LOCAL_OUT),
@@ -145,27 +146,27 @@ static int __init chaos_tg_init(void)
 {
 	int ret = -EINVAL;
 
-	xm_tcp = xt_request_find_match(AF_INET, "tcp", 0);
+	xm_tcp = xt_request_find_match(NFPROTO_IPV4, "tcp", 0);
 	if (xm_tcp == NULL) {
 		printk(KERN_WARNING PFX "Error: Could not find or load "
 		       "\"tcp\" match\n");
 		return -EINVAL;
 	}
 
-	xt_reject = xt_request_find_target(AF_INET, "REJECT", 0);
+	xt_reject = xt_request_find_target(NFPROTO_IPV4, "REJECT", 0);
 	if (xt_reject == NULL) {
 		printk(KERN_WARNING PFX "Error: Could not find or load "
 		       "\"REJECT\" target\n");
 		goto out2;
 	}
 
-	xt_tarpit   = xt_request_find_target(AF_INET, "TARPIT", 0);
+	xt_tarpit   = xt_request_find_target(NFPROTO_IPV4, "TARPIT", 0);
 	have_tarpit = xt_tarpit != NULL;
 	if (!have_tarpit)
 		printk(KERN_WARNING PFX "Warning: Could not find or load "
 		       "\"TARPIT\" target\n");
 
-	xt_delude   = xt_request_find_target(AF_INET, "DELUDE", 0);
+	xt_delude   = xt_request_find_target(NFPROTO_IPV4, "DELUDE", 0);
 	have_delude = xt_delude != NULL;
 	if (!have_delude)
 		printk(KERN_WARNING PFX "Warning: Could not find or load "

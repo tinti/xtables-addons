@@ -17,6 +17,18 @@ struct net_device;
 struct rtable;
 struct sk_buff;
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+enum {
+	NFPROTO_UNSPEC =  0,
+	NFPROTO_IPV4   =  2,
+	NFPROTO_ARP    =  3,
+	NFPROTO_BRIDGE =  7,
+	NFPROTO_IPV6   = 10,
+	NFPROTO_DECNET = 12,
+	NFPROTO_NUMPROTO,
+};
+#endif
+
 struct xtnu_match {
 	struct list_head list;
 	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];

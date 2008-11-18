@@ -179,7 +179,7 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 
 	nf_ct_attach(nskb, oldskb);
 
-	NF_HOOK(PF_INET, NF_INET_LOCAL_OUT, nskb, NULL, nskb->dst->dev,
+	NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_OUT, nskb, NULL, nskb->dst->dev,
 		dst_output);
 	return;
 
@@ -226,7 +226,8 @@ tarpit_tg(struct sk_buff **pskb, const struct net_device *in,
 
 static struct xt_target tarpit_tg_reg __read_mostly = {
 	.name   = "TARPIT",
-	.family = AF_INET,
+	.revision = 0,
+	.family = NFPROTO_IPV4,
 	.table  = "filter",
 	.hooks  = (1 << NF_INET_LOCAL_IN) | (1 << NF_INET_FORWARD),
 	.proto  = IPPROTO_TCP,

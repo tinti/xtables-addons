@@ -127,7 +127,7 @@ static unsigned int dhcpaddr_tg(struct sk_buff **pskb,
 static struct xt_target dhcpaddr_tg_reg __read_mostly = {
 	.name       = "DHCPADDR",
 	.revision   = 0,
-	.family     = PF_INET,
+	.family     = NFPROTO_IPV4,
 	.proto      = IPPROTO_UDP,
 	.table      = "mangle",
 	.target     = dhcpaddr_tg,
@@ -138,7 +138,7 @@ static struct xt_target dhcpaddr_tg_reg __read_mostly = {
 static struct xt_match dhcpaddr_mt_reg __read_mostly = {
 	.name       = "dhcpaddr",
 	.revision   = 0,
-	.family     = PF_INET,
+	.family     = NFPROTO_IPV4,
 	.proto      = IPPROTO_UDP,
 	.match      = dhcpaddr_mt,
 	.matchsize  = XT_ALIGN(sizeof(struct dhcpaddr_info)),

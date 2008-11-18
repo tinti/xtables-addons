@@ -220,7 +220,8 @@ static bool tee_tg_check(const char *tablename, const void *entry,
 
 static struct xt_target tee_tg_reg __read_mostly = {
 	.name       = "TEE",
-	.family     = AF_INET,
+	.revision   = 0,
+	.family     = NFPROTO_IPV4,
 	.table      = "mangle",
 	.target     = tee_tg,
 	.targetsize = sizeof(struct xt_tee_tginfo),

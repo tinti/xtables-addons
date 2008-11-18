@@ -109,7 +109,7 @@ static unsigned int echo_tg4(struct sk_buff **poldskb,
 static struct xt_target echo_tg_reg __read_mostly = {
 	.name       = "ECHO",
 	.revision   = 0,
-	.family     = AF_INET,
+	.family     = NFPROTO_IPV4,
 	.proto      = IPPROTO_UDP,
 	.table      = "filter",
 	.target     = echo_tg4,

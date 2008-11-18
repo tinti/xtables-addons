@@ -87,7 +87,7 @@ static struct xt_target ipmark_tg_reg[] __read_mostly = {
 	{
 		.name       = "IPMARK",
 		.revision   = 0,
-		.family     = PF_INET,
+		.family     = NFPROTO_IPV4,
 		.table      = "mangle",
 		.target     = ipmark_tg4,
 		.targetsize = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
@@ -96,7 +96,7 @@ static struct xt_target ipmark_tg_reg[] __read_mostly = {
 	{
 		.name       = "IPMARK",
 		.revision   = 0,
-		.family     = PF_INET6,
+		.family     = NFPROTO_IPV6,
 		.table      = "mangle",
 		.target     = ipmark_tg6,
 		.targetsize = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
