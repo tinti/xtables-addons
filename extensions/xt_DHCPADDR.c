@@ -68,15 +68,14 @@ static bool ether_cmp(const unsigned char *lh, const unsigned char *rh,
 	return true;
 }
 
-static bool dhcpaddr_mt(const struct sk_buff *skb, const struct net_device *in,
-    const struct net_device *out, const struct xt_match *match,
-    const void *matchinfo, int offset, unsigned int protoff, bool *hotdrop)
+static bool
+dhcpaddr_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	const struct dhcpaddr_info *info = matchinfo;
+	const struct dhcpaddr_info *info = par->matchinfo;
 	const struct dhcp_message *dh;
 	struct dhcp_message dhcpbuf;
 
-	dh = skb_header_pointer(skb, protoff + sizeof(struct udphdr),
+	dh = skb_header_pointer(skb, par->thoff + sizeof(struct udphdr),
 	     sizeof(dhcpbuf), &dhcpbuf);
 	if (dh == NULL)
 		/*
@@ -89,11 +88,10 @@ static bool dhcpaddr_mt(const struct sk_buff *skb, const struct net_device *in,
 	return ether_cmp((const void *)dh->chaddr, info->addr, info->mask);
 }
 
-static unsigned int dhcpaddr_tg(struct sk_buff **pskb,
-    const struct net_device *in, const struct net_device *out,
-    unsigned int hooknum, const struct xt_target *target, const void *targinfo)
+static unsigned int
+dhcpaddr_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 {
-	const struct dhcpaddr_info *info = targinfo;
+	const struct dhcpaddr_info *info = par->targinfo;
 	struct dhcp_message dhcpbuf, *dh;
 	struct udphdr udpbuf, *udph;
 	struct sk_buff *skb = *pskb;

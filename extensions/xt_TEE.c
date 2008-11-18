@@ -142,11 +142,9 @@ static void tee_ip_direct_send(struct sk_buff *skb)
  * packets when we see they already have that ->nfct.
  */
 static unsigned int
-tee_tg(struct sk_buff **pskb, const struct net_device *in,
-       const struct net_device *out, unsigned int hooknum,
-       const struct xt_target *target, const void *targinfo)
+tee_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 {
-	const struct xt_tee_tginfo *info = targinfo;
+	const struct xt_tee_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
 
 #ifdef WITH_CONNTRACK
@@ -169,7 +167,7 @@ tee_tg(struct sk_buff **pskb, const struct net_device *in,
 	 * If we are in INPUT, the checksum must be recalculated since
 	 * the length could have changed as a result of defragmentation.
 	 */
-	if (hooknum == NF_INET_LOCAL_IN) {
+	if (par->hooknum == NF_INET_LOCAL_IN) {
 		struct iphdr *iph = ip_hdr(skb);
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
@@ -208,11 +206,9 @@ tee_tg(struct sk_buff **pskb, const struct net_device *in,
 	return XT_CONTINUE;
 }
 
-static bool tee_tg_check(const char *tablename, const void *entry,
-                         const struct xt_target *target, void *targinfo,
-                         unsigned int hook_mask)
+static bool tee_tg_check(const struct xt_tgchk_param *par)
 {
-	const struct xt_tee_tginfo *info = targinfo;
+	const struct xt_tee_tginfo *info = par->targinfo;
 
 	/* 0.0.0.0 and :: not allowed */
 	return memcmp(&info->gw, &zero_address, sizeof(zero_address)) != 0;

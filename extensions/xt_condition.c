@@ -97,12 +97,9 @@ static int condition_proc_write(struct file *file, const char __user *buffer,
 }
 
 static bool
-condition_mt(const struct sk_buff *skb, const struct net_device *in,
-             const struct net_device *out, const struct xt_match *match,
-             const void *matchinfo, int offset, unsigned int protoff,
-             bool *hotdrop)
+condition_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	const struct xt_condition_mtinfo *info = matchinfo;
+	const struct xt_condition_mtinfo *info = par->matchinfo;
 	const struct condition_variable *var   = info->condvar;
 	bool x;
 
@@ -113,12 +110,9 @@ condition_mt(const struct sk_buff *skb, const struct net_device *in,
 	return x ^ info->invert;
 }
 
-static bool
-condition_mt_check(const char *tablename, const void *entry,
-                   const struct xt_match *match, void *matchinfo,
-                   unsigned int hook_mask)
+static bool condition_mt_check(const struct xt_mtchk_param *par)
 {
-	struct xt_condition_mtinfo *info = matchinfo;
+	struct xt_condition_mtinfo *info = par->matchinfo;
 	struct condition_variable *var;
 
 	/* Forbid certain names */
@@ -184,9 +178,9 @@ condition_mt_check(const char *tablename, const void *entry,
 	return true;
 }
 
-static void condition_mt_destroy(const struct xt_match *match, void *matchinfo)
+static void condition_mt_destroy(const struct xt_mtdtor_param *par)
 {
-	const struct xt_condition_mtinfo *info = matchinfo;
+	const struct xt_condition_mtinfo *info = par->matchinfo;
 	struct condition_variable *var = info->condvar;
 
 	down(&proc_lock);

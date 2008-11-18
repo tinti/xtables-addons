@@ -135,11 +135,10 @@ static bool geoip_bsearch(const struct geoip_subnet *range,
 	return false;
 }
 
-static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
-    const struct net_device *out, const struct xt_match *match,
-    const void *matchinfo, int offset, unsigned int protoff, bool *hotdrop)
+static bool
+xt_geoip_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	const struct xt_geoip_match_info *info = matchinfo;
+	const struct xt_geoip_match_info *info = par->matchinfo;
 	const struct geoip_country_kernel *node;
 	const struct iphdr *iph = ip_hdr(skb);
 	unsigned int i;
@@ -169,10 +168,9 @@ static bool xt_geoip_mt(const struct sk_buff *skb, const struct net_device *in,
 	return info->flags & XT_GEOIP_INV;
 }
 
-static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
-    const struct xt_match *match, void *matchinfo, unsigned int hook_mask)
+static bool xt_geoip_mt_checkentry(const struct xt_mtchk_param *par)
 {
-	struct xt_geoip_match_info *info = matchinfo;
+	struct xt_geoip_match_info *info = par->matchinfo;
 	struct geoip_country_kernel *node;
 	unsigned int i;
 
@@ -197,9 +195,9 @@ static bool xt_geoip_mt_checkentry(const char *table, const void *entry,
 	return true;
 }
 
-static void xt_geoip_mt_destroy(const struct xt_match *match, void *matchinfo)
+static void xt_geoip_mt_destroy(const struct xt_mtdtor_param *par)
 {
-	struct xt_geoip_match_info *info = matchinfo;
+	struct xt_geoip_match_info *info = par->matchinfo;
 	struct geoip_country_kernel *node;
 	unsigned int i;
 

@@ -171,18 +171,16 @@ static inline unsigned int portscan_mt_full(int mark,
 	return mark;
 }
 
-static bool portscan_mt(const struct sk_buff *skb,
-    const struct net_device *in, const struct net_device *out,
-    const struct xt_match *match, const void *matchinfo, int offset,
-    unsigned int protoff, bool *hotdrop)
+static bool
+portscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	const struct xt_portscan_mtinfo *info = matchinfo;
+	const struct xt_portscan_mtinfo *info = par->matchinfo;
 	enum ip_conntrack_info ctstate;
 	const struct tcphdr *tcph;
 	struct nf_conn *ctdata;
 	struct tcphdr tcph_buf;
 
-	tcph = skb_header_pointer(skb, protoff, sizeof(tcph_buf), &tcph_buf);
+	tcph = skb_header_pointer(skb, par->thoff, sizeof(tcph_buf), &tcph_buf);
 	if (tcph == NULL)
 		return false;
 
@@ -207,8 +205,8 @@ static bool portscan_mt(const struct sk_buff *skb,
 		unsigned int n;
 
 		n = portscan_mt_full(ctdata->mark & connmark_mask, ctstate,
-		    in == init_net__loopback_dev, tcph,
-		    skb->len - protoff - 4 * tcph->doff);
+		    par->in == init_net__loopback_dev, tcph,
+		    skb->len - par->thoff - 4 * tcph->doff);
 
 		ctdata->mark = (ctdata->mark & ~connmark_mask) | n;
 		skb_nfmark(skb) = (skb_nfmark(skb) & ~packet_mask) ^ mark_seen;
@@ -219,10 +217,9 @@ static bool portscan_mt(const struct sk_buff *skb,
 	       (info->match_gr && ctdata->mark == mark_grscan);
 }
 
-static bool portscan_mt_check(const char *tablename, const void *entry,
-    const struct xt_match *match, void *matchinfo, unsigned int hook_mask)
+static bool portscan_mt_check(const struct xt_mtchk_param *par)
 {
-	const struct xt_portscan_mtinfo *info = matchinfo;
+	const struct xt_portscan_mtinfo *info = par->matchinfo;
 
 	if ((info->match_stealth & ~1) || (info->match_syn & ~1) ||
 	    (info->match_cn & ~1) || (info->match_gr & ~1)) {

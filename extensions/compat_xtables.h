@@ -56,7 +56,7 @@
 #	define init_net__proc_net     init_net.proc_net
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 #	define xt_match              xtnu_match
 #	define xt_register_match     xtnu_register_match
 #	define xt_unregister_match   xtnu_unregister_match

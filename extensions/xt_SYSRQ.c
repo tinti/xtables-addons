@@ -58,9 +58,8 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	return NF_ACCEPT;
 }
 
-static unsigned int sysrq_tg4(struct sk_buff **pskb,
-    const struct net_device *in, const struct net_device *out,
-    unsigned int hooknum, const struct xt_target *target, const void *targinfo)
+static unsigned int
+sysrq_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	struct sk_buff *skb = *pskb;
 	const struct iphdr *iph;
@@ -80,9 +79,8 @@ static unsigned int sysrq_tg4(struct sk_buff **pskb,
 	return sysrq_tg((void *)udph + sizeof(struct udphdr), len);
 }
 
-static unsigned int sysrq_tg6(struct sk_buff **pskb,
-    const struct net_device *in, const struct net_device *out,
-    unsigned int hooknum, const struct xt_target *target, const void *targinfo)
+static unsigned int
+sysrq_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	struct sk_buff *skb = *pskb;
 	const struct ipv6hdr *iph;
@@ -102,18 +100,17 @@ static unsigned int sysrq_tg6(struct sk_buff **pskb,
 	return sysrq_tg(udph + sizeof(struct udphdr), len);
 }
 
-static bool sysrq_tg_check(const char *table, const void *ventry,
-    const struct xt_target *target, void *targinfo, unsigned int hook_mask)
+static bool sysrq_tg_check(const struct xt_tgchk_param *par)
 {
-	if (target->family == NFPROTO_IPV4) {
-		const struct ipt_entry *entry = ventry;
+	if (par->target->family == NFPROTO_IPV4) {
+		const struct ipt_entry *entry = par->entryinfo;
 
 		if ((entry->ip.proto != IPPROTO_UDP &&
 		    entry->ip.proto != IPPROTO_UDPLITE) ||
 		    entry->ip.invflags & XT_INV_PROTO)
 			goto out;
-	} else if (target->family == NFPROTO_IPV6) {
-		const struct ip6t_entry *entry = ventry;
+	} else if (par->target->family == NFPROTO_IPV6) {
+		const struct ip6t_entry *entry = par->entryinfo;
 
 		if ((entry->ipv6.proto != IPPROTO_UDP &&
 		    entry->ipv6.proto != IPPROTO_UDPLITE) ||

@@ -60,12 +60,9 @@ static uint8_t mf_low(uint32_t tx, uint32_t mini, uint32_t maxi)
 }
 
 static bool
-fuzzy_mt(const struct sk_buff *skb, const struct net_device *in,
-         const struct net_device *out, const struct xt_match *match,
-         const void *matchinfo, int offset, unsigned int protoff,
-         bool *hotdrop)
+fuzzy_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	struct xt_fuzzy_mtinfo *info = (void *)matchinfo;
+	struct xt_fuzzy_mtinfo *info = (void *)par->matchinfo;
 	unsigned long amount;
 	uint8_t howhigh, howlow, random_number;
 
@@ -128,11 +125,9 @@ fuzzy_mt(const struct sk_buff *skb, const struct net_device *in,
 	return false;
 }
 
-static bool
-fuzzy_mt_check(const char *table, const void *ip, const struct xt_match *match,
-               void *matchinfo, unsigned int hook_mask)
+static bool fuzzy_mt_check(const struct xt_mtchk_param *par)
 {
-	const struct xt_fuzzy_mtinfo *info = matchinfo;
+	const struct xt_fuzzy_mtinfo *info = par->matchinfo;
 
 	if (info->minimum_rate < FUZZY_MIN_RATE ||
 	    info->maximum_rate > FUZZY_MAX_RATE ||

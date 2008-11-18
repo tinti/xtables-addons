@@ -25,6 +25,7 @@
 #endif
 #include "ip_set.h"
 #include "ipt_set.h"
+#include "../compat_xtables.h"
 
 static inline int
 match_set(const struct ipt_set_info *info,
@@ -36,101 +37,20 @@ match_set(const struct ipt_set_info *info,
 	return inv;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-static int
-match(const struct sk_buff *skb,
-      const struct net_device *in,
-      const struct net_device *out,
-      const void *matchinfo,
-      int offset,
-      const void *hdr,
-      u_int16_t datalen,
-      int *hotdrop) 
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,16)
-static int
-match(const struct sk_buff *skb,
-      const struct net_device *in,
-      const struct net_device *out,
-      const void *matchinfo,
-      int offset,
-      int *hotdrop) 
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-static int
-match(const struct sk_buff *skb,
-      const struct net_device *in,
-      const struct net_device *out,
-      const void *matchinfo,
-      int offset,
-      unsigned int protoff,
-      int *hotdrop)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
-static int
-match(const struct sk_buff *skb,
-      const struct net_device *in,
-      const struct net_device *out,
-      const struct xt_match *match,
-      const void *matchinfo,
-      int offset,
-      unsigned int protoff,
-      int *hotdrop)
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23) */
 static bool
-match(const struct sk_buff *skb,
-      const struct net_device *in,
-      const struct net_device *out,
-      const struct xt_match *match,
-      const void *matchinfo,
-      int offset, 
-      unsigned int protoff, 
-      bool *hotdrop)
-#endif
+match(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	const struct ipt_set_info_match *info = matchinfo;
+	const struct ipt_set_info_match *info = par->matchinfo;
 		
 	return match_set(&info->match_set,
 			 skb,
 			 info->match_set.flags[0] & IPSET_MATCH_INV);
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,16)
-static int
-checkentry(const char *tablename,
-	   const struct ipt_ip *ip,
-	   void *matchinfo,
-	   unsigned int matchsize,
-	   unsigned int hook_mask)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-static int
-checkentry(const char *tablename,
-	   const void *inf,
-	   void *matchinfo,
-	   unsigned int matchsize,
-	   unsigned int hook_mask)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-static int
-checkentry(const char *tablename,
-	   const void *inf,
-	   const struct xt_match *match,
-	   void *matchinfo,
-	   unsigned int matchsize,
-	   unsigned int hook_mask)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
-static int
-checkentry(const char *tablename,
-	   const void *inf,
-	   const struct xt_match *match,
-	   void *matchinfo,
-	   unsigned int hook_mask)
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23) */
 static bool
-checkentry(const char *tablename,
-	   const void *inf,
-	   const struct xt_match *match,
-	   void *matchinfo,
-	   unsigned int hook_mask)
-#endif
+checkentry(const struct xt_mtchk_param *par)
 {
-	struct ipt_set_info_match *info = matchinfo;
+	struct ipt_set_info_match *info = par->matchinfo;
 	ip_set_id_t index;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
@@ -155,19 +75,9 @@ checkentry(const char *tablename,
 	return 1;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-static void destroy(void *matchinfo,
-		    unsigned int matchsize)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-static void destroy(const struct xt_match *match,
-		    void *matchinfo,
-		    unsigned int matchsize)
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19) */
-static void destroy(const struct xt_match *match,
-		    void *matchinfo)
-#endif
+static void destroy(const struct xt_mtdtor_param *par)
 {
-	struct ipt_set_info_match *info = matchinfo;
+	struct ipt_set_info_match *info = par->matchinfo;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
 	if (matchsize != IPT_ALIGN(sizeof(struct ipt_set_info_match))) {

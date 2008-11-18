@@ -30,19 +30,17 @@ static const char *const dir_names[] = {
 };
 
 static unsigned int
-logmark_tg(struct sk_buff **pskb, const struct net_device *in,
-           const struct net_device *out, unsigned int hooknum,
-           const struct xt_target *target, const void *targinfo)
+logmark_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct sk_buff *skb = *pskb;
-	const struct xt_logmark_tginfo *info = targinfo;
+	const struct xt_logmark_tginfo *info = par->targinfo;
 	const struct nf_conn *ct;
 	enum ip_conntrack_info ctinfo;
 	bool prev = false;
 
 	printk("<%u>%.*s""hook=%s nfmark=0x%x secmark=0x%x classify=0x%x",
 	       info->level, (unsigned int)sizeof(info->prefix), info->prefix,
-	       hook_names[hooknum],
+	       hook_names[par->hooknum],
 	       skb_nfmark(skb), skb_secmark(skb), skb->priority);
 
 	ct = nf_ct_get(skb, &ctinfo);
@@ -83,11 +81,9 @@ logmark_tg(struct sk_buff **pskb, const struct net_device *in,
 }
 
 static bool
-logmark_tg_check(const char *tablename, const void *e,
-                 const struct xt_target *target, void *targinfo,
-                 unsigned int hook_mask)
+logmark_tg_check(const struct xt_tgchk_param *par)
 {
-	const struct xt_logmark_tginfo *info = targinfo;
+	const struct xt_logmark_tginfo *info = par->targinfo;
 
 	if (info->level >= 8) {
 		pr_debug("LOGMARK: level %u >= 8\n", info->level);

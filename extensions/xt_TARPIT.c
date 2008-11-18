@@ -188,9 +188,7 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 }
 
 static unsigned int
-tarpit_tg(struct sk_buff **pskb, const struct net_device *in,
-          const struct net_device *out, unsigned int hooknum,
-          const struct xt_target *target, const void *targinfo)
+tarpit_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
@@ -220,7 +218,7 @@ tarpit_tg(struct sk_buff **pskb, const struct net_device *in,
 	if (iph->frag_off & htons(IP_OFFSET))
 		return NF_DROP;
 
-	tarpit_tcp(*pskb, hooknum);
+	tarpit_tcp(*pskb, par->hooknum);
 	return NF_DROP;
 }
 

@@ -44,13 +44,13 @@ static const struct xt_tcp tcp_params = {
 };
 
 /* CHAOS functions */
-static void xt_chaos_total(const struct xt_chaos_tginfo *info,
-    struct sk_buff *skb, const struct net_device *in,
-    const struct net_device *out, unsigned int hooknum)
+static void
+xt_chaos_total(struct sk_buff *skb, const struct xt_target_param *par)
 {
+	const struct xt_chaos_tginfo *info = par->targinfo;
 	const struct iphdr *iph = ip_hdr(skb);
-	const int protoff       = 4 * iph->ihl;
-	const int offset        = ntohs(iph->frag_off) & IP_OFFSET;
+	const int thoff         = 4 * iph->ihl;
+	const int fragoff       = ntohs(iph->frag_off) & IP_OFFSET;
 	typeof(xt_tarpit) destiny;
 	bool ret;
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
@@ -59,24 +59,44 @@ static void xt_chaos_total(const struct xt_chaos_tginfo *info,
 	bool hotdrop = false;
 #endif
 
-	ret = xm_tcp->match(skb, in, out, xm_tcp, &tcp_params,
-	                    offset, protoff, &hotdrop);
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+	ret = xm_tcp->match(skb, par->in, par->out, xm_tcp, &tcp_params,
+	                    fragoff, thoff, &hotdrop);
+#else
+	{
+		struct xt_match_param local_par = {
+			.in        = par->in,
+			.out       = par->out,
+			.match     = xm_tcp,
+			.matchinfo = &tcp_params,
+			.fragoff   = fragoff,
+			.thoff     = thoff,
+			.hotdrop   = &hotdrop,
+		};
+		ret = xm_tcp->match(skb, &local_par);
+	}
+#endif
 	if (!ret || hotdrop || (unsigned int)net_random() > delude_percentage)
 		return;
 
 	destiny = (info->variant == XTCHAOS_TARPIT) ? xt_tarpit : xt_delude;
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-	destiny->target(&skb, in, out, hooknum, destiny, NULL, NULL);
+	destiny->target(&skb, par->in, par->out, par->hooknum, destiny, NULL, NULL);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-	destiny->target(&skb, in, out, hooknum, destiny, NULL);
+	destiny->target(&skb, par->in, par->out, par->hooknum, destiny, NULL);
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+	destiny->target(skb, par->in, par->out, par->hooknum, destiny, NULL);
 #else
-	destiny->target(skb, in, out, hooknum, destiny, NULL);
+	{
+		struct xt_target_param local_par = *par;
+		local_par.target = destiny;
+		destiny->target(skb, &local_par);
+	}
 #endif
 }
 
-static unsigned int chaos_tg(struct sk_buff **pskb,
-    const struct net_device *in, const struct net_device *out,
-    unsigned int hooknum, const struct xt_target *target, const void *targinfo)
+static unsigned int
+chaos_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	/*
 	 * Equivalent to:
@@ -86,34 +106,44 @@ static unsigned int chaos_tg(struct sk_buff **pskb,
 	 *         $delude_percentage -j DELUDE;
 	 * -A chaos -j DROP;
 	 */
-	const struct xt_chaos_tginfo *info = targinfo;
+	const struct xt_chaos_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
 
-	if ((unsigned int)net_random() <= reject_percentage)
+	if ((unsigned int)net_random() <= reject_percentage) {
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-		return xt_reject->target(pskb, in, out, hooknum,
-		       target->__compat_target, &reject_params, NULL);
+		return xt_reject->target(pskb, par->in, par->out, par->hooknum,
+		       xt_reject, &reject_params, NULL);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-		return xt_reject->target(pskb, in, out, hooknum,
-		       target->__compat_target, &reject_params);
+		return xt_reject->target(pskb, par->in, par->out, par->hooknum,
+		       xt_reject, &reject_params);
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+		return xt_reject->target(skb, par->in, par->out, par->hooknum,
+		       xt_reject, &reject_params);
 #else
-		return xt_reject->target(skb, in, out, hooknum,
-		       target->__compat_target, &reject_params);
+		struct xt_target_param local_par = {
+			.in       = par->in,
+			.out      = par->out,
+			.hooknum  = par->hooknum,
+			.target   = xt_reject,
+			.targinfo = &reject_params,
+		};
+		return xt_reject->target(skb, &local_par);
 #endif
+	}
 
 	/* TARPIT/DELUDE may not be called from the OUTPUT chain */
 	if (iph->protocol == IPPROTO_TCP &&
-	    info->variant != XTCHAOS_NORMAL && hooknum != NF_INET_LOCAL_OUT)
-		xt_chaos_total(info, skb, in, out, hooknum);
+	    info->variant != XTCHAOS_NORMAL &&
+	    par->hooknum != NF_INET_LOCAL_OUT)
+		xt_chaos_total(skb, par);
 
 	return NF_DROP;
 }
 
-static bool chaos_tg_check(const char *tablename, const void *entry,
-    const struct xt_target *target, void *targinfo, unsigned int hook_mask)
+static bool chaos_tg_check(const struct xt_tgchk_param *par)
 {
-	const struct xt_chaos_tginfo *info = targinfo;
+	const struct xt_chaos_tginfo *info = par->targinfo;
 
 	if (info->variant == XTCHAOS_DELUDE && !have_delude) {
 		printk(KERN_WARNING PFX "Error: Cannot use --delude when "

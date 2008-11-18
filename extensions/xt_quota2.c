@@ -120,12 +120,9 @@ static struct quota_counter *q2_get_counter(const struct xt_quota_mtinfo2 *q)
 	return NULL;
 }
 
-static bool
-quota_mt2_check(const char *tablename, const void *entry,
-                const struct xt_match *match, void *matchinfo,
-                unsigned int hook_mask)
+static bool quota_mt2_check(const struct xt_mtchk_param *par)
 {
-	struct xt_quota_mtinfo2 *q = matchinfo;
+	struct xt_quota_mtinfo2 *q = par->matchinfo;
 
 	if (q->flags & ~XT_QUOTA_MASK)
 		return false;
@@ -146,9 +143,9 @@ quota_mt2_check(const char *tablename, const void *entry,
 	return true;
 }
 
-static void quota_mt2_destroy(const struct xt_match *match, void *matchinfo)
+static void quota_mt2_destroy(const struct xt_mtdtor_param *par)
 {
-	struct xt_quota_mtinfo2 *q = matchinfo;
+	struct xt_quota_mtinfo2 *q = par->matchinfo;
 	struct quota_counter *e = q->master;
 
 	spin_lock_bh(&counter_list_lock);
@@ -164,12 +161,9 @@ static void quota_mt2_destroy(const struct xt_match *match, void *matchinfo)
 }
 
 static bool
-quota_mt2(const struct sk_buff *skb, const struct net_device *in,
-          const struct net_device *out, const struct xt_match *match,
-          const void *matchinfo, int offset, unsigned int protoff,
-          bool *hotdrop)
+quota_mt2(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	struct xt_quota_mtinfo2 *q = (void *)matchinfo;
+	struct xt_quota_mtinfo2 *q = (void *)par->matchinfo;
 	struct quota_counter *e = q->master;
 	bool ret = q->flags & XT_QUOTA_INVERT;
 

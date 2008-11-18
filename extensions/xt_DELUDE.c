@@ -143,14 +143,13 @@ static void delude_send_reset(struct sk_buff *oldskb, unsigned int hook)
 	kfree_skb(nskb);
 }
 
-static unsigned int delude_tg(struct sk_buff **pskb,
-    const struct net_device *in, const struct net_device *out,
-    unsigned int hooknum, const struct xt_target *target, const void *targinfo)
+static unsigned int
+delude_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	/* WARNING: This code causes reentry within iptables.
 	   This means that the iptables jump stack is now crap.  We
 	   must return an absolute verdict. --RR */
-	delude_send_reset(*pskb, hooknum);
+	delude_send_reset(*pskb, par->hooknum);
 	return NF_DROP;
 }
 

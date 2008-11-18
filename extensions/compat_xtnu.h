@@ -27,17 +27,62 @@ enum {
 	NFPROTO_DECNET = 12,
 	NFPROTO_NUMPROTO,
 };
+
+struct xt_match_param {
+	const struct net_device *in, *out;
+	const struct xt_match *match;
+	const void *matchinfo;
+	int fragoff;
+	unsigned int thoff;
+	bool *hotdrop;
+	u_int8_t family;
+};
+
+struct xt_mtchk_param {
+	const char *table;
+	const void *entryinfo;
+	const struct xt_match *match;
+	void *matchinfo;
+	unsigned int hook_mask;
+	u_int8_t family;
+};
+
+struct xt_mtdtor_param {
+	const struct xt_match *match;
+	void *matchinfo;
+	u_int8_t family;
+};
+
+struct xt_target_param {
+	const struct net_device *in, *out;
+	unsigned int hooknum;
+	const struct xt_target *target;
+	const void *targinfo;
+	u_int8_t family;
+};
+
+struct xt_tgchk_param {
+	const char *table;
+	const void *entryinfo;
+	const struct xt_target *target;
+	void *targinfo;
+	unsigned int hook_mask;
+	u_int8_t family;
+};
+
+struct xt_tgdtor_param {
+	const struct xt_target *target;
+	void *targinfo;
+	u_int8_t family;
+};
 #endif
 
 struct xtnu_match {
 	struct list_head list;
 	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
-	bool (*match)(const struct sk_buff *, const struct net_device *,
-		const struct net_device *, const struct xtnu_match *,
-		const void *, int, unsigned int, bool *);
-	bool (*checkentry)(const char *, const void *,
-		const struct xtnu_match *, void *, unsigned int);
-	void (*destroy)(const struct xtnu_match *, void *);
+	bool (*match)(const struct sk_buff *, const struct xt_match_param *);
+	bool (*checkentry)(const struct xt_mtchk_param *);
+	void (*destroy)(const struct xt_mtdtor_param *);
 	struct module *me;
 	const char *table;
 	unsigned int matchsize, hooks;
@@ -50,12 +95,10 @@ struct xtnu_match {
 struct xtnu_target {
 	struct list_head list;
 	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
-	unsigned int (*target)(struct sk_buff **, const struct net_device *,
-		const struct net_device *, unsigned int,
-		const struct xtnu_target *, const void *);
-	bool (*checkentry)(const char *, const void *,
-		const struct xtnu_target *, void *, unsigned int);
-	void (*destroy)(const struct xtnu_target *, void *);
+	unsigned int (*target)(struct sk_buff **,
+		const struct xt_target_param *);
+	bool (*checkentry)(const struct xt_tgchk_param *);
+	void (*destroy)(const struct xt_tgdtor_param *);
 	struct module *me;
 	const char *table;
 	unsigned int targetsize, hooks;

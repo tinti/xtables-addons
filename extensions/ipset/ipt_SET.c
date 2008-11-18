@@ -26,103 +26,29 @@
 #include <linux/netfilter/x_tables.h>
 #endif
 #include "ipt_set.h"
+#include "../compat_xtables.h"
 
 static unsigned int
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-target(struct sk_buff **pskb,
-       unsigned int hooknum,
-       const struct net_device *in,
-       const struct net_device *out,
-       const void *targinfo,
-       void *userinfo)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-target(struct sk_buff **pskb,
-       const struct net_device *in,
-       const struct net_device *out,
-       unsigned int hooknum,
-       const void *targinfo,
-       void *userinfo)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-target(struct sk_buff **pskb,
-       const struct net_device *in,
-       const struct net_device *out,
-       unsigned int hooknum,
-       const struct xt_target *target,
-       const void *targinfo,
-       void *userinfo)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-target(struct sk_buff **pskb,
-       const struct net_device *in,
-       const struct net_device *out,
-       unsigned int hooknum,
-       const struct xt_target *target,
-       const void *targinfo)
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24) */
-target(struct sk_buff *skb,
-       const struct net_device *in,
-       const struct net_device *out,
-       unsigned int hooknum,
-       const struct xt_target *target,
-       const void *targinfo)
-#endif
+target(struct sk_buff **pskb, const struct xt_target_param *par)
 {
-	const struct ipt_set_info_target *info = targinfo;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-	struct sk_buff *skb = *pskb;
-#endif
+	const struct ipt_set_info_target *info = par->targinfo;
 
-	
 	if (info->add_set.index != IP_SET_INVALID_ID)
 		ip_set_addip_kernel(info->add_set.index,
-				    skb,
+				    *pskb,
 				    info->add_set.flags);
 	if (info->del_set.index != IP_SET_INVALID_ID)
 		ip_set_delip_kernel(info->del_set.index,
-				    skb,
+				    *pskb,
 				    info->del_set.flags);
 
 	return XT_CONTINUE;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,16)
-static int
-checkentry(const char *tablename,
-	   const struct ipt_entry *e,
-	   void *targinfo,
-	   unsigned int targinfosize,
-	   unsigned int hook_mask)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-static int
-checkentry(const char *tablename,
-	   const void *e,
-	   void *targinfo,
-	   unsigned int targinfosize,
-	   unsigned int hook_mask)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-static int
-checkentry(const char *tablename,
-	   const void *e,
-	   const struct xt_target *target,
-	   void *targinfo,
-	   unsigned int targinfosize,
-	   unsigned int hook_mask)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
-static int
-checkentry(const char *tablename,
-	   const void *e,
-	   const struct xt_target *target,
-	   void *targinfo,
-	   unsigned int hook_mask)
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23) */
 static bool
-checkentry(const char *tablename,
-	   const void *e,
-	   const struct xt_target *target,
-	   void *targinfo,
-	   unsigned int hook_mask)
-#endif
+checkentry(const struct xt_tgchk_param *par)
 {
-	struct ipt_set_info_target *info = targinfo;
+	struct ipt_set_info_target *info = par->targinfo;
 	ip_set_id_t index;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
@@ -158,19 +84,9 @@ checkentry(const char *tablename,
 	return 1;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-static void destroy(void *targetinfo,
-		    unsigned int targetsize)
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-static void destroy(const struct xt_target *target,
-		    void *targetinfo,
-		    unsigned int targetsize)
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19) */
-static void destroy(const struct xt_target *target,
-		    void *targetinfo)
-#endif
+static void destroy(const struct xt_tgdtor_param *par)
 {
-	struct ipt_set_info_target *info = targetinfo;
+	struct ipt_set_info_target *info = par->targinfo;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
 	if (targetsize != IPT_ALIGN(sizeof(struct ipt_set_info_target))) {

@@ -785,11 +785,9 @@ static const struct {
 };
 
 static bool
-ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
-         const struct net_device *out, const struct xt_match *match,
-         const void *matchinfo, int offset, unsigned int protoff, bool *hotdrop)
+ipp2p_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	const struct ipt_p2p_info *info = matchinfo;
+	const struct ipt_p2p_info *info = par->matchinfo;
 	const unsigned char  *haystack;
 	const struct iphdr *ip = ip_hdr(skb);
 	bool p2p_result = false;
@@ -797,9 +795,9 @@ ipp2p_mt(const struct sk_buff *skb, const struct net_device *in,
 	unsigned int hlen = ntohs(ip->tot_len) - ip_hdrlen(skb);	/* hlen = packet-data length */
 
 	/* must not be a fragment */
-	if (offset != 0) {
+	if (par->fragoff != 0) {
 		if (info->debug)
-			printk("IPP2P.match: offset found %i \n", offset);
+			printk("IPP2P.match: offset found %d\n", par->fragoff);
 		return 0;
 	}
 
