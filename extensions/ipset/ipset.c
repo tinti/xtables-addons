@@ -30,7 +30,7 @@
 #define PROC_SYS_MODPROBE "/proc/sys/kernel/modprobe"
 #endif
 
-#define IPSET_VERSION "2.4.3"
+#define IPSET_VERSION "2.4.5"
 
 char program_name[] = "ipset";
 char program_version[] = IPSET_VERSION;
@@ -121,7 +121,7 @@ static struct option opts_long[] = {
 	{"help",    2, 0, 'H'},
 
 	/* end */
-	{0, 0, 0, 0},
+	{NULL},
 };
 
 static char opts_short[] =
@@ -734,13 +734,13 @@ string_to_number(const char *str, unsigned int min, unsigned int max,
 static int
 string_to_port(const char *str, ip_set_ip_t *port)
 {
-	struct servent *service = getservbyname(str, "tcp");
+	struct servent *service;
 	
 	if ((service = getservbyname(str, "tcp")) != NULL) {
 		*port = ntohs((uint16_t) service->s_port);
 		return 0;
 	}
-	return - 1;
+	return -1;
 }
 
 /* Fills the 'ip' with the parsed port in host byte order */
@@ -1955,7 +1955,7 @@ static int find_cmd(int option)
 	int i;
 	
 	for (i = 1; i <= NUMBER_OF_CMD; i++)
-		if (cmdflags[i] == (char) option)
+		if (cmdflags[i] == option)
 			return i;
 			
 	return CMD_NONE;
