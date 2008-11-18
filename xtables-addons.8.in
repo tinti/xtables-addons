@@ -1,6 +1,6 @@
-.TH xtables-addons 8 2008-04-09
+.TH xtables\-addons 8 2008\-11\-18
 .SH NAME
-Xtables-addons - additional extensions for iptables, ip6tables, etc.
+Xtables\-addons - additional extensions for iptables, ip6tables, etc.
 .SH TARGETS
 .\" @TARGET@
 .SH MATCHES
@@ -8,6 +8,6 @@ Xtables-addons - additional extensions for iptables, ip6tables, etc.
 .SH "SEE ALSO"
 \fBiptables\fP(8), \fBip6tables\fP(8)
 .PP
-For developers, the book "Writing your own Netfilter modules" at
+For developers, the book "Writing Netfilter modules" at
 http://jengelh.medozas.de/documents/Netfilter_Modules.pdf provides detailed
 information on how to write such modules/extensions.
