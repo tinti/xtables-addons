@@ -32,6 +32,8 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_target_param *par)
 	unsigned int addr_type, data_len;
 	void *payload;
 
+	printk(KERN_INFO "dst_out=%p\n", (*poldskb)->dst->output);
+
 	/* This allows us to do the copy operation in fewer lines of code. */
 	if (skb_linearize(*poldskb) < 0)
 		return NF_DROP;
@@ -75,10 +77,10 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_target_param *par)
 
 	addr_type = RTN_UNSPEC;
 #ifdef CONFIG_BRIDGE_NETFILTER
-	if (hooknum != NF_INET_FORWARD || (newskb->nf_bridge != NULL &&
+	if (par->hooknum != NF_INET_FORWARD || (newskb->nf_bridge != NULL &&
 	    newskb->nf_bridge->mask & BRNF_BRIDGED))
 #else
-	if (hooknum != NF_INET_FORWARD)
+	if (par->hooknum != NF_INET_FORWARD)
 #endif
 		addr_type = RTN_LOCAL;
 
