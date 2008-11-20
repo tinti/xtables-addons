@@ -32,15 +32,13 @@ xtables_CFLAGS  := @xtables_CFLAGS@
 AM_CFLAGS      := ${regular_CFLAGS} -I${top_srcdir}/include ${xtables_CFLAGS} ${kinclude_CFLAGS} -DIPSET_LIB_DIR=\"${xtlibdir}\"
 AM_DEPFLAGS     = -Wp,-MMD,$(@D)/.$(@F).d,-MT,$@
 
-ifeq (${V},)
-AM_LIBTOOL_SILENT = --silent
-AM_VERBOSE_CC     = @echo "  CC      " $@;
-AM_VERBOSE_CCLD   = @echo "  CCLD    " $@;
-AM_VERBOSE_CXX    = @echo "  CXX     " $@;
-AM_VERBOSE_CXXLD  = @echo "  CXXLD   " $@;
-AM_VERBOSE_AR     = @echo "  AR      " $@;
-AM_VERBOSE_GEN    = @echo "  GEN     " $@;
-endif
+VU := 0
+am__1verbose_CC_0     = @echo "  CC      " $@;
+am__1verbose_CCLD_0   = @echo "  CCLD    " $@;
+am__1verbose_CC_1     = @echo "  CC      " $@ "<-" $<;
+am__1verbose_CCLD_1   = @echo "  CCLD    " $@ "<-" $^;
+am__verbose_CC        = ${am__1verbose_CC_${VU}}
+am__verbose_CCLD      = ${am__1verbose_CCLD_${VU}}
 
 #
 #	Building blocks
@@ -69,16 +67,16 @@ distclean: clean
 
 
 ipset: ipset.o
-	${AM_VERBOSE_CCLD} ${CCLD} ${AM_LDFLAGS} ${LDFLAGS} -o $@ $< -ldl -rdynamic;
+	${am__verbose_CCLD}${CCLD} ${AM_LDFLAGS} ${LDFLAGS} -o $@ $< -ldl -rdynamic;
 
 #
 #	Shared libraries
 #
 lib%.so: lib%.oo
-	${AM_VERBOSE_CCLD} ${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $<;
+	${am__verbose_CCLD}${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $<;
 
 libipset_%.oo: ${srcdir}/ipset_%.c
-	${AM_VERBOSE_CC} ${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} -DPIC -fPIC ${CFLAGS} -o $@ -c $<;
+	${am__verbose_CC}${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} -DPIC -fPIC ${CFLAGS} -o $@ -c $<;
 
 %.o: %.c
-	${AM_VERBOSE_CC} ${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} ${CFLAGS} -o $@ -c $<;
+	${am__verbose_CC}${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} ${CFLAGS} -o $@ -c $<;

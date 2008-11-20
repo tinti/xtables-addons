@@ -65,6 +65,19 @@ If you want to enable debugging, use
 much easier.)
 
 
+Build-time options
+==================
+
+V= controls the kernel's make verbosity.
+V=0	"silent" (output filename)
+V=1	"verbose" (entire gcc command line)
+
+VU= controls the Xt-a make verbosity.
+VU=0	output filename
+VU=1	output filename and source file
+VU=2	entire gcc command line
+
+
 Note to distribution packagers
 ==============================
 
