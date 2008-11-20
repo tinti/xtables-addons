@@ -57,7 +57,6 @@ static bool tee_routing(struct sk_buff *skb,
 		.nl_u = {
 			.ip4_u = {
 				.daddr = info->gw.ip,
-				.tos   = RT_TOS(iph->tos),
 				.scope = RT_SCOPE_UNIVERSE,
 			}
 		}
