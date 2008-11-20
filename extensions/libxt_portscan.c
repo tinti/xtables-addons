@@ -116,8 +116,7 @@ static struct xtables_match portscan_mt_reg = {
 	.extra_opts    = portscan_mt_opts,
 };
 
-void _init(void);
-void _init(void)
+static __attribute__((constructor)) void portscan_mt_ldr(void)
 {
 	xtables_register_match(&portscan_mt_reg);
 }

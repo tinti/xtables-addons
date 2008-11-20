@@ -111,8 +111,7 @@ static struct xtables_target logmark_tg_reg = {
 	.extra_opts    = logmark_tg_opts,
 };
 
-void _init(void);
-void _init(void)
+static __attribute__((constructor)) void logmark_tg_ldr(void)
 {
 	xtables_register_target(&logmark_tg_reg);
 }

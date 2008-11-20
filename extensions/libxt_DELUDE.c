@@ -41,8 +41,7 @@ static struct xtables_target delude_tg_reg = {
 	.final_check   = delude_tg_check,
 };
 
-void _init(void);
-void _init(void)
+static __attribute__((constructor)) void delude_tg_ldr(void)
 {
 	xtables_register_target(&delude_tg_reg);
 }

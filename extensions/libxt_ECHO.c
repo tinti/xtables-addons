@@ -37,7 +37,7 @@ static struct xtables_target echo_tg_reg = {
 	.final_check   = echo_tg_check,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void echo_tg_ldr(void)
 {
 	xtables_register_target(&echo_tg_reg);
 }

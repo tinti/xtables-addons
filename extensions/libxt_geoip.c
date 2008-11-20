@@ -272,7 +272,7 @@ static struct xtables_match geoip_match = {
 	 .extra_opts    = geoip_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void geoip_mt_ldr(void)
 {
 	xtables_register_match(&geoip_match);
 }

@@ -92,7 +92,7 @@ static struct xtables_match condition_mt_reg = {
 	.extra_opts 	= condition_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void condition_mt_ldr(void)
 {
 	xtables_register_match(&condition_mt_reg);
 }

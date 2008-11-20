@@ -32,7 +32,7 @@ static struct xtables_target tarpit_tg_reg = {
 	.final_check   = tarpit_tg_check,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void tarpit_tg_ldr(void)
 {
 	xtables_register_target(&tarpit_tg_reg);
 }

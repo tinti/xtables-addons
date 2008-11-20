@@ -95,7 +95,7 @@ static struct xtables_target dhcpaddr_tg_reg = {
 	.extra_opts    = dhcpaddr_tg_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void dhcpaddr_tg_ldr(void)
 {
 	xtables_register_target(&dhcpaddr_tg_reg);
 }

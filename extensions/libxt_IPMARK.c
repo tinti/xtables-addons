@@ -68,7 +68,7 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 			exit_error(PARAMETER_PROBLEM, "Bad addr value `%s' - should be `src' or `dst'", optarg);
 		*flags |= FL_ADDR_USED;
 		return true;
-	
+
 	case '2':
 		param_act(P_ONLY_ONCE, "IPMARK", "and-mask", *flags & FL_AND_MASK_USED);
 		param_act(P_NO_INVERT, "IPMARK", "and-mask", invert);
@@ -175,7 +175,7 @@ static struct xtables_target ipmark_tg6_reg = {
 	.extra_opts    = ipmark_tg_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void ipmark_tg_ldr(void)
 {
 	xtables_register_target(&ipmark_tg4_reg);
 	xtables_register_target(&ipmark_tg6_reg);

@@ -43,7 +43,7 @@ static struct xtables_target sysrq_tg6_reg = {
 	.final_check   = sysrq_tg_check,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void sysrq_tg_ldr(void)
 {
 	xtables_register_target(&sysrq_tg4_reg);
 	xtables_register_target(&sysrq_tg6_reg);

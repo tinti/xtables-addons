@@ -133,7 +133,7 @@ static struct xtables_match quota_mt2_reg = {
 	.extra_opts    = quota_mt2_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void quota2_mt_ldr(void)
 {
 	xtables_register_match(&quota_mt2_reg);
 }

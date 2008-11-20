@@ -96,7 +96,7 @@ static struct xtables_match dhcpaddr_mt_reg = {
 	.extra_opts    = dhcpaddr_mt_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void dhcpaddr_mt_ldr(void)
 {
 	xtables_register_match(&dhcpaddr_mt_reg);
 }

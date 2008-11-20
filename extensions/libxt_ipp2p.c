@@ -242,7 +242,7 @@ static struct xtables_match ipp2p_mt_reg = {
 	.extra_opts    = ipp2p_mt_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void ipp2p_mt_ldr(void)
 {
 	xtables_register_match(&ipp2p_mt_reg);
 }

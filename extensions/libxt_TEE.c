@@ -108,7 +108,7 @@ static struct xtables_target tee_tg_reg = {
 	.extra_opts    = tee_tg_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void tee_tg_ldr(void)
 {
 	xtables_register_target(&tee_tg_reg);
 }

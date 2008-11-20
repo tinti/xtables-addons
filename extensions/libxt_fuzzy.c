@@ -112,7 +112,7 @@ static struct xtables_match fuzzy_mt_reg = {
 	.extra_opts    = fuzzy_mt_opts,
 };
 
-static void _init(void)
+static __attribute__((constructor)) void fuzzy_mt_ldr(void)
 {
 	xtables_register_match(&fuzzy_mt_reg);
 }
