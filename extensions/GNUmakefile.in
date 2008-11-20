@@ -53,22 +53,30 @@ include ${srcdir}/Mbuild
 #
 #	Building blocks
 #
-targets := ${obj-m}
-targets_install := ${obj-m}
+targets := $(filter-out %/,${obj-m})
+targets_install := ${targets}
+subdirs_list := $(filter %/,${obj-m})
 
 .SECONDARY:
 
 .PHONY: all install clean distclean FORCE
 
-all: modules user matches.man targets.man
+all: subdirs modules user matches.man targets.man
+
+subdirs:
+	@for i in ${subdirs_list}; do ${MAKE} -C $$i; done;
+
+subdirs-install:
+	@for i in ${subdirs_list}; do ${MAKE} -C $$i install; done;
 
 user: ${targets}
 
-install: modules_install ${targets_install}
+install: modules_install subdirs-install ${targets_install}
 	@mkdir -p "${DESTDIR}${xtlibdir}";
 	install -pm0755 ${targets_install} "${DESTDIR}${xtlibdir}/";
 
 clean: clean_modules
+	@for i in ${subdirs_list}; do make -C $$i clean; done;
 	rm -f *.oo *.so;
 
 distclean: clean
