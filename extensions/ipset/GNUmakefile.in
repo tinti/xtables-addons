@@ -43,7 +43,9 @@ am__verbose_CCLD      = ${am__1verbose_CCLD_${VU}}
 #
 #	Building blocks
 #
-targets := $(addsuffix .so,$(addprefix libipset_,iphash ipmap ipporthash iptree iptreemap macipmap nethash portmap))
+targets := $(addsuffix .so,$(addprefix libipset_, \
+	iphash ipmap ipporthash ipportiphash ipportnethash iptree \
+	iptreemap macipmap nethash portmap setlist))
 
 .SECONDARY:
 
