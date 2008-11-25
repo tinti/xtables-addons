@@ -600,24 +600,28 @@ search_all_gnu(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 {
-	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a) {
-		if (memcmp(payload, "GIVE ", 5) == 0)
-			return IPP2P_KAZAA * 100 + 1;
+	if (payload[plen-2] != 0x0d || payload[plen-1] != 0x0a)
+		return 0;
 
-		if (memcmp(payload, "GET /", 5) == 0) {
-			uint16_t c = 8;
-			const uint16_t end = plen - 22;
+	if (memcmp(payload, "GIVE ", 5) == 0)
+		return IPP2P_KAZAA * 100 + 1;
 
-			while (c < end) {
-				if (payload[c] == 0x0a &&
-				    payload[c+1] == 0x0d &&
-				    (memcmp(&payload[c+2], "X-Kazaa-Username: ", 18) == 0 ||
-				    memcmp(&payload[c+2], "User-Agent: PeerEnabler/", 24) == 0))
-					return IPP2P_KAZAA * 100 + 2;
-				c++;
-			}
+	if (memcmp(payload, "GET /", 5) == 0) {
+		uint16_t c = 8;
+		const uint16_t end = plen - 22;
+
+		for (c = 8; c < end; ++c) {
+			if (payload[c] != 0x0a)
+				continue;
+			if (payload[c+1] != 0x0d)
+				continue;
+			if (memcmp(&payload[c+2], "X-Kazaa-Username: ", 18) == 0)
+				return IPP2P_KAZAA * 100 + 2;
+			if (memcmp(&payload[c+2], "User-Agent: PeerEnabler/", 24) == 0)
+				return IPP2P_KAZAA * 100 + 2;
 		}
 	}
+
 	return 0;
 }
 
