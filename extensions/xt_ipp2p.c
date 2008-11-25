@@ -611,9 +611,9 @@ search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 		const uint16_t end = plen - 22;
 
 		for (c = 8; c < end; ++c) {
-			if (payload[c] != 0x0a)
+			if (payload[c] != 0x0d)
 				continue;
-			if (payload[c+1] != 0x0d)
+			if (payload[c+1] != 0x0a)
 				continue;
 			if (memcmp(&payload[c+2], "X-Kazaa-Username: ", 18) == 0)
 				return IPP2P_KAZAA * 100 + 2;
