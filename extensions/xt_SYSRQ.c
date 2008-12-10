@@ -26,24 +26,24 @@
 static bool sysrq_once;
 static char sysrq_password[64];
 static char sysrq_hash[16] = "sha1";
-static long seqno;
-static int debug;
+static long sysrq_seqno;
+static int sysrq_debug;
 module_param_string(password, sysrq_password, sizeof(sysrq_password),
 	S_IRUSR | S_IWUSR);
 module_param_string(hash, sysrq_hash, sizeof(sysrq_hash), S_IRUSR);
-module_param(seqno, long, S_IRUSR | S_IWUSR);
-module_param(debug, int, S_IRUSR | S_IWUSR);
+module_param_named(seqno, sysrq_seqno, long, S_IRUSR | S_IWUSR);
+module_param_named(debug, sysrq_debug, int, S_IRUSR | S_IWUSR);
 MODULE_PARM_DESC(password, "password for remote sysrq");
 MODULE_PARM_DESC(hash, "hash algorithm, default sha1");
 MODULE_PARM_DESC(seqno, "sequence number for remote sysrq");
 MODULE_PARM_DESC(debug, "debugging: 0=off, 1=on");
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-static struct crypto_hash *tfm;
-static int digestsize;
-static unsigned char *digest_password;
-static unsigned char *digest;
-static char *hexdigest;
+static struct crypto_hash *sysrq_tfm;
+static int sysrq_digest_size;
+static unsigned char *sysrq_digest_password;
+static unsigned char *sysrq_digest;
+static char *sysrq_hexdigest;
 
 /*
  * The data is of the form "<requests>,<seqno>,<salt>,<hash>" where <requests>
@@ -92,19 +92,19 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	}
 	++n;
 	if (i != 3) {
-		if (debug)
+		if (sysrq_debug)
 			printk(KERN_WARNING KBUILD_MODNAME
 				": badly formatted request\n");
 		return NF_DROP;
 	}
-	if (seqno >= new_seqno) {
-		if (debug)
+	if (sysrq_seqno >= new_seqno) {
+		if (sysrq_debug)
 			printk(KERN_WARNING KBUILD_MODNAME
 				": old sequence number ignored\n");
 		return NF_DROP;
 	}
 
-	desc.tfm = tfm;
+	desc.tfm   = sysrq_tfm;
 	desc.flags = 0;
 	ret = crypto_hash_init(&desc);
 	if (ret != 0)
@@ -113,35 +113,35 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	sg_init_table(sg, 2);
 #endif
 	sg_set_buf(&sg[0], data, n);
-	strcpy(digest_password, sysrq_password);
-	i = strlen(digest_password);
-	sg_set_buf(&sg[1], digest_password, i);
-	ret = crypto_hash_digest(&desc, sg, n + i, digest);
+	strcpy(sysrq_digest_password, sysrq_password);
+	i = strlen(sysrq_digest_password);
+	sg_set_buf(&sg[1], sysrq_digest_password, i);
+	ret = crypto_hash_digest(&desc, sg, n + i, sysrq_digest);
 	if (ret != 0)
 		goto hash_fail;
 
-	for (i = 0; i < digestsize; ++i) {
-		hexdigest[2*i] =
-			"0123456789abcdef"[(digest[i] >> 4) & 0xf];
-		hexdigest[2*i+1] =
-			"0123456789abcdef"[digest[i] & 0xf];
+	for (i = 0; i < sysrq_digest_size; ++i) {
+		sysrq_hexdigest[2*i] =
+			"0123456789abcdef"[(sysrq_digest[i] >> 4) & 0xf];
+		sysrq_hexdigest[2*i+1] =
+			"0123456789abcdef"[sysrq_digest[i] & 0xf];
 	}
-	hexdigest[2*digestsize] = '\0';
-	if (len - n < digestsize) {
-		if (debug)
+	sysrq_hexdigest[2*sysrq_digest_size] = '\0';
+	if (len - n < sysrq_digest_size) {
+		if (sysrq_debug)
 			printk(KERN_INFO KBUILD_MODNAME ": Short digest,"
-			       " expected %s\n", hexdigest);
+			       " expected %s\n", sysrq_hexdigest);
 		return NF_DROP;
 	}
-	if (strncmp(data + n, hexdigest, digestsize) != 0) {
-		if (debug)
+	if (strncmp(data + n, sysrq_hexdigest, sysrq_digest_size) != 0) {
+		if (sysrq_debug)
 			printk(KERN_INFO KBUILD_MODNAME ": Bad digest,"
-			       " expected %s\n", hexdigest);
+			       " expected %s\n", sysrq_hexdigest);
 		return NF_DROP;
 	}
 
 	/* Now we trust the requester */
-	seqno = new_seqno;
+	sysrq_seqno = new_seqno;
 	for (i = 0; i < len && data[i] != ','; ++i) {
 		printk(KERN_INFO KBUILD_MODNAME ": SysRq %c\n", data[i]);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
@@ -203,7 +203,7 @@ sysrq_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	udph = (void *)iph + ip_hdrlen(skb);
 	len  = ntohs(udph->len) - sizeof(struct udphdr);
 
-	if (debug)
+	if (sysrq_debug)
 		printk(KERN_INFO KBUILD_MODNAME
 		       ": " NIPQUAD_FMT ":%u -> :%u len=%u\n",
 		       NIPQUAD(iph->saddr), htons(udph->source),
@@ -226,7 +226,7 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 	udph = udp_hdr(skb);
 	len  = ntohs(udph->len) - sizeof(struct udphdr);
 
-	if (debug)
+	if (sysrq_debug)
 		printk(KERN_INFO KBUILD_MODNAME
 		       ": " NIP6_FMT ":%hu -> :%hu len=%u\n",
 		       NIP6(iph->saddr), ntohs(udph->source),
@@ -284,46 +284,46 @@ static int __init sysrq_tg_init(void)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 	struct timeval now;
 
-	tfm = crypto_alloc_hash(sysrq_hash, 0, CRYPTO_ALG_ASYNC);
-	if (IS_ERR(tfm)) {
+	sysrq_tfm = crypto_alloc_hash(sysrq_hash, 0, CRYPTO_ALG_ASYNC);
+	if (IS_ERR(sysrq_tfm)) {
 		printk(KERN_WARNING KBUILD_MODNAME
 			": Error: Could not find or load %s hash\n",
 			sysrq_hash);
-		tfm = NULL;
+		sysrq_tfm = NULL;
 		goto fail;
 	}
-	digestsize = crypto_hash_digestsize(tfm);
-	digest = kmalloc(digestsize, GFP_KERNEL);
-	if (digest == NULL) {
+	sysrq_digest_size = crypto_hash_digestsize(sysrq_tfm);
+	sysrq_digest = kmalloc(sysrq_digest_size, GFP_KERNEL);
+	if (sysrq_digest == NULL) {
 		printk(KERN_WARNING KBUILD_MODNAME
 			": Cannot allocate digest\n");
 		goto fail;
 	}
-	hexdigest = kmalloc(2 * digestsize + 1, GFP_KERNEL);
-	if (hexdigest == NULL) {
+	sysrq_hexdigest = kmalloc(2 * sysrq_digest_size + 1, GFP_KERNEL);
+	if (sysrq_hexdigest == NULL) {
 		printk(KERN_WARNING KBUILD_MODNAME
 			": Cannot allocate hexdigest\n");
 		goto fail;
 	}
-	digest_password = kmalloc(sizeof(sysrq_password), GFP_KERNEL);
-	if (!digest_password) {
+	sysrq_digest_password = kmalloc(sizeof(sysrq_password), GFP_KERNEL);
+	if (sysrq_digest_password == NULL) {
 		printk(KERN_WARNING KBUILD_MODNAME
 			": Cannot allocate password digest space\n");
 		goto fail;
 	}
 	do_gettimeofday(&now);
-	seqno = now.tv_sec;
+	sysrq_seqno = now.tv_sec;
 	return xt_register_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
 
  fail:
-	if (tfm)
-		crypto_free_hash(tfm);
-	if (digest)
-		kfree(digest);
-	if (hexdigest)
-		kfree(hexdigest);
-	if (digest_password)
-		kfree(digest_password);
+	if (sysrq_tfm)
+		crypto_free_hash(sysrq_tfm);
+	if (sysrq_digest)
+		kfree(sysrq_digest);
+	if (sysrq_hexdigest)
+		kfree(sysrq_hexdigest);
+	if (sysrq_digest_password)
+		kfree(sysrq_digest_password);
 	return -EINVAL;
 #else
 	printk(KERN_WARNING "xt_SYSRQ does not provide crypto for <= 2.6.18\n");
@@ -334,10 +334,10 @@ static int __init sysrq_tg_init(void)
 static void __exit sysrq_tg_exit(void)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-	crypto_free_hash(tfm);
-	kfree(digest);
-	kfree(hexdigest);
-	kfree(digest_password);
+	crypto_free_hash(sysrq_tfm);
+	kfree(sysrq_digest);
+	kfree(sysrq_hexdigest);
+	kfree(sysrq_digest_password);
 #endif
 	return xt_unregister_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
 }
