@@ -38,6 +38,7 @@ MODULE_PARM_DESC(hash, "hash algorithm, default sha1");
 MODULE_PARM_DESC(seqno, "sequence number for remote sysrq");
 MODULE_PARM_DESC(debug, "debugging: 0=off, 1=on");
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 static struct crypto_hash *tfm;
 static int digestsize;
 static unsigned char *digest_password;
@@ -108,7 +109,9 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	ret = crypto_hash_init(&desc);
 	if (ret != 0)
 		goto hash_fail;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	sg_init_table(sg, 2);
+#endif
 	sg_set_buf(&sg[0], data, n);
 	strcpy(digest_password, sysrq_password);
 	i = strlen(digest_password);
@@ -153,6 +156,37 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	printk(KERN_WARNING KBUILD_MODNAME ": digest failure\n");
 	return NF_DROP;
 }
+#else
+static unsigned int sysrq_tg(const void *pdata, uint16_t len)
+{
+	const char *data = pdata;
+	char c;
+
+	if (*sysrq_password == '\0') {
+		if (!sysrq_once)
+			printk(KERN_INFO KBUILD_MODNAME "No password set\n");
+		sysrq_once = true;
+		return NF_DROP;
+	}
+
+	if (len == 0)
+		return NF_DROP;
+
+	c = *data;
+	if (strncmp(&data[1], sysrq_password, len - 1) != 0) {
+		printk(KERN_INFO KBUILD_MODNAME "Failed attempt - "
+		       "password mismatch\n");
+		return NF_DROP;
+	}
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+	handle_sysrq(c, NULL);
+#else
+	handle_sysrq(c, NULL, NULL);
+#endif
+	return NF_ACCEPT;
+}
+#endif
 
 static unsigned int
 sysrq_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
@@ -202,6 +236,7 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 
 static bool sysrq_tg_check(const struct xt_tgchk_param *par)
 {
+
 	if (par->target->family == NFPROTO_IPV4) {
 		const struct ipt_entry *entry = par->entryinfo;
 
@@ -246,6 +281,7 @@ static struct xt_target sysrq_tg_reg[] __read_mostly = {
 
 static int __init sysrq_tg_init(void)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 	struct timeval now;
 
 	tfm = crypto_alloc_hash(sysrq_hash, 0, CRYPTO_ALG_ASYNC);
@@ -289,14 +325,20 @@ static int __init sysrq_tg_init(void)
 	if (digest_password)
 		kfree(digest_password);
 	return -EINVAL;
+#else
+	printk(KERN_WARNING "xt_SYSRQ does not provide crypto for <= 2.6.18\n");
+	return xt_register_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
+#endif
 }
 
 static void __exit sysrq_tg_exit(void)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 	crypto_free_hash(tfm);
 	kfree(digest);
 	kfree(hexdigest);
 	kfree(digest_password);
+#endif
 	return xt_unregister_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
 }
 
