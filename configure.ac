@@ -1,8 +1,9 @@
 
-AC_INIT([xtables-addons], [1.6])
+AC_INIT([xtables-addons], [1.7])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_INSTALL
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wall])
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_DISABLE_STATIC
@@ -63,4 +64,5 @@ AC_SUBST([kinclude_CFLAGS])
 AC_SUBST([kbuilddir])
 AC_SUBST([ksourcedir])
 AC_SUBST([xtlibdir])
-AC_OUTPUT([Makefile extensions/GNUmakefile extensions/ipset/GNUmakefile])
+AC_CONFIG_FILES([Makefile extensions/GNUmakefile extensions/ipset/GNUmakefile])
+AC_OUTPUT
