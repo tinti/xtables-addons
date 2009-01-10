@@ -603,8 +603,13 @@ search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 {
 	uint16_t c, end, rem;
 
-	if (plen >= 5) {
-		printk(KERN_WARNING KBUILD_MODNAME ": %s: plen (%u) < 5\n",
+	if (plen < 5)
+		/* too short for anything we test for - early bailout */
+		return 0;
+
+	if (plen >= 65535) {
+		/* Something seems _really_ fishy */
+		printk(KERN_WARNING KBUILD_MODNAME ": %s: plen (%u) >= 65535\n",
 		       __func__, plen);
 		return 0;
 	}
