@@ -623,6 +623,10 @@ search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 	if (memcmp(payload, "GET /", 5) != 0)
 		return 0;
 
+	if (plen < 18)
+		/* The next tests would not succeed anyhow. */
+		return 0;
+
 	end = plen - 18;
 	rem = plen - 5;
 	for (c = 5; c < end; ++c, --rem) {
