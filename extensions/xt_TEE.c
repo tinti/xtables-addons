@@ -1,7 +1,7 @@
 /*
  *	"TEE" target extension for Xtables
  *	Copyright © Sebastian Claßen <sebastian.classen [at] freenet de>, 2007
- *	Jan Engelhardt <jengelh [at] medozas de>, 2007
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2007 - 2008
  *
  *	based on ipt_ROUTE.c from Cédric de Launois
  *	<delaunois [at] info ucl ac be>
@@ -17,6 +17,7 @@
 #include <net/checksum.h>
 #include <net/icmp.h>
 #include <net/ip.h>
+#include <net/ip6_route.h>
 #include <net/route.h>
 #include <linux/netfilter/x_tables.h>
 
@@ -29,7 +30,7 @@ static struct nf_conn tee_track;
 #include "compat_xtables.h"
 #include "xt_TEE.h"
 
-static const union nf_inet_addr zero_address;
+static const union nf_inet_addr tee_zero_address;
 
 /*
  * Try to route the packet according to the routing keys specified in
@@ -47,21 +48,16 @@ static const union nf_inet_addr zero_address;
  *         true  - if the packet was succesfully routed to the
  *                 destination desired
  */
-static bool tee_routing(struct sk_buff *skb,
-                        const struct xt_tee_tginfo *info)
+static bool
+tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 {
 	int err;
 	struct rtable *rt;
-	struct iphdr *iph = ip_hdr(skb);
-	struct flowi fl = {
-		.nl_u = {
-			.ip4_u = {
-				.daddr = info->gw.ip,
-				.tos   = RT_TOS(iph->tos),
-				.scope = RT_SCOPE_UNIVERSE,
-			}
-		}
-	};
+	struct flowi fl;
+
+	memset(&fl, 0, sizeof(fl));
+	fl.nl_u.ip4_u.daddr = info->gw.ip;
+	fl.nl_u.ip4_u.scope = RT_SCOPE_UNIVERSE;
 
 	/* Trying to route the packet using the standard routing table. */
 	err = ip_route_output_key(&init_net, &rt, &fl);
@@ -72,22 +68,14 @@ static bool tee_routing(struct sk_buff *skb,
 		return false;
 	}
 
-	/* Drop old route. */
 	dst_release(skb->dst);
-	skb->dst = NULL;
-
-	/*
-	 * Success if no oif specified or if the oif correspond to the
-	 * one desired.
-	 * [SC]: always the case, because we have no oif.
-	 */
 	skb->dst      = &rt->u.dst;
 	skb->dev      = skb->dst->dev;
 	skb->protocol = htons(ETH_P_IP);
 	return true;
 }
 
-static bool dev_hh_avail(const struct net_device *dev)
+static inline bool dev_hh_avail(const struct net_device *dev)
 {
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 	return dev->hard_header != NULL;
@@ -103,14 +91,14 @@ static bool dev_hh_avail(const struct net_device *dev)
  * POST: the packet is sent with the link layer header pushed
  *       the packet is destroyed
  */
-static void tee_ip_direct_send(struct sk_buff *skb)
+static void tee_tg_send(struct sk_buff *skb)
 {
 	const struct dst_entry *dst  = skb->dst;
 	const struct net_device *dev = dst->dev;
 	unsigned int hh_len = LL_RESERVED_SPACE(dev);
 
 	/* Be paranoid, rather than too clever. */
-	if (unlikely(skb_headroom(skb) < hh_len) && dev_hh_avail(dev)) {
+	if (unlikely(skb_headroom(skb) < hh_len && dev_hh_avail(dev))) {
 		struct sk_buff *skb2;
 
 		skb2 = skb_realloc_headroom(skb, LL_RESERVED_SPACE(dev));
@@ -142,7 +130,7 @@ static void tee_ip_direct_send(struct sk_buff *skb)
  * packets when we see they already have that ->nfct.
  */
 static unsigned int
-tee_tg(struct sk_buff **pskb, const struct xt_target_param *par)
+tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct xt_tee_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
@@ -200,8 +188,78 @@ tee_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 	nf_conntrack_get(skb->nfct);
 #endif
 
-	if (tee_routing(skb, info))
-		tee_ip_direct_send(skb);
+	/*
+	 * Normally, we would just use ip_local_out. Because iph->check is
+	 * already correct, we could take a shortcut and call dst_output
+	 * [forwards to ip_output] directly. ip_output however will invoke
+	 * Netfilter hooks and cause reentrancy. So we skip that too and go
+	 * directly to ip_finish_output. Since we should not do XFRM, control
+	 * passes to ip_finish_output2. That function is not exported, so it is
+	 * copied here as tee_ip_direct_send.
+	 *
+	 * We do no XFRM on the cloned packet on purpose! The choice of
+	 * iptables match options will control whether the raw packet or the
+	 * transformed version is cloned.
+	 *
+	 * Also on purpose, no fragmentation is done, to preserve the
+	 * packet as best as possible.
+	 */
+	if (tee_tg_route4(skb, info))
+		tee_tg_send(skb);
+
+	return XT_CONTINUE;
+}
+
+static bool
+tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
+{
+	struct dst_entry *dst;
+	struct flowi fl;
+
+	memset(&fl, 0, sizeof(fl));
+	fl.nl_u.ip6_u.daddr = info->gw.in6;
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 25)
+	dst = ip6_route_output(NULL, &fl);
+#else
+	dst = ip6_route_output(dev_net(skb->dev), NULL, &fl);
+#endif
+	if (dst == NULL) {
+		if (net_ratelimit())
+			printk(KERN_ERR "ip6_route_output failed for tee\n");
+		return false;
+	}
+
+	dst_release(skb->dst);
+	skb->dst      = dst;
+	skb->dev      = skb->dst->dev;
+	skb->protocol = htons(ETH_P_IPV6);
+	return true;
+}
+
+static unsigned int
+tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
+{
+	const struct xt_tee_tginfo *info = par->targinfo;
+	struct sk_buff *skb = *pskb;
+
+	/* Try silence. */
+#ifdef WITH_CONNTRACK
+	if (skb->nfct == &tee_track.ct_general)
+		return NF_DROP;
+#endif
+
+	if ((skb = skb_copy(skb, GFP_ATOMIC)) == NULL)
+		return XT_CONTINUE;
+
+#ifdef WITH_CONNTRACK
+	nf_conntrack_put(skb->nfct);
+	skb->nfct     = &tee_track.ct_general;
+	skb->nfctinfo = IP_CT_NEW;
+	nf_conntrack_get(skb->nfct);
+#endif
+	if (tee_tg_route6(skb, info))
+		tee_tg_send(skb);
 
 	return XT_CONTINUE;
 }
@@ -211,18 +269,31 @@ static bool tee_tg_check(const struct xt_tgchk_param *par)
 	const struct xt_tee_tginfo *info = par->targinfo;
 
 	/* 0.0.0.0 and :: not allowed */
-	return memcmp(&info->gw, &zero_address, sizeof(zero_address)) != 0;
+	return memcmp(&info->gw, &tee_zero_address,
+	       sizeof(tee_zero_address)) != 0;
 }
 
-static struct xt_target tee_tg_reg __read_mostly = {
-	.name       = "TEE",
-	.revision   = 0,
-	.family     = NFPROTO_IPV4,
-	.table      = "mangle",
-	.target     = tee_tg,
-	.targetsize = sizeof(struct xt_tee_tginfo),
-	.checkentry = tee_tg_check,
-	.me         = THIS_MODULE,
+static struct xt_target tee_tg_reg[] __read_mostly = {
+	{
+		.name       = "TEE",
+		.revision   = 0,
+		.family     = NFPROTO_IPV4,
+		.table      = "mangle",
+		.target     = tee_tg4,
+		.targetsize = sizeof(struct xt_tee_tginfo),
+		.checkentry = tee_tg_check,
+		.me         = THIS_MODULE,
+	},
+	{
+		.name       = "TEE",
+		.revision   = 0,
+		.family     = NFPROTO_IPV6,
+		.table      = "mangle",
+		.target     = tee_tg6,
+		.targetsize = sizeof(struct xt_tee_tginfo),
+		.checkentry = tee_tg_check,
+		.me         = THIS_MODULE,
+	},
 };
 
 static int __init tee_tg_init(void)
@@ -241,19 +312,20 @@ static int __init tee_tg_init(void)
 	tee_track.status |= IPS_NAT_DONE_MASK;
 #endif
 
-	return xt_register_target(&tee_tg_reg);
+	return xt_register_targets(tee_tg_reg, ARRAY_SIZE(tee_tg_reg));
 }
 
 static void __exit tee_tg_exit(void)
 {
-	xt_unregister_target(&tee_tg_reg);
+	xt_unregister_targets(tee_tg_reg, ARRAY_SIZE(tee_tg_reg));
 	/* [SC]: shoud not we cleanup tee_track here? */
 }
 
 module_init(tee_tg_init);
 module_exit(tee_tg_exit);
 MODULE_AUTHOR("Sebastian Claßen <sebastian.classen@freenet.ag>");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@computergmbh.de>");
+MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_DESCRIPTION("Xtables: Reroute packet copy");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_TEE");
+MODULE_ALIAS("ip6t_TEE");

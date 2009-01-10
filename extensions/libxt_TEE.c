@@ -1,7 +1,7 @@
 /*
  *	"TEE" target extension for iptables
  *	Copyright © Sebastian Claßen <sebastian.classen [at] freenet.ag>, 2007
- *	Jan Engelhardt <jengelh [at] medozas de>, 2007 - 2008
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2007 - 2009
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -70,6 +70,35 @@ static int tee_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 	return false;
 }
 
+static int tee_tg6_parse(int c, char **argv, int invert, unsigned int *flags,
+                         const void *entry, struct xt_entry_target **target)
+{
+	struct xt_tee_tginfo *info = (void *)(*target)->data;
+	const struct in6_addr *ia;
+
+	switch (c) {
+	case 'g':
+		if (*flags & FLAG_GATEWAY)
+			exit_error(PARAMETER_PROBLEM,
+			           "Cannot specify --gw more than once");
+
+		if (check_inverse(optarg, &invert, NULL, 0))
+			exit_error(PARAMETER_PROBLEM,
+			           "Unexpected \"!\" after --gateway");
+
+		ia = numeric_to_ip6addr(optarg);
+		if (ia == NULL)
+			exit_error(PARAMETER_PROBLEM,
+			           "Invalid IP address %s", optarg);
+
+		memcpy(&info->gw, ia, sizeof(*ia));
+		*flags |= FLAG_GATEWAY;
+		return true;
+	}
+
+	return false;
+}
+
 static void tee_tg_check(unsigned int flags)
 {
 	if (flags == 0)
@@ -88,11 +117,29 @@ static void tee_tg_print(const void *ip, const struct xt_entry_target *target,
 		printf("TEE gw:%s ", ipaddr_to_anyname(&info->gw.in));
 }
 
+static void tee_tg6_print(const void *ip, const struct xt_entry_target *target,
+                          int numeric)
+{
+	const struct xt_tee_tginfo *info = (const void *)target->data;
+
+	if (numeric)
+		printf("TEE gw:%s ", ip6addr_to_numeric(&info->gw.in6));
+	else
+		printf("TEE gw:%s ", ip6addr_to_anyname(&info->gw.in6));
+}
+
 static void tee_tg_save(const void *ip, const struct xt_entry_target *target)
 {
 	const struct xt_tee_tginfo *info = (const void *)target->data;
 
 	printf("--gateway %s ", ipaddr_to_numeric(&info->gw.in));
+}
+
+static void tee_tg6_save(const void *ip, const struct xt_entry_target *target)
+{
+	const struct xt_tee_tginfo *info = (const void *)target->data;
+
+	printf("--gateway %s ", ip6addr_to_numeric(&info->gw.in6));
 }
 
 static struct xtables_target tee_tg_reg = {
@@ -110,7 +157,23 @@ static struct xtables_target tee_tg_reg = {
 	.extra_opts    = tee_tg_opts,
 };
 
+static struct xtables_target tee_tg6_reg = {
+	.name          = "TEE",
+	.version       = XTABLES_VERSION,
+	.revision      = 0,
+	.family        = PF_INET6,
+	.size          = XT_ALIGN(sizeof(struct xt_tee_tginfo)),
+	.userspacesize = XT_ALIGN(sizeof(struct xt_tee_tginfo)),
+	.help          = tee_tg_help,
+	.parse         = tee_tg6_parse,
+	.final_check   = tee_tg_check,
+	.print         = tee_tg6_print,
+	.save          = tee_tg6_save,
+	.extra_opts    = tee_tg_opts,
+};
+
 static __attribute__((constructor)) void tee_tg_ldr(void)
 {
 	xtables_register_target(&tee_tg_reg);
+	xtables_register_target(&tee_tg6_reg);
 }
