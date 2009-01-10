@@ -837,7 +837,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	switch (ip->protocol) {
 	case IPPROTO_TCP:	/* what to do with a TCP packet */
 	{
-		const struct tcphdr *tcph = tcp_hdr(skb);
+		const struct tcphdr *tcph = (const void *)ip + ip_hdrlen(skb);
 
 		if (tcph->fin) return 0;  /* if FIN bit is set bail out */
 		if (tcph->syn) return 0;  /* if SYN bit is set bail out */
@@ -864,7 +864,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 
 	case IPPROTO_UDP:	/* what to do with an UDP packet */
 	{
-		const struct udphdr *udph = udp_hdr(skb);
+		const struct udphdr *udph = (const void *)ip + ip_hdrlen(skb);
 
 		while (udp_list[i].command) {
 			if ((info->cmd & udp_list[i].command) == udp_list[i].command &&
