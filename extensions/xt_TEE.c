@@ -91,7 +91,7 @@ static inline bool dev_hh_avail(const struct net_device *dev)
  * POST: the packet is sent with the link layer header pushed
  *       the packet is destroyed
  */
-static void tee_tg_send4(struct sk_buff *skb)
+static void tee_tg_send(struct sk_buff *skb)
 {
 	const struct dst_entry *dst  = skb->dst;
 	const struct net_device *dev = dst->dev;
@@ -205,7 +205,7 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	 * packet as best as possible.
 	 */
 	if (tee_tg_route4(skb, info))
-		tee_tg_send4(skb);
+		tee_tg_send(skb);
 
 	return XT_CONTINUE;
 }
@@ -237,19 +237,6 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	return true;
 }
 
-static void tee_tg_send6(struct sk_buff *skb)
-{
-	struct dst_entry *dst = skb->dst;
-
-	if (dst->hh != NULL)
-		neigh_hh_output(dst->hh, skb);
-	else if (dst->neighbour != NULL)
-		dst->neighbour->output(skb);
-	else
-		kfree_skb(skb);
-
-}
-
 static unsigned int
 tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 {
@@ -272,7 +259,7 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 	nf_conntrack_get(skb->nfct);
 #endif
 	if (tee_tg_route6(skb, info))
-		tee_tg_send6(skb);
+		tee_tg_send(skb);
 
 	return XT_CONTINUE;
 }
