@@ -83,9 +83,9 @@ static void tee_tg_print(const void *ip, const struct xt_entry_target *target,
 	const struct xt_tee_tginfo *info = (const void *)target->data;
 
 	if (numeric)
-		printf("TEE gw:%s ", ipaddr_to_anyname(&info->gw.in));
-	else
 		printf("TEE gw:%s ", ipaddr_to_numeric(&info->gw.in));
+	else
+		printf("TEE gw:%s ", ipaddr_to_anyname(&info->gw.in));
 }
 
 static void tee_tg_save(const void *ip, const struct xt_entry_target *target)
