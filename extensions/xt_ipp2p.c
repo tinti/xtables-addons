@@ -603,8 +603,13 @@ search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 {
 	uint16_t c, end, rem;
 
-	if (plen >= 5) {
-		printk(KERN_WARNING KBUILD_MODNAME ": %s: plen (%u) < 5\n",
+	if (plen < 5)
+		/* too short for anything we test for - early bailout */
+		return 0;
+
+	if (plen >= 65535) {
+		/* Something seems _really_ fishy */
+		printk(KERN_WARNING KBUILD_MODNAME ": %s: plen (%u) >= 65535\n",
 		       __func__, plen);
 		return 0;
 	}
@@ -616,6 +621,10 @@ search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 		return IPP2P_KAZAA * 100 + 1;
 
 	if (memcmp(payload, "GET /", 5) != 0)
+		return 0;
+
+	if (plen < 18)
+		/* The next tests would not succeed anyhow. */
 		return 0;
 
 	end = plen - 18;
@@ -828,7 +837,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	switch (ip->protocol) {
 	case IPPROTO_TCP:	/* what to do with a TCP packet */
 	{
-		const struct tcphdr *tcph = tcp_hdr(skb);
+		const struct tcphdr *tcph = (const void *)ip + ip_hdrlen(skb);
 
 		if (tcph->fin) return 0;  /* if FIN bit is set bail out */
 		if (tcph->syn) return 0;  /* if SYN bit is set bail out */
@@ -855,7 +864,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 
 	case IPPROTO_UDP:	/* what to do with an UDP packet */
 	{
-		const struct udphdr *udph = udp_hdr(skb);
+		const struct udphdr *udph = (const void *)ip + ip_hdrlen(skb);
 
 		while (udp_list[i].command) {
 			if ((info->cmd & udp_list[i].command) == udp_list[i].command &&

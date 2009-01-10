@@ -22,7 +22,7 @@
 static void ipp2p_mt_help(void)
 {
 	printf(
-	"IPP2P v%s options:\n"
+	"ipp2p v%s match options:\n"
 	"  --edk    [tcp,udp]  All known eDonkey/eMule/Overnet packets\n"
 	"  --dc     [tcp]      All known Direct Connect packets\n"
 	"  --kazaa  [tcp,udp]  All known KaZaA packets\n"
@@ -32,19 +32,10 @@ static void ipp2p_mt_help(void)
 	"  --winmx  [tcp]      All known WinMX\n"
 	"  --soul   [tcp]      All known SoulSeek\n"
 	"  --ares   [tcp]      All known Ares\n\n"
-	"EXPERIMENTAL protocols (please send feedback to: ipp2p@ipp2p.org) :\n"
+	"EXPERIMENTAL protocols:\n"
 	"  --mute   [tcp]      All known Mute packets\n"
 	"  --waste  [tcp]      All known Waste packets\n"
 	"  --xdcc   [tcp]      All known XDCC packets (only xdcc login)\n\n"
-	"DEBUG SUPPPORT, use only if you know why\n"
-	"  --debug             Generate kernel debug output, THIS WILL SLOW DOWN THE FILTER\n"
-	"\nIPP2P was intended for TCP only. Due to increasing usage of UDP we needed to change this.\n"
-	"You can now use -p udp to search UDP packets only or without -p switch to search UDP and TCP packets.\n"
-	"\nSee README included with this package for more details or visit http://www.ipp2p.org\n"
-	"\nExamples:\n"
-	" iptables -A FORWARD -m ipp2p --ipp2p -j MARK --set-mark 0x01\n"
-	" iptables -A FORWARD -p udp -m ipp2p --kazaa --bit -j DROP\n"
-	" iptables -A FORWARD -p tcp -m ipp2p --edk --soul -j DROP\n\n"
 	, IPP2P_VERSION);
 }
 
