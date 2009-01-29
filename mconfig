@@ -14,5 +14,6 @@ build_fuzzy=m
 build_geoip=m
 build_ipp2p=m
 build_ipset=m
+build_length2=m
 build_portscan=m
 build_quota2=m
