@@ -1,9 +1,9 @@
-.TH xtables\-addons 8 "v1.8 (2009\-01\-10)" "" "v1.8 (2009\-01\-10)"
-.SH NAME
+.TH xtables\-addons 8 "v1.9 (2009\-01\-30)" "" "v1.9 (2009\-01\-30)"
+.SH Name
 Xtables\-addons - additional extensions for iptables, ip6tables, etc.
-.SH TARGETS
+.SH Targets
 .\" @TARGET@
-.SH MATCHES
+.SH Matches
 .\" @MATCHES@
 .SH "SEE ALSO"
 \fBiptables\fP(8), \fBip6tables\fP(8)
