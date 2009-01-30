@@ -53,10 +53,6 @@ static int tee_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 			exit_error(PARAMETER_PROBLEM,
 			           "Cannot specify --gw more than once");
 
-		if (check_inverse(optarg, &invert, NULL, 0))
-			exit_error(PARAMETER_PROBLEM,
-			           "Unexpected \"!\" after --gateway");
-
 		ia = numeric_to_ipaddr(optarg);
 		if (ia == NULL)
 			exit_error(PARAMETER_PROBLEM,
@@ -81,10 +77,6 @@ static int tee_tg6_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & FLAG_GATEWAY)
 			exit_error(PARAMETER_PROBLEM,
 			           "Cannot specify --gw more than once");
-
-		if (check_inverse(optarg, &invert, NULL, 0))
-			exit_error(PARAMETER_PROBLEM,
-			           "Unexpected \"!\" after --gateway");
 
 		ia = numeric_to_ip6addr(optarg);
 		if (ia == NULL)
