@@ -1,6 +1,6 @@
 #ifndef __IPT_IPP2P_H
 #define __IPT_IPP2P_H
-#define IPP2P_VERSION "0.9"
+#define IPP2P_VERSION "0.10"
 
 enum {
 	IPP2N_EDK,
