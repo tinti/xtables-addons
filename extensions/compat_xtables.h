@@ -1,6 +1,7 @@
 #ifndef _XTABLES_COMPAT_H
 #define _XTABLES_COMPAT_H 1
 
+#include <linux/kernel.h>
 #include <linux/version.h>
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
@@ -68,6 +69,27 @@
 #	define csum_replace2 xtnu_csum_replace2
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
 #	define csum_replace2 nf_csum_replace2
+#endif
+
+#if !defined(NIP6) && !defined(NIP6_FMT)
+#	define NIP6(addr) \
+		ntohs((addr).s6_addr16[0]), \
+		ntohs((addr).s6_addr16[1]), \
+		ntohs((addr).s6_addr16[2]), \
+		ntohs((addr).s6_addr16[3]), \
+		ntohs((addr).s6_addr16[4]), \
+		ntohs((addr).s6_addr16[5]), \
+		ntohs((addr).s6_addr16[6]), \
+		ntohs((addr).s6_addr16[7])
+#	define NIP6_FMT "%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x"
+#endif
+#if !defined(NIPQUAD) && !defined(NIPQUAD_FMT)
+#	define NIPQUAD(addr) \
+		((const unsigned char *)&addr)[0], \
+		((const unsigned char *)&addr)[1], \
+		((const unsigned char *)&addr)[2], \
+		((const unsigned char *)&addr)[3]
+#	define NIPQUAD_FMT "%u.%u.%u.%u"
 #endif
 
 #define ip_route_me_harder    xtnu_ip_route_me_harder
