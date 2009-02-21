@@ -34,12 +34,14 @@ VU := 0
 am__1verbose_CC_0     = @echo "  CC      " $@;
 am__1verbose_CCLD_0   = @echo "  CCLD    " $@;
 am__1verbose_GEN_0    = @echo "  GEN     " $@;
+am__1verbose_SILENT_0 = @
 am__1verbose_CC_1     = @echo "  CC      " $@ "<-" $<;
 am__1verbose_CCLD_1   = @echo "  CCLD    " $@ "<-" $^;
 am__1verbose_GEN_1    = @echo "  GEN     " $@ "<-" $<;
 am__verbose_CC        = ${am__1verbose_CC_${VU}}
 am__verbose_CCLD      = ${am__1verbose_CCLD_${VU}}
 am__verbose_GEN       = ${am__1verbose_GEN_${VU}}
+am__verbose_SILENT    = ${am__1verbose_GEN_${VU}}
 
 
 #
@@ -93,13 +95,13 @@ distclean: clean
 .PHONY: modules modules_install clean_modules
 
 modules:
-	make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} modules;
+	${am__verbose_SILENT}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} modules; fi;
 
 modules_install:
-	make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} INSTALL_MOD_PATH=${DESTDIR} modules_install;
+	${am__verbose_SILENT}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} INSTALL_MOD_PATH=${DESTDIR} modules_install; fi;
 
 clean_modules:
-	make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} clean;
+	${am__verbose_SILENT}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} clean; fi;
 
 
 #
