@@ -15,6 +15,8 @@ extensions/%:
 install-exec-local:
 	depmod -a || :;
 
+config.status: extensions/GNUmakefile.in
+
 .PHONY: tarball
 tarball:
 	rm -Rf /tmp/xtables-addons-${PACKAGE_VERSION};
