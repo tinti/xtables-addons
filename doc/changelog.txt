@@ -1,0 +1,112 @@
+
+Xtables-addons 1.10 (February 18 2009)
+======================================
+- compat: compile fixes for 2.6.29
+- ipset: upgrade to ipset 2.4.9
+
+
+Xtables-addons 1.9 (January 30 2009)
+====================================
+- add the xt_length2 extension
+- xt_TEE: remove intrapositional '!' support
+- ipset: upgrade to ipset 2.4.7
+
+
+Xtables-addons 1.8 (January 10 2009)
+====================================
+- xt_TEE: IPv6 support
+- xt_TEE: do not include TOS value in routing decision
+- xt_TEE: fix switch-case inversion for name/IP display
+- xt_ipp2p: update manpages and help text
+- xt_ipp2p: remove log flooding
+- xt_portscan: update manpage about --grscan option caveats
+
+
+Xtables-addons 1.7 (December 25 2008)
+=====================================
+- xt_ECHO: compile fix
+- avoid the use of "_init" which led to compile errors on some installations
+- build: do not unconditionally install ipset
+- doc: add manpages for xt_ECHO and xt_TEE
+- xt_ipp2p: kazaa detection code cleanup
+- xt_ipp2p: fix newline inspection in kazaa detection
+- xt_ipp2p: ensure better array bounds checking
+- xt_SYSRQ: improve security by hashing password
+
+
+Xtables-addons 1.6 (November 18 2008)
+=====================================
+- build: support for Linux 2.6.17
+- build: compile fixes for 2.6.18 and 2.6.19
+- xt_ECHO: resolve compile errors in xt_ECHO
+- xt_ipp2p: parenthesize unaligned-access macros
+
+
+Xtables-addons 1.5.7 (September 01 2008)
+========================================
+- API layer: fix use of uninitialized 'hotdrop' variable
+- API layer: move to pskb-based signatures
+- xt_SYSRQ: compile fixes for Linux <= 2.6.19
+- ipset: adjust semaphore.h include for Linux >= 2.6.27
+- build: automatically run `depmod -a` on installation
+- add reworked xt_fuzzy module
+- add DHCP address match and mangle module
+- xt_portscan: IPv6 support
+- xt_SYSRQ: add missing module aliases
+
+
+Xtables-addons 1.5.5 (August 03 2008)
+=====================================
+- manpage updates for xt_CHAOS, xt_IPMARK; README updates
+- build: properly recognize external Kbuild/Mbuild files
+- build: remove dependency on CONFIG_NETWORK_SECMARK
+- add the xt_SYSRQ target
+- add the xt_quota2 extension
+- import ipset extension group
+
+
+Xtables-addons 1.5.4.1 (April 26 2008)
+======================================
+- build: fix compile error for 2.6.18-stable
+
+
+Xtables-addons 1.5.4 (April 09 2008)
+====================================
+- build: support building multiple files with one config option
+- API layer: add check for pskb relocation
+- doc: generate manpages
+- xt_ECHO: catch skb_linearize out-of-memory condition
+- xt_LOGMARK: add hook= and ctdir= fields in dump
+- xt_LOGMARK: fix comma output in ctstatus= list
+- xt_TEE: fix address copying bug
+- xt_TEE: make skb writable before attempting checksum update
+- add reworked xt_condition match
+- add reworked xt_ipp2p match
+- add reworked xt_IPMARK target
+
+
+Xtables-addons 1.5.3 (March 22 2008)
+====================================
+- support for Linux 2.6.18
+- add xt_ECHO sample target
+- add reworked xt_geoip match
+
+
+Xtables-addons 1.5.2 (March 04 2008)
+====================================
+- build: support for GNU make < 3.81 which does not have $(realpath)
+
+
+Xtables-addons 1.5.1 (February 21 2008)
+=======================================
+- build: allow user to select what extensions to compile and install
+- build: allow external proejcts to be downloaded into the tree
+- xt_LOGMARK: dump classify mark, ctstate and ctstatus
+- add xt_CHAOS, xt_DELUDE and xt_portscan from Chaostables
+
+
+Xtables-addons 1.5.0 (February 11 2008)
+=======================================
+Initial release with:
+- extensions: xt_LOGMARK, xt_TARPIT, xt_TEE
+- support for Linux >= 2.6.19
