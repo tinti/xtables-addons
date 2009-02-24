@@ -53,11 +53,8 @@ Configuring and compiling
 	xtables.h, should it not be within the standard C compiler
 	include path (/usr/include), or if you want to override it.
 	The directory will be checked for xtables.h and
-	include/xtables.h. (This is to support the following specs:)
-
-		--with-xtables=/usr/src/xtables
-		--with-xtables=/usr/src/xtables/include
-		--with-xtables=/opt/xtables/include
+	include/xtables.h. (The latter to support both standard
+	/usr/include and the iptables source root.)
 
 --with-libxtdir=
 
