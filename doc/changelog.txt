@@ -1,4 +1,8 @@
 
+
+- ipset: fix for compilation with 2.6.29-rt
+
+
 Xtables-addons 1.10 (February 18 2009)
 ======================================
 - compat: compile fixes for 2.6.29
