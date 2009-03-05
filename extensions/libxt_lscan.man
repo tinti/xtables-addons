@@ -1,4 +1,5 @@
-Detects simple port scan attemps based upon the packet's contents. (This is
+Detects simple low-level scan attemps based upon the packet's contents.
+(This is
 different from other implementations, which also try to match the rate of new
 connections.) Note that an attempt is only discovered after it has been carried
 out, but this information can be used in conjunction with other rules to block
@@ -27,5 +28,5 @@ ports where a protocol runs that is guaranteed to do a bidirectional exchange
 of bytes.
 .PP
 NOTE: Some clients (Windows XP for example) may do what looks like a SYN scan,
-so be advised to carefully use xt_portscan in conjunction with blocking rules,
+so be advised to carefully use xt_lscan in conjunction with blocking rules,
 as it may lock out your very own internal network.

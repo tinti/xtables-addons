@@ -1,6 +1,6 @@
 /*
- *	"portscan" match extension for iptables
- *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2006 - 2008
+ *	LSCAN match extension for iptables
+ *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2006 - 2009
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -16,9 +16,9 @@
 
 #include <xtables.h>
 #include <linux/netfilter/x_tables.h>
-#include "xt_portscan.h"
+#include "xt_lscan.h"
 
-static const struct option portscan_mt_opts[] = {
+static const struct option lscan_mt_opts[] = {
 	{.name = "stealth", .has_arg = false, .val = 'x'},
 	{.name = "synscan", .has_arg = false, .val = 's'},
 	{.name = "cnscan",  .has_arg = false, .val = 'c'},
@@ -26,10 +26,10 @@ static const struct option portscan_mt_opts[] = {
 	{NULL},
 };
 
-static void portscan_mt_help(void)
+static void lscan_mt_help(void)
 {
 	printf(
-		"portscan match options:\n"
+		"lscan match options:\n"
 		"(Combining them will make them match by OR-logic)\n"
 		"  --stealth    Match TCP Stealth packets\n"
 		"  --synscan    Match TCP SYN scans\n"
@@ -37,10 +37,10 @@ static void portscan_mt_help(void)
 		"  --grscan     Match Banner Grabbing scans\n");
 }
 
-static int portscan_mt_parse(int c, char **argv, int invert,
+static int lscan_mt_parse(int c, char **argv, int invert,
     unsigned int *flags, const void *entry, struct xt_entry_match **match)
 {
-	struct xt_portscan_mtinfo *info = (void *)((*match)->data);
+	struct xt_lscan_mtinfo *info = (void *)((*match)->data);
 
 	switch (c) {
 	case 'c':
@@ -59,17 +59,17 @@ static int portscan_mt_parse(int c, char **argv, int invert,
 	return false;
 }
 
-static void portscan_mt_check(unsigned int flags)
+static void lscan_mt_check(unsigned int flags)
 {
 }
 
-static void portscan_mt_print(const void *ip,
+static void lscan_mt_print(const void *ip,
     const struct xt_entry_match *match, int numeric)
 {
-	const struct xt_portscan_mtinfo *info = (const void *)(match->data);
+	const struct xt_lscan_mtinfo *info = (const void *)(match->data);
 	const char *s = "";
 
-	printf("portscan ");
+	printf("lscan ");
 	if (info->match_stealth) {
 		printf("STEALTH");
 		s = ",";
@@ -87,9 +87,9 @@ static void portscan_mt_print(const void *ip,
 	printf(" ");
 }
 
-static void portscan_mt_save(const void *ip, const struct xt_entry_match *match)
+static void lscan_mt_save(const void *ip, const struct xt_entry_match *match)
 {
-	const struct xt_portscan_mtinfo *info = (const void *)(match->data);
+	const struct xt_lscan_mtinfo *info = (const void *)(match->data);
 
 	if (info->match_stealth)
 		printf("--stealth ");
@@ -101,22 +101,22 @@ static void portscan_mt_save(const void *ip, const struct xt_entry_match *match)
 		printf("--grscan ");
 }
 
-static struct xtables_match portscan_mt_reg = {
+static struct xtables_match lscan_mt_reg = {
 	.version       = XTABLES_VERSION,
-	.name          = "portscan",
+	.name          = "lscan",
 	.revision      = 0,
 	.family        = AF_INET,
-	.size          = XT_ALIGN(sizeof(struct xt_portscan_mtinfo)),
-	.userspacesize = XT_ALIGN(sizeof(struct xt_portscan_mtinfo)),
-	.help          = portscan_mt_help,
-	.parse         = portscan_mt_parse,
-	.final_check   = portscan_mt_check,
-	.print         = portscan_mt_print,
-	.save          = portscan_mt_save,
-	.extra_opts    = portscan_mt_opts,
+	.size          = XT_ALIGN(sizeof(struct xt_lscan_mtinfo)),
+	.userspacesize = XT_ALIGN(sizeof(struct xt_lscan_mtinfo)),
+	.help          = lscan_mt_help,
+	.parse         = lscan_mt_parse,
+	.final_check   = lscan_mt_check,
+	.print         = lscan_mt_print,
+	.save          = lscan_mt_save,
+	.extra_opts    = lscan_mt_opts,
 };
 
-static __attribute__((constructor)) void portscan_mt_ldr(void)
+static __attribute__((constructor)) void lscan_mt_ldr(void)
 {
-	xtables_register_match(&portscan_mt_reg);
+	xtables_register_match(&lscan_mt_reg);
 }

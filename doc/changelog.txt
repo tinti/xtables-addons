@@ -1,6 +1,8 @@
 
 
 - ipset: fix for compilation with 2.6.29-rt
+- rename xt_portscan to xt_lscan ("low-level scan") because
+  "portscan" as a wor caused confusion
 
 
 Xtables-addons 1.10 (February 18 2009)

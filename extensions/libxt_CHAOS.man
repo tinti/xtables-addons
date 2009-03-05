@@ -18,4 +18,4 @@ The randomness factor of not replying vs. replying can be set during load-time
 of the xt_CHAOS module or during runtime in /sys/modules/xt_CHAOS/parameters.
 .PP
 See http://jengelh.medozas.de/projects/chaostables/ for more information
-about CHAOS, DELUDE and portscan.
+about CHAOS, DELUDE and lscan.

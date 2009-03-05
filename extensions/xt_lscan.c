@@ -1,6 +1,6 @@
 /*
- *	portscan match for netfilter
- *	Copyright © CC Computer Consultants GmbH, 2006 - 2008
+ *	LSCAN match for netfilter
+ *	Copyright © Jan Engelhardt, 2006 - 2009
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License; either version
@@ -17,8 +17,7 @@
 #include <linux/version.h>
 #include <linux/netfilter/x_tables.h>
 #include <linux/netfilter/xt_tcpudp.h>
-//#include <net/netfilter/nf_conntrack.h>
-#include "xt_portscan.h"
+#include "xt_lscan.h"
 #include "compat_xtables.h"
 #define PFX KBUILD_MODNAME ": "
 
@@ -103,8 +102,8 @@ static inline bool tflg_synack(const struct tcphdr *th)
 	       (TCP_FLAG_SYN | TCP_FLAG_ACK);
 }
 
-/* portscan functions */
-static inline bool portscan_mt_stealth(const struct tcphdr *th)
+/* lscan functions */
+static inline bool lscan_mt_stealth(const struct tcphdr *th)
 {
 	/*
 	 * "Connection refused" replies to our own probes must not be matched.
@@ -126,7 +125,7 @@ static inline bool portscan_mt_stealth(const struct tcphdr *th)
 	return !tflg_syn(th);
 }
 
-static inline unsigned int portscan_mt_full(int mark,
+static inline unsigned int lscan_mt_full(int mark,
     enum ip_conntrack_info ctstate, bool loopback, const struct tcphdr *tcph,
     unsigned int payload_len)
 {
@@ -172,9 +171,9 @@ static inline unsigned int portscan_mt_full(int mark,
 }
 
 static bool
-portscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
+lscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	const struct xt_portscan_mtinfo *info = par->matchinfo;
+	const struct xt_lscan_mtinfo *info = par->matchinfo;
 	enum ip_conntrack_info ctstate;
 	const struct tcphdr *tcph;
 	struct nf_conn *ctdata;
@@ -187,7 +186,7 @@ portscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	/* Check for invalid packets: -m conntrack --ctstate INVALID */
 	if ((ctdata = nf_ct_get(skb, &ctstate)) == NULL) {
 		if (info->match_stealth)
-			return portscan_mt_stealth(tcph);
+			return lscan_mt_stealth(tcph);
 		/*
 		 * If @ctdata is NULL, we cannot match the other scan
 		 * types, return.
@@ -196,7 +195,7 @@ portscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	}
 
 	/*
-	 * If -m portscan was previously applied to this packet, the rules we
+	 * If -m lscan was previously applied to this packet, the rules we
 	 * simulate must not be run through again. And for speedup, do not call
 	 * it either when the connection is already VALID.
 	 */
@@ -204,7 +203,7 @@ portscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	     (skb_nfmark(skb) & packet_mask) != mark_seen) {
 		unsigned int n;
 
-		n = portscan_mt_full(ctdata->mark & connmark_mask, ctstate,
+		n = lscan_mt_full(ctdata->mark & connmark_mask, ctstate,
 		    par->in == init_net__loopback_dev, tcph,
 		    skb->len - par->thoff - 4 * tcph->doff);
 
@@ -217,9 +216,9 @@ portscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	       (info->match_gr && ctdata->mark == mark_grscan);
 }
 
-static bool portscan_mt_check(const struct xt_mtchk_param *par)
+static bool lscan_mt_check(const struct xt_mtchk_param *par)
 {
-	const struct xt_portscan_mtinfo *info = par->matchinfo;
+	const struct xt_lscan_mtinfo *info = par->matchinfo;
 
 	if ((info->match_stealth & ~1) || (info->match_syn & ~1) ||
 	    (info->match_cn & ~1) || (info->match_gr & ~1)) {
@@ -229,44 +228,44 @@ static bool portscan_mt_check(const struct xt_mtchk_param *par)
 	return true;
 }
 
-static struct xt_match portscan_mt_reg[] __read_mostly = {
+static struct xt_match lscan_mt_reg[] __read_mostly = {
 	{
-		.name       = "portscan",
+		.name       = "lscan",
 		.revision   = 0,
 		.family     = NFPROTO_IPV4,
-		.match      = portscan_mt,
-		.checkentry = portscan_mt_check,
-		.matchsize  = sizeof(struct xt_portscan_mtinfo),
+		.match      = lscan_mt,
+		.checkentry = lscan_mt_check,
+		.matchsize  = sizeof(struct xt_lscan_mtinfo),
 		.proto      = IPPROTO_TCP,
 		.me         = THIS_MODULE,
 	},
 	{
-		.name       = "portscan",
+		.name       = "lscan",
 		.revision   = 0,
 		.family     = NFPROTO_IPV6,
-		.match      = portscan_mt,
-		.checkentry = portscan_mt_check,
-		.matchsize  = sizeof(struct xt_portscan_mtinfo),
+		.match      = lscan_mt,
+		.checkentry = lscan_mt_check,
+		.matchsize  = sizeof(struct xt_lscan_mtinfo),
 		.proto      = IPPROTO_TCP,
 		.me         = THIS_MODULE,
 	},
 };
 
-static int __init portscan_mt_init(void)
+static int __init lscan_mt_init(void)
 {
-	return xt_register_matches(portscan_mt_reg,
-	       ARRAY_SIZE(portscan_mt_reg));
+	return xt_register_matches(lscan_mt_reg,
+	       ARRAY_SIZE(lscan_mt_reg));
 }
 
-static void __exit portscan_mt_exit(void)
+static void __exit lscan_mt_exit(void)
 {
-	xt_unregister_matches(portscan_mt_reg, ARRAY_SIZE(portscan_mt_reg));
+	xt_unregister_matches(lscan_mt_reg, ARRAY_SIZE(lscan_mt_reg));
 }
 
-module_init(portscan_mt_init);
-module_exit(portscan_mt_exit);
+module_init(lscan_mt_init);
+module_exit(lscan_mt_exit);
 MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
-MODULE_DESCRIPTION("Xtables: \"portscan\" match");
+MODULE_DESCRIPTION("Xtables: Low-level scan (e.g. nmap) match");
 MODULE_LICENSE("GPL");
-MODULE_ALIAS("ipt_portscan");
-MODULE_ALIAS("ip6t_portscan");
+MODULE_ALIAS("ipt_lscan");
+MODULE_ALIAS("ip6t_lscan");

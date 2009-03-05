@@ -20,7 +20,7 @@ obj-${build_geoip}       += xt_geoip.o
 obj-${build_ipp2p}       += xt_ipp2p.o
 obj-${build_ipset}       += ipset/
 obj-${build_length2}     += xt_length2.o
-obj-${build_portscan}    += xt_portscan.o
+obj-${build_lscan}       += xt_lscan.o
 obj-${build_quota2}      += xt_quota2.o
 
 -include ${M}/*.Kbuild
