@@ -51,12 +51,14 @@ static const union nf_inet_addr tee_zero_address;
 static bool
 tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 {
+	const struct iphdr *iph = ip_hdr(skb);
 	int err;
 	struct rtable *rt;
 	struct flowi fl;
 
 	memset(&fl, 0, sizeof(fl));
 	fl.nl_u.ip4_u.daddr = info->gw.ip;
+	fl.nl_u.ip4_u.tos   = RT_TOS(iph->tos);
 	fl.nl_u.ip4_u.scope = RT_SCOPE_UNIVERSE;
 
 	/* Trying to route the packet using the standard routing table. */
