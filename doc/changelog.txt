@@ -4,6 +4,7 @@
 - rename xt_portscan to xt_lscan ("low-level scan") because
   "portscan" as a wor caused confusion
 - revert "TEE: do not use TOS for routing"
+- xt_TEE: resolve unknown symbol error with CONFIG_IPV6=n
 
 
 Xtables-addons 1.10 (February 18 2009)

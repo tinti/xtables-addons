@@ -26,6 +26,9 @@
 #	include <net/netfilter/nf_conntrack.h>
 static struct nf_conn tee_track;
 #endif
+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+#	define WITH_IPV6 1
+#endif
 
 #include "compat_xtables.h"
 #include "xt_TEE.h"
@@ -212,6 +215,7 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	return XT_CONTINUE;
 }
 
+#ifdef WITH_IPV6
 static bool
 tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 {
@@ -265,6 +269,7 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 
 	return XT_CONTINUE;
 }
+#endif /* WITH_IPV6 */
 
 static bool tee_tg_check(const struct xt_tgchk_param *par)
 {
@@ -286,6 +291,7 @@ static struct xt_target tee_tg_reg[] __read_mostly = {
 		.checkentry = tee_tg_check,
 		.me         = THIS_MODULE,
 	},
+#ifdef WITH_IPV6
 	{
 		.name       = "TEE",
 		.revision   = 0,
@@ -296,6 +302,7 @@ static struct xt_target tee_tg_reg[] __read_mostly = {
 		.checkentry = tee_tg_check,
 		.me         = THIS_MODULE,
 	},
+#endif
 };
 
 static int __init tee_tg_init(void)
