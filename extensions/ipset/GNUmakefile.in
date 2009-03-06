@@ -2,6 +2,7 @@
 
 top_srcdir      := @top_srcdir@
 srcdir          := @srcdir@
+datarootdir     := @datarootdir@
 abstop_srcdir   := $(shell readlink -e ${top_srcdir})
 abssrcdir       := $(shell readlink -e ${srcdir})
 
