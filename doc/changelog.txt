@@ -3,6 +3,7 @@
 - ipset: fix for compilation with 2.6.29-rt
 - rename xt_portscan to xt_lscan ("low-level scan") because
   "portscan" as a wor caused confusion
+- xt_LOGMARK: print incoming interface index
 - revert "TEE: do not use TOS for routing"
 - xt_TEE: resolve unknown symbol error with CONFIG_IPV6=n
 

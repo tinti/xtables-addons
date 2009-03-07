@@ -38,9 +38,10 @@ logmark_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 	enum ip_conntrack_info ctinfo;
 	bool prev = false;
 
-	printk("<%u>%.*s""hook=%s nfmark=0x%x secmark=0x%x classify=0x%x",
+	printk("<%u>%.*s""iif=%d hook=%s nfmark=0x%x "
+	       "secmark=0x%x classify=0x%x",
 	       info->level, (unsigned int)sizeof(info->prefix), info->prefix,
-	       hook_names[par->hooknum],
+	       skb->iif, hook_names[par->hooknum],
 	       skb_nfmark(skb), skb_secmark(skb), skb->priority);
 
 	ct = nf_ct_get(skb, &ctinfo);
