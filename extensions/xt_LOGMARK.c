@@ -41,7 +41,7 @@ logmark_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 	printk("<%u>%.*s""iif=%d hook=%s nfmark=0x%x "
 	       "secmark=0x%x classify=0x%x",
 	       info->level, (unsigned int)sizeof(info->prefix), info->prefix,
-	       skb->iif, hook_names[par->hooknum],
+	       skb_ifindex(skb), hook_names[par->hooknum],
 	       skb_nfmark(skb), skb_secmark(skb), skb->priority);
 
 	ct = nf_ct_get(skb, &ctinfo);
