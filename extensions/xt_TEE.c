@@ -60,6 +60,8 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	struct flowi fl;
 
 	memset(&fl, 0, sizeof(fl));
+	fl.iif  = skb->iif;
+	fl.mark = skb->mark;
 	fl.nl_u.ip4_u.daddr = info->gw.ip;
 	fl.nl_u.ip4_u.tos   = RT_TOS(iph->tos);
 	fl.nl_u.ip4_u.scope = RT_SCOPE_UNIVERSE;
@@ -219,11 +221,16 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 static bool
 tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 {
+	const struct ipv6hdr *iph = ipv6_hdr(skb);
 	struct dst_entry *dst;
 	struct flowi fl;
 
 	memset(&fl, 0, sizeof(fl));
+	fl.iif  = skb->iif;
+	fl.mark = skb->mark;
 	fl.nl_u.ip6_u.daddr = info->gw.in6;
+	fl.nl_u.ip6_u.flowlabel = ((iph->flow_lbl[0] & 0xF) << 16) |
+		(iph->flow_lbl[1] << 8) | iph->flow_lbl[2];
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 25)
 	dst = ip6_route_output(NULL, &fl);
