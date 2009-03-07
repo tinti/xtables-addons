@@ -1,6 +1,7 @@
 
 
 - ipset: fix for compilation with 2.6.29-rt
+- ipset: fast forward to 2.5.0
 - rename xt_portscan to xt_lscan ("low-level scan") because
   "portscan" as a wor caused confusion
 - xt_LOGMARK: print incoming interface index
