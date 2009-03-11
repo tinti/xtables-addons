@@ -1,5 +1,8 @@
 
 
+- added a reworked ipv4options match
+
+
 Xtables-addons 1.12 (March 07 2009)
 ===================================
 - ipset: fix for compilation with 2.6.29-rt
