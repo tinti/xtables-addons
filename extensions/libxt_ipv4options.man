@@ -1,0 +1,47 @@
+The "ipv4options" module allows to match against a set of IPv4 header options.
+.TP
+\fB\-\-flags\fP [\fB!\fP]\fIsymbol\fP[\fB,\fP[\fB!\fP]\fIsymbol...\fP]
+Specify the options that shall appear or not appear in the header. Each
+symbol specification is delimited by a comma, and a '!' can be prefixed to
+a symbol to negate its presence. Symbols are either the name of an IPv4 option
+or its number. See examples below.
+.TP
+\fB\-\-any\fP
+By default, all of the flags specified must be present/absent, that is, they
+form an AND condition. Use the \-\-any flag instead to use an OR condition
+where only at least one symbol spec must be true.
+.PP
+Known symbol names (and their number):
+.PP
+1 - \fBnop\fP
+.PP
+2 - \fBsecurity\fP - RFC 1108
+.PP
+3 - \fBlsrr\fP - Loose Source Routing, RFC 791
+.PP
+4 - \fBtimestamp\fP - RFC 781, 791
+.PP
+7 - \fBrecord\-route\fP - RFC 791
+.PP
+9 - \fBssrr\fP - Strict Source Routing, RFC 791
+.PP
+11 - \fBmtu\-probe\fP - RFC 1063
+.PP
+12 - \fBmtu\-reply\fP - RFC 1063
+.PP
+18 - \fBtraceroute\fP - RFC 1393
+.PP
+20 - \fBrouter-alert\fP - RFC 2113
+.PP
+Examples:
+.PP
+Match packets that have both Timestamp and NOP:
+\-m ipv4options \-\-flags nop,timestamp
+.PP
+~ that have either of Timestamp or NOP, or both:
+\-\-flags nop,timestamp \-\-any
+.PP
+~ that have Timestamp and no NOP: \-\-flags '!nop,timestamp'
+.PP
+~ that have either no NOP or a timestamp (or both conditions):
+\-\-flags '!nop,timestamp' \-\-any
