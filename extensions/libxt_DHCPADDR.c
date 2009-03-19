@@ -42,10 +42,10 @@ static int dhcpaddr_tg_parse(int c, char **argv, int invert,
 
 	switch (c) {
 	case 'M':
-		param_act(P_ONLY_ONCE, "DHCPADDR", "--set-mac", *flags & F_MAC);
-		param_act(P_NO_INVERT, "DHCPADDR", "--set-mac", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "DHCPADDR", "--set-mac", *flags & F_MAC);
+		xtables_param_act(XTF_NO_INVERT, "DHCPADDR", "--set-mac", invert);
 		if (!mac_parse(optarg, info->addr, &info->mask))
-			param_act(P_BAD_VALUE, "DHCPADDR", "--set-mac", optarg);
+			xtables_param_act(XTF_BAD_VALUE, "DHCPADDR", "--set-mac", optarg);
 		*flags |= F_MAC;
 		return true;
 	}
@@ -56,7 +56,7 @@ static int dhcpaddr_tg_parse(int c, char **argv, int invert,
 static void dhcpaddr_tg_check(unsigned int flags)
 {
 	if (flags == 0)
-		exit_error(PARAMETER_PROBLEM, "DHCPADDR target: "
+		xtables_error(PARAMETER_PROBLEM, "DHCPADDR target: "
 		           "--set-mac parameter required");
 }
 

@@ -52,42 +52,42 @@ static int length_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	switch (c) {
 	case '3': /* --layer3 */
-		param_act(P_ONLY_ONCE, "length", "--layer*", *flags & F_LAYER);
+		xtables_param_act(XTF_ONLY_ONCE, "length", "--layer*", *flags & F_LAYER);
 		info->flags &= ~XT_LENGTH_LAYER_MASK;
 		info->flags |= XT_LENGTH_LAYER3;
 		*flags |= F_LAYER;
 		return true;
 	case '4': /* --layer4 */
-		param_act(P_ONLY_ONCE, "length", "--layer*", *flags & F_LAYER);
+		xtables_param_act(XTF_ONLY_ONCE, "length", "--layer*", *flags & F_LAYER);
 		info->flags &= ~XT_LENGTH_LAYER_MASK;
 		info->flags |= XT_LENGTH_LAYER4;
 		*flags |= F_LAYER;
 		return true;
 	case '5': /* --layer5 */
-		param_act(P_ONLY_ONCE, "length", "--layer*", *flags & F_LAYER);
+		xtables_param_act(XTF_ONLY_ONCE, "length", "--layer*", *flags & F_LAYER);
 		info->flags &= ~XT_LENGTH_LAYER_MASK;
 		info->flags |= XT_LENGTH_LAYER5;
 		*flags |= F_LAYER;
 		return true;
 	case '7': /* --layer7 */
-		param_act(P_ONLY_ONCE, "length", "--layer*", *flags & F_LAYER);
+		xtables_param_act(XTF_ONLY_ONCE, "length", "--layer*", *flags & F_LAYER);
 		info->flags &= ~XT_LENGTH_LAYER_MASK;
 		info->flags |= XT_LENGTH_LAYER7;
 		*flags |= F_LAYER;
 		return true;
 	case '=': /* --length */
-		param_act(P_ONLY_ONCE, "length", "--length", *flags & F_LENGTH);
+		xtables_param_act(XTF_ONLY_ONCE, "length", "--length", *flags & F_LENGTH);
 		if (invert)
 			info->flags |= XT_LENGTH_INVERT;
-		if (!strtonum(optarg, &end, &from, 0, ~0U))
-			param_act(P_BAD_VALUE, "length", "--length", optarg);
+		if (!xtables_strtoui(optarg, &end, &from, 0, ~0U))
+			xtables_param_act(XTF_BAD_VALUE, "length", "--length", optarg);
 		to = from;
 		if (*end == ':')
-			if (!strtonum(end + 1, &end, &to, 0, ~0U))
-				param_act(P_BAD_VALUE, "length",
+			if (!xtables_strtoui(end + 1, &end, &to, 0, ~0U))
+				xtables_param_act(XTF_BAD_VALUE, "length",
 				          "--length", optarg);
 		if (*end != '\0')
-			param_act(P_BAD_VALUE, "length", "--length", optarg);
+			xtables_param_act(XTF_BAD_VALUE, "length", "--length", optarg);
 		info->min = from;
 		info->max = to;
 		*flags |= F_LENGTH;
@@ -99,7 +99,7 @@ static int length_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 static void length_mt_check(unsigned int flags)
 {
 	if (!(flags & F_LENGTH))
-		exit_error(PARAMETER_PROBLEM,
+		xtables_error(PARAMETER_PROBLEM,
 		           "length: You must specify \"--length\"");
 	if (!(flags & F_LAYER))
 		fprintf(stderr, "iptables: length match: Defaulting to "

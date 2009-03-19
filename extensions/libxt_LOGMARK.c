@@ -51,23 +51,23 @@ logmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	switch (c) {
 	case 'l': /* --log-level */
-		param_act(P_ONLY_ONCE, "LOGMARK", "--log-level", *flags & F_LEVEL);
-		param_act(P_NO_INVERT, "LOGMARK", "--log-level", invert);
-		if (!strtonum(optarg, NULL, &x, 0, 8))
-			param_act(P_BAD_VALUE, "LOGMARK", "--log-level", optarg);
+		xtables_param_act(XTF_ONLY_ONCE, "LOGMARK", "--log-level", *flags & F_LEVEL);
+		xtables_param_act(XTF_NO_INVERT, "LOGMARK", "--log-level", invert);
+		if (!xtables_strtoui(optarg, NULL, &x, 0, 8))
+			xtables_param_act(XTF_BAD_VALUE, "LOGMARK", "--log-level", optarg);
 		info->level = x;
 		*flags |= F_LEVEL;
 		return true;
 
 	case 'p': /* --log-prefix */
-		param_act(P_ONLY_ONCE, "LOGMARK", "--log-prefix", *flags & F_PREFIX);
-		param_act(P_NO_INVERT, "LOGMARK", "--log-prefix", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "LOGMARK", "--log-prefix", *flags & F_PREFIX);
+		xtables_param_act(XTF_NO_INVERT, "LOGMARK", "--log-prefix", invert);
 		if (strlen(optarg) > sizeof(info->prefix))
-			exit_error(PARAMETER_PROBLEM, "LOGMARK: Maximum "
+			xtables_error(PARAMETER_PROBLEM, "LOGMARK: Maximum "
 			           "prefix length is %zu",
 			           sizeof(info->prefix));
 		if (strchr(optarg, '\n'))
-			exit_error(PARAMETER_PROBLEM, "LOGMARK: Newlines not "
+			xtables_error(PARAMETER_PROBLEM, "LOGMARK: Newlines not "
 			           "allowed in log prefix");
 		strncpy(info->prefix, optarg, sizeof(info->prefix));
 		*flags |= F_PREFIX;

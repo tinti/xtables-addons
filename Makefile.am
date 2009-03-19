@@ -1,7 +1,6 @@
 # -*- Makefile -*-
 
 ACLOCAL_AMFLAGS  = -I m4
-AUTOMAKE_OPTIONS = foreign subdir-objects
 SUBDIRS          = extensions
 
 man_MANS := xtables-addons.8

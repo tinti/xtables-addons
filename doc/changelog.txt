@@ -1,6 +1,7 @@
 
 
 - added a reworked ipv4options match
+- upgrade to iptables 1.4.3 API
 
 
 Xtables-addons 1.12 (March 07 2009)

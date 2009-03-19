@@ -12,8 +12,7 @@ in combination with the kernel's Kbuild system.
 Supported configurations for this release
 =========================================
 
-	* iptables >= 1.4.1
-	  upper bound: iptables <= 1.4.3-rc1
+	* iptables >= 1.4.3
 
 	* kernel-source >= 2.6.17, no upper bound known
 	  with prepared build/output directory

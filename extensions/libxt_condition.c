@@ -37,13 +37,13 @@ static int condition_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	if (c == 'X') {
 		if (*flags)
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 				   "Can't specify multiple conditions");
 
 		if (strlen(optarg) < sizeof(info->name))
 			strcpy(info->name, optarg);
 		else
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 				   "File name too long");
 
 		info->invert = invert;
@@ -57,7 +57,7 @@ static int condition_parse(int c, char **argv, int invert, unsigned int *flags,
 static void condition_check(unsigned int flags)
 {
 	if (flags == 0)
-		exit_error(PARAMETER_PROBLEM,
+		xtables_error(PARAMETER_PROBLEM,
 			   "Condition match: must specify --condition");
 }
 

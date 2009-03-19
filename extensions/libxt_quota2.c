@@ -51,31 +51,31 @@ quota_mt2_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	switch (c) {
 	case 'g':
-		param_act(P_ONLY_ONCE, "quota", "--grow", *flags & FL_GROW);
-		param_act(P_NO_INVERT, "quota", "--grow", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "quota", "--grow", *flags & FL_GROW);
+		xtables_param_act(XTF_NO_INVERT, "quota", "--grow", invert);
 		info->flags |= XT_QUOTA_GROW;
 		*flags |= FL_GROW;
 		return true;
 	case 'n':
 		/* zero termination done on behalf of the kernel module */
-		param_act(P_ONLY_ONCE, "quota", "--name", *flags & FL_NAME);
-		param_act(P_NO_INVERT, "quota", "--name", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "quota", "--name", *flags & FL_NAME);
+		xtables_param_act(XTF_NO_INVERT, "quota", "--name", invert);
 		strncpy(info->name, optarg, sizeof(info->name));
 		*flags |= FL_NAME;
 		return true;
 	case 'p':
-		param_act(P_ONLY_ONCE, "quota", "--packets", *flags & FL_PACKET);
-		param_act(P_NO_INVERT, "quota", "--packets", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "quota", "--packets", *flags & FL_PACKET);
+		xtables_param_act(XTF_NO_INVERT, "quota", "--packets", invert);
 		info->flags |= XT_QUOTA_PACKET;
 		*flags |= FL_PACKET;
 		return true;
 	case 'q':
-		param_act(P_ONLY_ONCE, "quota", "--quota", *flags & FL_QUOTA);
+		xtables_param_act(XTF_ONLY_ONCE, "quota", "--quota", *flags & FL_QUOTA);
 		if (invert)
 			info->flags |= XT_QUOTA_INVERT;
 		info->quota = strtoull(optarg, &end, 0);
 		if (*end != '\0')
-			exit_error(PARAMETER_PROBLEM, "quota match: "
+			xtables_error(PARAMETER_PROBLEM, "quota match: "
 			           "invalid value for --quota");
 		*flags |= FL_QUOTA;
 		return true;

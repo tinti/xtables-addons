@@ -74,12 +74,12 @@ static void ipv4options_parse_flagspec(struct xt_ipv4options_mtinfo1 *info,
 			}
 
 		if (opt == 0 &&
-		    !strtonum(arg, NULL, &opt, 0, UINT8_MAX))
-			exit_error(PARAMETER_PROBLEM,
+		    !xtables_strtoui(arg, NULL, &opt, 0, UINT8_MAX))
+			xtables_error(PARAMETER_PROBLEM,
 				"ipv4options: Bad option value \"%s\"", arg);
 
 		if (opt == 0)
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 				"ipv4options: Option value may not be zero");
 
 		info->map |= (1 << opt);
@@ -98,11 +98,11 @@ static int ipv4options_mt_parse(int c, char **argv, int invert,
 
 	switch (c) {
 	case 'a': /* --any */
-		param_act(P_NO_INVERT, "ipv4options", "--any", invert);
+		xtables_param_act(XTF_NO_INVERT, "ipv4options", "--any", invert);
 		info->flags |= XT_V4OPTS_ANY;
 		return true;
 	case 'f': /* --flags */
-		param_act(P_NO_INVERT, "ipv4options", "--flags", invert);
+		xtables_param_act(XTF_NO_INVERT, "ipv4options", "--flags", invert);
 		ipv4options_parse_flagspec(info, optarg);
 		return true;
 	}

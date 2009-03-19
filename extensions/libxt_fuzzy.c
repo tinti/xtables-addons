@@ -54,22 +54,22 @@ static int fuzzy_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 	switch (c) {
 	case '1':
 		if (invert)
-			exit_error(PARAMETER_PROBLEM,"Can't specify ! --lower-limit");
+			xtables_error(PARAMETER_PROBLEM,"Can't specify ! --lower-limit");
 		if (*flags & IPT_FUZZY_OPT_MINIMUM)
-			exit_error(PARAMETER_PROBLEM,"Can't specify --lower-limit twice");
-		if (string_to_number(optarg,1,FUZZY_MAX_RATE,&num) == -1 || num < 1)
-			exit_error(PARAMETER_PROBLEM,"BAD --lower-limit");
+			xtables_error(PARAMETER_PROBLEM,"Can't specify --lower-limit twice");
+		if (!xtables_strtoui(optarg, NULL, &num, 1, FUZZY_MAX_RATE) == -1 || num < 1)
+			xtables_error(PARAMETER_PROBLEM,"BAD --lower-limit");
 		info->minimum_rate = num;
 		*flags |= IPT_FUZZY_OPT_MINIMUM;
 		return true;
 
 	case '2':
 		if (invert)
-			exit_error(PARAMETER_PROBLEM,"Can't specify ! --upper-limit");
+			xtables_error(PARAMETER_PROBLEM,"Can't specify ! --upper-limit");
 		if (*flags & IPT_FUZZY_OPT_MAXIMUM)
-			exit_error(PARAMETER_PROBLEM,"Can't specify --upper-limit twice");
-		if (string_to_number(optarg,1,FUZZY_MAX_RATE,&num) == -1 || num < 1)
-			exit_error(PARAMETER_PROBLEM,"BAD --upper-limit");
+			xtables_error(PARAMETER_PROBLEM,"Can't specify --upper-limit twice");
+		if (!xtables_strtoui(optarg, NULL, &num, 1, FUZZY_MAX_RATE) == -1 || num < 1)
+			xtables_error(PARAMETER_PROBLEM,"BAD --upper-limit");
 		info->maximum_rate = num;
 		*flags |= IPT_FUZZY_OPT_MAXIMUM;
 		return true;

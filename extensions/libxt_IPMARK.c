@@ -58,44 +58,44 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	switch (c) {
 	case '1':
-		param_act(P_ONLY_ONCE, "IPMARK", "addr", *flags & FL_ADDR_USED);
-		param_act(P_NO_INVERT, "IPMARK", "addr", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "IPMARK", "addr", *flags & FL_ADDR_USED);
+		xtables_param_act(XTF_NO_INVERT, "IPMARK", "addr", invert);
 		if (strcmp(optarg, "src") == 0)
 			info->selector = XT_IPMARK_SRC;
 		else if (strcmp(optarg, "dst") == 0)
 			info->selector = XT_IPMARK_DST;
 		else
-			exit_error(PARAMETER_PROBLEM, "Bad addr value `%s' - should be `src' or `dst'", optarg);
+			xtables_error(PARAMETER_PROBLEM, "Bad addr value `%s' - should be `src' or `dst'", optarg);
 		*flags |= FL_ADDR_USED;
 		return true;
 
 	case '2':
-		param_act(P_ONLY_ONCE, "IPMARK", "and-mask", *flags & FL_AND_MASK_USED);
-		param_act(P_NO_INVERT, "IPMARK", "and-mask", invert);
-		if (!strtonum(optarg, NULL, &n, 0, ~0U))
-			param_act(P_BAD_VALUE, "IPMARK", "and-mask", optarg);
+		xtables_param_act(XTF_ONLY_ONCE, "IPMARK", "and-mask", *flags & FL_AND_MASK_USED);
+		xtables_param_act(XTF_NO_INVERT, "IPMARK", "and-mask", invert);
+		if (!xtables_strtoui(optarg, NULL, &n, 0, ~0U))
+			xtables_param_act(XTF_BAD_VALUE, "IPMARK", "and-mask", optarg);
 		info->andmask = n;
 		*flags |= FL_AND_MASK_USED;
 		return true;
 
 	case '3':
-		param_act(P_ONLY_ONCE, "IPMARK", "or-mask", *flags & FL_OR_MASK_USED);
-		param_act(P_NO_INVERT, "IPMARK", "or-mask", invert);
-		if (!strtonum(optarg, NULL, &n, 0, ~0U))
-			param_act(P_BAD_VALUE, "IPMARK", "or-mask", optarg);
+		xtables_param_act(XTF_ONLY_ONCE, "IPMARK", "or-mask", *flags & FL_OR_MASK_USED);
+		xtables_param_act(XTF_NO_INVERT, "IPMARK", "or-mask", invert);
+		if (!xtables_strtoui(optarg, NULL, &n, 0, ~0U))
+			xtables_param_act(XTF_BAD_VALUE, "IPMARK", "or-mask", optarg);
 		info->ormask = n;
 		*flags |= FL_OR_MASK_USED;
 		return true;
 
 	case '4':
-		param_act(P_ONLY_ONCE, "IPMARK", "--shift", *flags & FL_SHIFT);
-		param_act(P_NO_INVERT, "IPMARK", "--shift", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "IPMARK", "--shift", *flags & FL_SHIFT);
+		xtables_param_act(XTF_NO_INVERT, "IPMARK", "--shift", invert);
 		/*
 		 * Anything >31 does not make sense for IPv4, but it still
 		 * does the right thing.
 		 */
-		if (!strtonum(optarg, NULL, &n, 0, 128))
-			param_act(P_BAD_VALUE, "IPMARK", "--shift", optarg);
+		if (!xtables_strtoui(optarg, NULL, &n, 0, 128))
+			xtables_param_act(XTF_BAD_VALUE, "IPMARK", "--shift", optarg);
 		info->shift = n;
 		return true;
 	}
@@ -106,7 +106,7 @@ static int ipmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 static void ipmark_tg_check(unsigned int flags)
 {
 	if (!(flags & FL_ADDR_USED))
-		exit_error(PARAMETER_PROBLEM,
+		xtables_error(PARAMETER_PROBLEM,
 		           "IPMARK target: Parameter --addr is required");
 }
 

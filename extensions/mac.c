@@ -19,7 +19,7 @@ static bool mac_parse(const char *addr, unsigned char *dest, uint8_t *mask)
 
 	*mask = 48;
 	if (*end == '/') {
-		if (!strtonum(end + 1, &end, &value, 0, 48))
+		if (!xtables_strtoui(end + 1, &end, &value, 0, 48))
 			return false;
 		if (*end != '\0')
 			return false;

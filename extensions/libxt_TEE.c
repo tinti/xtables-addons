@@ -50,12 +50,12 @@ static int tee_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 	switch (c) {
 	case 'g':
 		if (*flags & FLAG_GATEWAY)
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 			           "Cannot specify --gw more than once");
 
-		ia = numeric_to_ipaddr(optarg);
+		ia = xtables_numeric_to_ipaddr(optarg);
 		if (ia == NULL)
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 			           "Invalid IP address %s", optarg);
 
 		memcpy(&info->gw, ia, sizeof(*ia));
@@ -75,12 +75,12 @@ static int tee_tg6_parse(int c, char **argv, int invert, unsigned int *flags,
 	switch (c) {
 	case 'g':
 		if (*flags & FLAG_GATEWAY)
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 			           "Cannot specify --gw more than once");
 
-		ia = numeric_to_ip6addr(optarg);
+		ia = xtables_numeric_to_ip6addr(optarg);
 		if (ia == NULL)
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 			           "Invalid IP address %s", optarg);
 
 		memcpy(&info->gw, ia, sizeof(*ia));
@@ -94,7 +94,7 @@ static int tee_tg6_parse(int c, char **argv, int invert, unsigned int *flags,
 static void tee_tg_check(unsigned int flags)
 {
 	if (flags == 0)
-		exit_error(PARAMETER_PROBLEM, "TEE target: "
+		xtables_error(PARAMETER_PROBLEM, "TEE target: "
 		           "--gateway parameter required");
 }
 
@@ -104,9 +104,9 @@ static void tee_tg_print(const void *ip, const struct xt_entry_target *target,
 	const struct xt_tee_tginfo *info = (const void *)target->data;
 
 	if (numeric)
-		printf("TEE gw:%s ", ipaddr_to_numeric(&info->gw.in));
+		printf("TEE gw:%s ", xtables_ipaddr_to_numeric(&info->gw.in));
 	else
-		printf("TEE gw:%s ", ipaddr_to_anyname(&info->gw.in));
+		printf("TEE gw:%s ", xtables_ipaddr_to_anyname(&info->gw.in));
 }
 
 static void tee_tg6_print(const void *ip, const struct xt_entry_target *target,
@@ -115,23 +115,23 @@ static void tee_tg6_print(const void *ip, const struct xt_entry_target *target,
 	const struct xt_tee_tginfo *info = (const void *)target->data;
 
 	if (numeric)
-		printf("TEE gw:%s ", ip6addr_to_numeric(&info->gw.in6));
+		printf("TEE gw:%s ", xtables_ip6addr_to_numeric(&info->gw.in6));
 	else
-		printf("TEE gw:%s ", ip6addr_to_anyname(&info->gw.in6));
+		printf("TEE gw:%s ", xtables_ip6addr_to_anyname(&info->gw.in6));
 }
 
 static void tee_tg_save(const void *ip, const struct xt_entry_target *target)
 {
 	const struct xt_tee_tginfo *info = (const void *)target->data;
 
-	printf("--gateway %s ", ipaddr_to_numeric(&info->gw.in));
+	printf("--gateway %s ", xtables_ipaddr_to_numeric(&info->gw.in));
 }
 
 static void tee_tg6_save(const void *ip, const struct xt_entry_target *target)
 {
 	const struct xt_tee_tginfo *info = (const void *)target->data;
 
-	printf("--gateway %s ", ip6addr_to_numeric(&info->gw.in6));
+	printf("--gateway %s ", xtables_ip6addr_to_numeric(&info->gw.in6));
 }
 
 static struct xtables_target tee_tg_reg = {

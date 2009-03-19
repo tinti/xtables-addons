@@ -64,16 +64,16 @@ static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
 
 	if ((fd = open(buf, O_RDONLY)) < 0) {
 		fprintf(stderr, "Could not open %s: %s\n", buf, strerror(errno));
-		exit_error(OTHER_PROBLEM, "Could not read geoip database");
+		xtables_error(OTHER_PROBLEM, "Could not read geoip database");
 	}
 
 	fstat(fd, &sb);
 	if (sb.st_size % sizeof(struct geoip_subnet) != 0)
-		exit_error(OTHER_PROBLEM, "Database file %s seems to be "
+		xtables_error(OTHER_PROBLEM, "Database file %s seems to be "
 		           "corrupted", buf);
 	subnets = malloc(sb.st_size);
 	if (subnets == NULL)
-		exit_error(OTHER_PROBLEM, "geoip: insufficient memory");
+		xtables_error(OTHER_PROBLEM, "geoip: insufficient memory");
 	read(fd, subnets, sb.st_size);
 	close(fd);
 	*count = sb.st_size / sizeof(struct geoip_subnet);
@@ -103,7 +103,7 @@ check_geoip_cc(char *cc, u_int16_t cc_used[], u_int8_t count)
 
 	if (strlen(cc) != 2) /* Country must be 2 chars long according
 													 to the ISO3166 standard */
-		exit_error(PARAMETER_PROBLEM,
+		xtables_error(PARAMETER_PROBLEM,
 			"geoip: invalid country code '%s'", cc);
 
 	// Verification will fail if chars aren't uppercased.
@@ -112,7 +112,7 @@ check_geoip_cc(char *cc, u_int16_t cc_used[], u_int8_t count)
 		if (isalnum(cc[i]) != 0)
 			cc[i] = toupper(cc[i]);
 		else
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 				"geoip:  invalid country code '%s'", cc);
 
 	/* Convert chars into a single 16 bit integer.
@@ -140,7 +140,7 @@ static unsigned int parse_geoip_cc(const char *ccstr, uint16_t *cc,
 
 	buffer = strdup(ccstr);
 	if (!buffer)
-		exit_error(OTHER_PROBLEM,
+		xtables_error(OTHER_PROBLEM,
 			"geoip: insufficient memory available");
 
 	for (cp = buffer, i = 0; cp && i < XT_GEOIP_MAX; cp = next, i++)
@@ -150,19 +150,19 @@ static unsigned int parse_geoip_cc(const char *ccstr, uint16_t *cc,
 
 		if ((cctmp = check_geoip_cc(cp, cc, count)) != 0) {
 			if ((mem[count++].user = (unsigned long)geoip_load_cc(cp, cctmp)) == 0)
-				exit_error(OTHER_PROBLEM,
+				xtables_error(OTHER_PROBLEM,
 					"geoip: insufficient memory available");
 			cc[count-1] = cctmp;
 		}
 	}
 
 	if (cp)
-		exit_error(PARAMETER_PROBLEM,
+		xtables_error(PARAMETER_PROBLEM,
 			"geoip: too many countries specified");
 	free(buffer);
 
 	if (count == 0)
-		exit_error(PARAMETER_PROBLEM,
+		xtables_error(PARAMETER_PROBLEM,
 			"geoip: don't know what happened");
 
 	return count;
@@ -176,7 +176,7 @@ static int geoip_parse(int c, char **argv, int invert, unsigned int *flags,
 	switch (c) {
 	case '1':
 		if (*flags & (XT_GEOIP_SRC | XT_GEOIP_DST))
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 				"geoip: Only exactly one of --source-country "
 				"or --destination-country must be specified!");
 
@@ -190,7 +190,7 @@ static int geoip_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	case '2':
 		if (*flags & (XT_GEOIP_SRC | XT_GEOIP_DST))
-			exit_error(PARAMETER_PROBLEM,
+			xtables_error(PARAMETER_PROBLEM,
 				"geoip: Only exactly one of --source-country "
 				"or --destination-country must be specified!");
 
@@ -210,7 +210,7 @@ static void
 geoip_final_check(unsigned int flags)
 {
 	if (!flags)
-		exit_error(PARAMETER_PROBLEM,
+		xtables_error(PARAMETER_PROBLEM,
 			"geoip: missing arguments");
 }
 

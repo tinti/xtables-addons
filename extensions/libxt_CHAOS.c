@@ -58,7 +58,7 @@ static void chaos_tg_check(unsigned int flags)
 {
 	if (flags == (F_DELUDE | F_TARPIT))
 		/* If flags == 0x03, both were specified, which should not be. */
-		exit_error(PARAMETER_PROBLEM,
+		xtables_error(PARAMETER_PROBLEM,
 		           "CHAOS: only one of --tarpit or --delude "
 		           "may be specified");
 }

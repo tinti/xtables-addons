@@ -3,7 +3,7 @@ AC_INIT([xtables-addons], [1.12])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_INSTALL
-AM_INIT_AUTOMAKE([-Wall])
+AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_DISABLE_STATIC
@@ -28,8 +28,11 @@ AC_ARG_WITH([xtlibdir],
 	[xtlibdir="$withval"],
 	[xtlibdir='${libexecdir}/xtables'])
 
-AC_MSG_CHECKING([xtables.h presence])
+#
+# --with-xtables= overrides a possibly installed pkgconfig file.
+#
 if [[ -n "$xtables_location" ]]; then
+	AC_MSG_CHECKING([xtables.h presence])
 	if [[ -f "$xtables_location/xtables.h" ]]; then
 		AC_MSG_RESULT([$xtables_location/xtables.h])
 		xtables_CFLAGS="-I $xtables_location";
@@ -37,13 +40,15 @@ if [[ -n "$xtables_location" ]]; then
 		AC_MSG_RESULT([$xtables_location/include/xtables.h])
 		xtables_CFLAGS="-I $xtables_location/include";
 	fi;
-fi;
-if [[ -z "$xtables_CFLAGS" ]]; then
-	if [[ -f "$includedir/xtables.h" ]]; then
-		AC_MSG_RESULT([$includedir/xtables.h])
-	else
-		AC_MSG_RESULT([no])
+	if [[ -z "$xtables_CFLAGS" ]]; then
+		if [[ -f "$includedir/xtables.h" ]]; then
+			AC_MSG_RESULT([$includedir/xtables.h])
+		else
+			AC_MSG_RESULT([no])
+		fi;
 	fi;
+else
+	PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
 fi;
 
 regular_CFLAGS="-D_LARGEFILE_SOURCE=1 -D_LARGE_FILES -D_FILE_OFFSET_BITS=64 \

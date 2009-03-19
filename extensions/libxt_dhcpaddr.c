@@ -41,10 +41,10 @@ static int dhcpaddr_mt_parse(int c, char **argv, int invert,
 
 	switch (c) {
 	case 'M':
-		param_act(P_ONLY_ONCE, "dhcpaddr", "--mac", *flags & F_MAC);
-		param_act(P_NO_INVERT, "dhcpaddr", "--mac", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "dhcpaddr", "--mac", *flags & F_MAC);
+		xtables_param_act(XTF_NO_INVERT, "dhcpaddr", "--mac", invert);
 		if (!mac_parse(optarg, info->addr, &info->mask))
-			param_act(P_BAD_VALUE, "dhcpaddr", "--mac", optarg);
+			xtables_param_act(XTF_BAD_VALUE, "dhcpaddr", "--mac", optarg);
 		if (invert)
 			info->invert = true;
 		*flags |= F_MAC;
@@ -57,7 +57,7 @@ static int dhcpaddr_mt_parse(int c, char **argv, int invert,
 static void dhcpaddr_mt_check(unsigned int flags)
 {
 	if (flags == 0)
-		exit_error(PARAMETER_PROBLEM, "dhcpaddr match: "
+		xtables_error(PARAMETER_PROBLEM, "dhcpaddr match: "
 		           "--mac parameter required");
 }
 
