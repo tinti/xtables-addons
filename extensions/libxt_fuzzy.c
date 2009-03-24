@@ -9,6 +9,7 @@
  */
 #include <getopt.h>
 #include <netdb.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -102,7 +103,7 @@ static struct xtables_match fuzzy_mt_reg = {
 	.name          = "fuzzy",
 	.version       = XTABLES_VERSION,
 	.size          = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
-	.userspacesize = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
+	.userspacesize = offsetof(struct xt_fuzzy_mtinfo, packets_total),
 	.help          = fuzzy_mt_help,
 	.init          = fuzzy_mt_init,
 	.parse         = fuzzy_mt_parse,

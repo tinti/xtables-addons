@@ -1,5 +1,8 @@
 
 
+- fuzzy: need to account for kernel-level modified variables in .userspacesize
+
+
 Xtables-addons 1.13 (March 23 2009)
 ===================================
 - added a reworked ipv4options match
