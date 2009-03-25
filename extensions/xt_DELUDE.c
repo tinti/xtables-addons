@@ -176,7 +176,7 @@ static void __exit delude_tg_exit(void)
 
 module_init(delude_tg_init);
 module_exit(delude_tg_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@computergmbh.de>");
 MODULE_DESCRIPTION("Xtables: Close TCP connections after handshake");
+MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_DELUDE");

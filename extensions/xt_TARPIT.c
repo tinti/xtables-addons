@@ -245,7 +245,7 @@ static void __exit tarpit_tg_exit(void)
 
 module_init(tarpit_tg_init);
 module_exit(tarpit_tg_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@computergmbh.de>");
 MODULE_DESCRIPTION("Xtables: \"TARPIT\", capture and hold TCP connections");
+MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_TARPIT");

@@ -234,7 +234,7 @@ static void __exit chaos_tg_exit(void)
 
 module_init(chaos_tg_init);
 module_exit(chaos_tg_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@computergmbh.de>");
 MODULE_DESCRIPTION("Xtables: Network scan slowdown with non-deterministic results");
+MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_CHAOS");

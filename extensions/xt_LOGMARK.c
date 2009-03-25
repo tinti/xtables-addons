@@ -128,7 +128,7 @@ static void __exit logmark_tg_exit(void)
 module_init(logmark_tg_init);
 module_exit(logmark_tg_exit);
 MODULE_DESCRIPTION("Xtables: netfilter mark logging to syslog");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@computergmbh.de>");
+MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_LOGMARK");
 MODULE_ALIAS("ip6t_LOGMARK");
