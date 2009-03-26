@@ -447,6 +447,24 @@ int xtnu_ip_route_output_key(void *net, struct rtable **rp, struct flowi *flp)
 	return ip_route_output_flow(rp, flp, NULL, 0);
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_output_key);
+
+void xtnu_proto_csum_replace4(__sum16 *sum, struct sk_buff *skb,
+    __be32 from, __be32 to, bool pseudohdr)
+{
+	__be32 diff[] = {~from, to};
+
+	if (skb->ip_summed != CHECKSUM_PARTIAL) {
+		*sum = csum_fold(csum_partial(diff, sizeof(diff),
+		       ~csum_unfold(*sum)));
+		if (skb->ip_summed == CHECKSUM_COMPLETE && pseudohdr)
+			skb->csum = ~csum_partial(diff, sizeof(diff),
+			            ~skb->csum);
+	} else if (pseudohdr) {
+		*sum = ~csum_fold(csum_partial(diff, sizeof(diff),
+		       csum_unfold(*sum)));
+	}
+}
+EXPORT_SYMBOL_GPL(xtnu_proto_csum_replace4);
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
@@ -468,7 +486,7 @@ static inline __wsum xtnu_csum_unfold(__sum16 n)
 	return (__force __wsum)n;
 }
 
-static inline void xtnu_csum_replace4(__sum16 *sum, __be32 from, __be32 to)
+void xtnu_csum_replace4(__sum16 *sum, __be32 from, __be32 to)
 {
 	__be32 diff[] = {~from, to};
 	*sum = csum_fold(csum_partial((char *)diff, sizeof(diff),
