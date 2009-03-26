@@ -6,6 +6,8 @@
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
 
+#define DEBUGP Use__pr_debug__instead
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 17)
 #	warning Kernels below 2.6.17 not supported.
 #endif
