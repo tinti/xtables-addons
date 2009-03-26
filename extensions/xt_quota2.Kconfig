@@ -1,0 +1,8 @@
+config NETFILTER_XT_MATCH_QUOTA2
+	tristate '"quota2" match support'
+	depends on NETFILTER_XTABLES
+	---help---
+	This option adds the "quota2" match which is an advanced form of
+	xt_quota that also allows counting upwards, and where the counter can
+	be set through procfs. This allows for simple interfacing of
+	accounting information.

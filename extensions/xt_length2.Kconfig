@@ -1,0 +1,7 @@
+config NETFILTER_XT_MATCH_LENGTH2
+	tristate '"length2" match support'
+	depends on NETFILTER_XTABLES
+	---help---
+	This option adds the "length2" match which is an advanced form of
+	xt_length that allows unambiguous layer-4/-5/-7 length matching. It is
+	useful to detect empty packets or for aiding in packet scheduling.

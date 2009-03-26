@@ -1,0 +1,6 @@
+config NETFILTER_XT_MATCH_IPV4OPTIONS
+	tristate '"ipv4options" IPv4 option match support'
+	depends on NETFILTER_XTABLES
+	---help---
+	The ipv4options match can be used to check on the presence or absence
+	of one or move IPv4 options.
