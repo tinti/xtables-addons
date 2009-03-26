@@ -11,6 +11,7 @@ obj-${build_DHCPMAC}     += xt_DHCPMAC.o
 obj-${build_ECHO}        += xt_ECHO.o
 obj-${build_IPMARK}      += xt_IPMARK.o
 obj-${build_LOGMARK}     += xt_LOGMARK.o
+obj-${build_RAWNAT}      += iptable_rawpost.o ip6table_rawpost.o
 obj-${build_SYSRQ}       += xt_SYSRQ.o
 obj-${build_STEAL}       += xt_STEAL.o
 obj-${build_TARPIT}      += xt_TARPIT.o
