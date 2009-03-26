@@ -1,6 +1,6 @@
 obj-${build_CHAOS}       += libxt_CHAOS.so
 obj-${build_DELUDE}      += libxt_DELUDE.so
-obj-${build_DHCPADDR}    += libxt_DHCPADDR.so libxt_dhcpaddr.so
+obj-${build_DHCPMAC}     += libxt_DHCPMAC.so libxt_dhcpmac.so
 obj-${build_ECHO}        += libxt_ECHO.so
 obj-${build_IPMARK}      += libxt_IPMARK.so
 obj-${build_LOGMARK}     += libxt_LOGMARK.so

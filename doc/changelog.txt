@@ -3,6 +3,7 @@
 - fuzzy: need to account for kernel-level modified variables in .userspacesize
 - geoip: remove XT_ALIGN from .userspacesize when used with offsetof
 - add "STEAL" target
+- dhcpmac: rename from dhcpaddr
 
 
 Xtables-addons 1.13 (March 23 2009)

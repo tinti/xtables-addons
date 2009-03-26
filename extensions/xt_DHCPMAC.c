@@ -1,5 +1,5 @@
 /*
- *	"DHCPADDR" extensions for Xtables
+ *	"DHCPMAC" extensions for Xtables
  *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008
  *
  *	This program is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 #include <linux/udp.h>
 #include <net/ip.h>
 #include <linux/netfilter/x_tables.h>
-#include "xt_DHCPADDR.h"
+#include "xt_DHCPMAC.h"
 #include "compat_xtables.h"
 
 struct dhcp_message {
@@ -69,9 +69,9 @@ static bool ether_cmp(const unsigned char *lh, const unsigned char *rh,
 }
 
 static bool
-dhcpaddr_mt(const struct sk_buff *skb, const struct xt_match_param *par)
+dhcpmac_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
-	const struct dhcpaddr_info *info = par->matchinfo;
+	const struct dhcpmac_info *info = par->matchinfo;
 	const struct dhcp_message *dh;
 	struct dhcp_message dhcpbuf;
 
@@ -89,9 +89,9 @@ dhcpaddr_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 }
 
 static unsigned int
-dhcpaddr_tg(struct sk_buff **pskb, const struct xt_target_param *par)
+dhcpmac_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 {
-	const struct dhcpaddr_info *info = par->targinfo;
+	const struct dhcpmac_info *info = par->targinfo;
 	struct dhcp_message dhcpbuf, *dh;
 	struct udphdr udpbuf, *udph;
 	struct sk_buff *skb = *pskb;
@@ -122,52 +122,52 @@ dhcpaddr_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 	return XT_CONTINUE;
 }
 
-static struct xt_target dhcpaddr_tg_reg __read_mostly = {
-	.name       = "DHCPADDR",
+static struct xt_target dhcpmac_tg_reg __read_mostly = {
+	.name       = "DHCPMAC",
 	.revision   = 0,
 	.family     = NFPROTO_IPV4,
 	.proto      = IPPROTO_UDP,
 	.table      = "mangle",
-	.target     = dhcpaddr_tg,
-	.targetsize = XT_ALIGN(sizeof(struct dhcpaddr_info)),
+	.target     = dhcpmac_tg,
+	.targetsize = XT_ALIGN(sizeof(struct dhcpmac_info)),
 	.me         = THIS_MODULE,
 };
 
-static struct xt_match dhcpaddr_mt_reg __read_mostly = {
-	.name       = "dhcpaddr",
+static struct xt_match dhcpmac_mt_reg __read_mostly = {
+	.name       = "dhcpmac",
 	.revision   = 0,
 	.family     = NFPROTO_IPV4,
 	.proto      = IPPROTO_UDP,
-	.match      = dhcpaddr_mt,
-	.matchsize  = XT_ALIGN(sizeof(struct dhcpaddr_info)),
+	.match      = dhcpmac_mt,
+	.matchsize  = XT_ALIGN(sizeof(struct dhcpmac_info)),
 	.me         = THIS_MODULE,
 };
 
-static int __init dhcpaddr_init(void)
+static int __init dhcpmac_init(void)
 {
 	int ret;
 
-	ret = xt_register_target(&dhcpaddr_tg_reg);
+	ret = xt_register_target(&dhcpmac_tg_reg);
 	if (ret != 0)
 		return ret;
-	ret = xt_register_match(&dhcpaddr_mt_reg);
+	ret = xt_register_match(&dhcpmac_mt_reg);
 	if (ret != 0) {
-		xt_unregister_target(&dhcpaddr_tg_reg);
+		xt_unregister_target(&dhcpmac_tg_reg);
 		return ret;
 	}
 	return 0;
 }
 
-static void __exit dhcpaddr_exit(void)
+static void __exit dhcpmac_exit(void)
 {
-	xt_unregister_target(&dhcpaddr_tg_reg);
-	xt_unregister_match(&dhcpaddr_mt_reg);
+	xt_unregister_target(&dhcpmac_tg_reg);
+	xt_unregister_match(&dhcpmac_mt_reg);
 }
 
-module_init(dhcpaddr_init);
-module_exit(dhcpaddr_exit);
+module_init(dhcpmac_init);
+module_exit(dhcpmac_exit);
 MODULE_DESCRIPTION("Xtables: Clamp DHCP MAC to packet MAC addresses");
 MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_LICENSE("GPL");
-MODULE_ALIAS("ipt_DHCPADDR");
-MODULE_ALIAS("ipt_dhcpaddr");
+MODULE_ALIAS("ipt_DHCPMAC");
+MODULE_ALIAS("ipt_dhcpmac");

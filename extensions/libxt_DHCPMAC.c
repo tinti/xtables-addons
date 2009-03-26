@@ -1,5 +1,5 @@
 /*
- *	"DHCPADDR" target extension for iptables
+ *	"DHCPMAC" target extension for iptables
  *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008
  *
  *	This program is free software; you can redistribute it and/or
@@ -15,19 +15,19 @@
 #include <string.h>
 #include <netinet/ether.h>
 #include <xtables.h>
-#include "xt_DHCPADDR.h"
+#include "xt_DHCPMAC.h"
 #include "mac.c"
 
 enum {
 	F_MAC = 1 << 0,
 };
 
-static const struct option dhcpaddr_tg_opts[] = {
+static const struct option dhcpmac_tg_opts[] = {
 	{.name = "set-mac", .has_arg = true, .val = 'M'},
 	{NULL},
 };
 
-static void dhcpaddr_tg_help(void)
+static void dhcpmac_tg_help(void)
 {
 	printf(
 "DHCPADDDR target options:\n"
@@ -35,17 +35,17 @@ static void dhcpaddr_tg_help(void)
 	);
 }
 
-static int dhcpaddr_tg_parse(int c, char **argv, int invert,
+static int dhcpmac_tg_parse(int c, char **argv, int invert,
     unsigned int *flags, const void *entry, struct xt_entry_target **target)
 {
-	struct dhcpaddr_info *info = (void *)(*target)->data;
+	struct dhcpmac_info *info = (void *)(*target)->data;
 
 	switch (c) {
 	case 'M':
-		xtables_param_act(XTF_ONLY_ONCE, "DHCPADDR", "--set-mac", *flags & F_MAC);
-		xtables_param_act(XTF_NO_INVERT, "DHCPADDR", "--set-mac", invert);
+		xtables_param_act(XTF_ONLY_ONCE, "DHCPMAC", "--set-mac", *flags & F_MAC);
+		xtables_param_act(XTF_NO_INVERT, "DHCPMAC", "--set-mac", invert);
 		if (!mac_parse(optarg, info->addr, &info->mask))
-			xtables_param_act(XTF_BAD_VALUE, "DHCPADDR", "--set-mac", optarg);
+			xtables_param_act(XTF_BAD_VALUE, "DHCPMAC", "--set-mac", optarg);
 		*flags |= F_MAC;
 		return true;
 	}
@@ -53,26 +53,26 @@ static int dhcpaddr_tg_parse(int c, char **argv, int invert,
 	return false;
 }
 
-static void dhcpaddr_tg_check(unsigned int flags)
+static void dhcpmac_tg_check(unsigned int flags)
 {
 	if (flags == 0)
-		xtables_error(PARAMETER_PROBLEM, "DHCPADDR target: "
+		xtables_error(PARAMETER_PROBLEM, "DHCPMAC target: "
 		           "--set-mac parameter required");
 }
 
-static void dhcpaddr_tg_print(const void *ip,
+static void dhcpmac_tg_print(const void *ip,
     const struct xt_entry_target *target, int numeric)
 {
-	const struct dhcpaddr_info *info = (void *)target->data;
+	const struct dhcpmac_info *info = (void *)target->data;
 
-	printf("DHCPADDR %s" DH_MAC_FMT "/%u ",
+	printf("DHCPMAC %s" DH_MAC_FMT "/%u ",
 	       info->invert ? "!" : "", DH_MAC_HEX(info->addr), info->mask);
 }
 
-static void dhcpaddr_tg_save(const void *ip,
+static void dhcpmac_tg_save(const void *ip,
     const struct xt_entry_target *target)
 {
-	const struct dhcpaddr_info *info = (const void *)target->data;
+	const struct dhcpmac_info *info = (const void *)target->data;
 
 	if (info->invert)
 		printf("! ");
@@ -80,22 +80,22 @@ static void dhcpaddr_tg_save(const void *ip,
 	       DH_MAC_HEX(info->addr), info->mask);
 }
 
-static struct xtables_target dhcpaddr_tg_reg = {
+static struct xtables_target dhcpmac_tg_reg = {
 	.version       = XTABLES_VERSION,
-	.name          = "DHCPADDR",
+	.name          = "DHCPMAC",
 	.revision      = 0,
 	.family        = PF_INET,
-	.size          = XT_ALIGN(sizeof(struct dhcpaddr_info)),
-	.userspacesize = XT_ALIGN(sizeof(struct dhcpaddr_info)),
-	.help          = dhcpaddr_tg_help,
-	.parse         = dhcpaddr_tg_parse,
-	.final_check   = dhcpaddr_tg_check,
-	.print         = dhcpaddr_tg_print,
-	.save          = dhcpaddr_tg_save,
-	.extra_opts    = dhcpaddr_tg_opts,
+	.size          = XT_ALIGN(sizeof(struct dhcpmac_info)),
+	.userspacesize = XT_ALIGN(sizeof(struct dhcpmac_info)),
+	.help          = dhcpmac_tg_help,
+	.parse         = dhcpmac_tg_parse,
+	.final_check   = dhcpmac_tg_check,
+	.print         = dhcpmac_tg_print,
+	.save          = dhcpmac_tg_save,
+	.extra_opts    = dhcpmac_tg_opts,
 };
 
-static __attribute__((constructor)) void dhcpaddr_tg_ldr(void)
+static __attribute__((constructor)) void dhcpmac_tg_ldr(void)
 {
-	xtables_register_target(&dhcpaddr_tg_reg);
+	xtables_register_target(&dhcpmac_tg_reg);
 }
