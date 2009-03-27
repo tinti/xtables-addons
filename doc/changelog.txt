@@ -3,6 +3,8 @@
 - fuzzy: need to account for kernel-level modified variables in .userspacesize
 - geoip: remove XT_ALIGN from .userspacesize when used with offsetof
 - SYSRQ: ignore non-UDP packets
+- SYSRQ: do proper L4 header access in IPv6 code
+  (must not use tcp/udp_hdr in input path)
 - add "STEAL" target
 - dhcpmac: rename from dhcpaddr
 

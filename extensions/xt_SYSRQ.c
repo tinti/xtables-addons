@@ -203,7 +203,7 @@ sysrq_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	if (iph->protocol != IPPROTO_UDP)
 		return NF_ACCEPT; /* sink it */
 
-	udph = (void *)iph + ip_hdrlen(skb);
+	udph = (const void *)iph + ip_hdrlen(skb);
 	len  = ntohs(udph->len) - sizeof(struct udphdr);
 
 	if (sysrq_debug)
@@ -232,7 +232,7 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 	    frag_off > 0)
 		return NF_ACCEPT; /* sink it */
 
-	udph = udp_hdr(skb);
+	udph = (const void *)iph + th_off;
 	len  = ntohs(udph->len) - sizeof(struct udphdr);
 
 	if (sysrq_debug)
