@@ -30,7 +30,7 @@ static const struct option dhcpmac_tg_opts[] = {
 static void dhcpmac_tg_help(void)
 {
 	printf(
-"DHCPADDDR target options:\n"
+"DHCPMAC target options:\n"
 "  --set-mac lladdr[/mask]    Set MAC address in DHCP Client Host field\n"
 	);
 }
