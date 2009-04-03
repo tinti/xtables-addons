@@ -1,7 +1,7 @@
 /*
  *	"ipp2p" match extension for iptables
  *	Eicke Friedrich/Klaus Degner <ipp2p@ipp2p.org>, 2005 - 2006
- *	Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2008 - 2009
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -199,7 +199,7 @@ static const char *const ipp2p_cmds[] = {
 };
 
 static void
-ipp2p_mt_print(const void *entry, const struct xt_entry_match *match,
+ipp2p_mt_print1(const void *entry, const struct xt_entry_match *match,
                int numeric)
 {
 	const struct ipt_p2p_info *info = (const void *)match->data;
@@ -213,9 +213,16 @@ ipp2p_mt_print(const void *entry, const struct xt_entry_match *match,
 		printf("--debug ");
 }
 
+static void ipp2p_mt_print(const void *entry,
+    const struct xt_entry_match *match, int numeric)
+{
+	printf("ipp2p ");
+	ipp2p_mt_print1(entry, match, true);
+}
+
 static void ipp2p_mt_save(const void *entry, const struct xt_entry_match *match)
 {
-	ipp2p_mt_print(entry, match, true);
+	ipp2p_mt_print1(entry, match, true);
 }
 
 static struct xtables_match ipp2p_mt_reg = {
