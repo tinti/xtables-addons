@@ -4,8 +4,6 @@
  *	Original author: Gáspár Lajos <gaspar.lajos@glsys.eu>
  */
 
-#define _KERNEL 1
-
 #include <linux/if.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
@@ -43,36 +41,10 @@ static bool xt_iface_mt(const struct sk_buff *skb,
 	struct net_device *dev;
 	bool retval;
 	int i;
-	DEBUGP("match...");
-	DEBUGP("Interface: %s", info->ifname);
+
 	retval =
 	    ((dev = dev_get_by_name(&init_net, info->ifname)) != NULL);
 	if (retval) {
-#if DEBUG
-		DEBUGP("dev->flags: %#8x", dev->flags);
-		if (dev->flags & IFF_UP)
-			DEBUGP("            %#8x (UP)", IFF_UP);
-		if (dev->flags & IFF_BROADCAST)
-			DEBUGP("            %#8x (BROADCAST)", IFF_BROADCAST);
-		if (dev->flags & IFF_LOOPBACK)
-			DEBUGP("            %#8x (LOOPBACK)", IFF_LOOPBACK);
-		if (dev->flags & IFF_POINTOPOINT)
-			DEBUGP("            %#8x (POINTOPOINT)", IFF_POINTOPOINT);
-		if (dev->flags & IFF_RUNNING)
-			DEBUGP("            %#8x (RUNNING)", IFF_RUNNING);
-		if (dev->flags & IFF_NOARP)
-			DEBUGP("            %#8x (NOARP)", IFF_NOARP);
-		if (dev->flags & IFF_PROMISC)
-			DEBUGP("            %#8x (PROMISC)", IFF_PROMISC);
-		if (dev->flags & IFF_MULTICAST)
-			DEBUGP("            %#8x (MULTICAST)", IFF_MULTICAST);
-		if (dev->flags & IFF_DYNAMIC)
-			DEBUGP("            %#8x (DYNAMIC)", IFF_DYNAMIC);
-		if (dev->flags & IFF_LOWER_UP)
-			DEBUGP("            %#8x (LOWER_UP)", IFF_LOWER_UP);
-		if (dev->flags & IFF_DORMANT)
-			DEBUGP("            %#8x (DORMANT)", IFF_DORMANT);
-#endif
 		for (i=0; (i<XT_IFACE_FLAGCOUNT) && (retval); i++)
 			{
 			if (info->flags & xt_iface_lookup[i].iface_flag)
@@ -108,14 +80,12 @@ static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 
 static int __init xt_iface_match_init(void)
 {
-	DEBUGP("init...\n");
 	return xt_register_matches(xt_iface_mt_reg,
 		ARRAY_SIZE(xt_iface_mt_reg));
 }
 
 static void __exit xt_iface_match_exit(void)
 {
-	DEBUGP("exit...\n");
 	xt_unregister_matches(xt_iface_mt_reg, ARRAY_SIZE(xt_iface_mt_reg));
 }
 

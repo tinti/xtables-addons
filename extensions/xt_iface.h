@@ -1,19 +1,8 @@
 #ifndef _LINUX_NETFILTER_XT_IFACE_H
 #define _LINUX_NETFILTER_XT_IFACE_H 1
 
-#define DEBUG 0
 #define _MODULE_NAME "iface"
 #define _MODULE_REVISION 0
-
-#if DEBUG
-#if _KERNEL
-#define DEBUGP(format, args...) printk(KERN_INFO "xt_"_MODULE_NAME": "format"\n", ##args)
-#else
-#define DEBUGP(format, args...) printf("# DEBUG: libxt_"_MODULE_NAME": "format"\n", ##args)
-#endif
-#else
-#define DEBUGP(format, args...)
-#endif
 
 #define XT_IFACE_FLAGCOUNT 11
 

@@ -39,7 +39,6 @@ static struct option iface_mt_opts[] = {
 static void iface_print_opt(const struct xt_iface_mtinfo *info,
     const unsigned int option, const char *command)
 {
-	DEBUGP("print_option... %s", command);
 	if (info->flags & option)
 		printf(" %s", command);
 	if (info->invflags & option)
@@ -49,7 +48,6 @@ static void iface_print_opt(const struct xt_iface_mtinfo *info,
 static void iface_setflag(struct xt_iface_mtinfo *info,
     unsigned int *flags, int invert, u_int16_t flag, const char *command)
 {
-	DEBUGP("setflag... %s", command);
 	if (*flags & flag)
 		xtables_error(PARAMETER_PROBLEM,
 			"iface: \"--%s\" flag already specified", command);
@@ -64,7 +62,6 @@ static bool iface_valid_name(const char *name)
 {
 	char invalid_chars[] = ".+!*";
 
-	DEBUGP("valid_interface_name... %d %d", strcspn(name, invalid_chars), strlen(name));
 	return !((strlen(name) >= IFNAMSIZ) || (strcspn(name, invalid_chars) != strlen(name)));
 }
 
@@ -94,7 +91,6 @@ static void iface_mt_help(void)
 static int iface_mt_parse(int c, char **argv, int invert, unsigned int *flags,
     const void *entry, struct xt_entry_match **match)
 {
-	DEBUGP("parse... c:%c invert:%x", c, invert);
 	struct xt_iface_mtinfo *info = (void *)(*match)->data;
 
 	switch (c) {
@@ -159,7 +155,6 @@ static int iface_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 
 static void iface_mt_check(unsigned int flags)
 {
-	DEBUGP("final_check...");
 	if (!(flags & XT_IFACE_IFACE))
 		xtables_error(PARAMETER_PROBLEM,
 			"iface: You must specify an interface");
@@ -171,7 +166,6 @@ static void iface_mt_check(unsigned int flags)
 static void iface_mt_print(const void *ip, const struct xt_entry_match *match,
     int numeric)
 {
-	DEBUGP("print...");
 	const struct xt_iface_mtinfo *info = (const void *)match->data;
 
 	printf("iface: \"%s\" [state:", info->ifname);
@@ -191,7 +185,6 @@ static void iface_mt_print(const void *ip, const struct xt_entry_match *match,
 
 static void iface_mt_save(const void *ip, const struct xt_entry_match *match)
 {
-	DEBUGP("save...");
 	const struct xt_iface_mtinfo *info = (const void *)match->data;
 
 	printf(" --iface %s", info->ifname);
@@ -241,7 +234,6 @@ static struct xtables_match iface_mt6_reg = {
 
 static void _init(void)
 {
-	DEBUGP("_init...");
 	xtables_register_match(&iface_mt_reg);
 	xtables_register_match(&iface_mt6_reg);
 }
