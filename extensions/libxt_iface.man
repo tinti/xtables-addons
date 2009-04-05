@@ -1,0 +1,52 @@
+Allows you to check interface states.
+
+.TP
+.BI "--iface " "interface"
+Check the states on "interface". Required.
+.TP
+.B [!] --up
+Check the UP flag.
+.TP
+.B [!] --down
+Not --up.
+.TP
+.B "[!] --broadcast"
+Check the BROADCAST flag.
+.TP
+.B "[!] --loopback"
+Check the LOOPBACK flag.
+.TP
+.B "[!] --pointopoint"
+Check the POINTOPOINT flag.
+.TP
+.B "[!] --pointtopoint"
+Same as --pointopoint.
+.TP
+.B [!] --running
+Check the RUNNING flag. Do NOT relay on it!
+.TP
+.B [!] --noarp
+Check the NOARP flag.
+.TP
+.B [!] --arp
+Not --noarp.
+.TP
+.B [!] --promisc
+Check the PROMISC flag.
+.TP
+.B [!] --promiscous
+Same as --promisc.
+.TP
+.B [!] --multicast
+Check the MULTICAST flag.
+.TP
+.B [!] --dynamic
+Check the DYNAMIC flag.
+.TP
+.B [!] --lower_up
+Check the LOWER_UP flag.
+.TP
+.B [!] --dormant
+Check the DORMANT flag.
+
+For more information see the \fIif.h\fP header file in the kernel source.
