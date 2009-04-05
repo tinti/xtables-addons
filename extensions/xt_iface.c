@@ -85,17 +85,6 @@ static bool xt_iface_mt(const struct sk_buff *skb,
 	return retval;
 }
 
-static bool xt_iface_mt_check(const struct xt_mtchk_param *par)
-{
-	DEBUGP("checkentry...");
-	return true;
-}
-
-static void xt_iface_mt_destroy(const struct xt_mtdtor_param *par)
-{
-	DEBUGP("destroy...");
-}
-
 static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 	{
 		.name       = _MODULE_NAME,
@@ -103,8 +92,6 @@ static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 		.family     = AF_INET,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 		.match      = xt_iface_mt,
-		.checkentry = xt_iface_mt_check,
-		.destroy    = xt_iface_mt_destroy,
 		.data       = 0,
 		.me         = THIS_MODULE,
 	},
@@ -114,8 +101,6 @@ static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 		.family     = AF_INET6,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 		.match      = xt_iface_mt,
-		.checkentry = xt_iface_mt_check,
-		.destroy    = xt_iface_mt_destroy,
 		.data       = 0,
 		.me         = THIS_MODULE,
 	},

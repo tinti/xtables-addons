@@ -91,11 +91,6 @@ static void iface_mt_help(void)
 	XTABLES_VERSION, _MODULE_REVISION);
 }
 
-static void iface_mt_init(struct xt_entry_match *m)
-{
-	DEBUGP("init...");
-}
-
 static int iface_mt_parse(int c, char **argv, int invert, unsigned int *flags,
     const void *entry, struct xt_entry_match **match)
 {
@@ -222,7 +217,6 @@ static struct xtables_match iface_mt_reg = {
 	.size		= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 	.userspacesize	= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 	.help		= iface_mt_help,
-	.init		= iface_mt_init,
 	.parse		= iface_mt_parse,
 	.final_check	= iface_mt_check,
 	.print		= iface_mt_print,
@@ -238,7 +232,6 @@ static struct xtables_match iface_mt6_reg = {
 	.size		= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 	.userspacesize	= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 	.help		= iface_mt_help,
-	.init		= iface_mt_init,
 	.parse		= iface_mt_parse,
 	.final_check	= iface_mt_check,
 	.print		= iface_mt_print,
