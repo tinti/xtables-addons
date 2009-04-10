@@ -17,7 +17,7 @@
 #include <ctype.h>
 #include <xtables.h>
 #include "xt_ipp2p.h"
-#define param_act(t, s, f) param_act((t), "ipp2p", (s), (f))
+#define param_act(t, s, f) xtables_param_act((t), "ipp2p", (s), (f))
 
 static void ipp2p_mt_help(void)
 {
@@ -63,8 +63,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	switch (c) {
 	case '2':		/*cmd: edk*/
-		xtables_param_act(XTF_ONLY_ONCE, "--edk", *flags & IPP2P_EDK);
-		xtables_param_act(XTF_NO_INVERT, "--edk", invert);
+		param_act(XTF_ONLY_ONCE, "--edk", *flags & IPP2P_EDK);
+		param_act(XTF_NO_INVERT, "--edk", invert);
 		if (*flags & IPP2P_DATA_EDK)
 			xtables_error(PARAMETER_PROBLEM,
 				"ipp2p: use `--edk' OR `--edk-data' but not both of them!");
@@ -73,8 +73,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		break;
 
 	case '7':		/*cmd: dc*/
-		xtables_param_act(XTF_ONLY_ONCE, "--dc", *flags & IPP2P_DC);
-		xtables_param_act(XTF_NO_INVERT, "--dc", invert);
+		param_act(XTF_ONLY_ONCE, "--dc", *flags & IPP2P_DC);
+		param_act(XTF_NO_INVERT, "--dc", invert);
 		if (*flags & IPP2P_DATA_DC)
 			xtables_error(PARAMETER_PROBLEM,
 				"ipp2p: use `--dc' OR `--dc-data' but not both of them!");
@@ -83,8 +83,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		break;
 
 	case '9':		/*cmd: gnu*/
-		xtables_param_act(XTF_ONLY_ONCE, "--gnu", *flags & IPP2P_GNU);
-		xtables_param_act(XTF_NO_INVERT, "--gnu", invert);
+		param_act(XTF_ONLY_ONCE, "--gnu", *flags & IPP2P_GNU);
+		param_act(XTF_NO_INVERT, "--gnu", invert);
 		if (*flags & IPP2P_DATA_GNU)
 			xtables_error(PARAMETER_PROBLEM,
 				"ipp2p: use `--gnu' OR `--gnu-data' but not both of them!");
@@ -93,8 +93,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		break;
 
 	case 'a':		/*cmd: kazaa*/
-		xtables_param_act(XTF_ONLY_ONCE, "--kazaa", *flags & IPP2P_KAZAA);
-		xtables_param_act(XTF_NO_INVERT, "--kazaa", invert);
+		param_act(XTF_ONLY_ONCE, "--kazaa", *flags & IPP2P_KAZAA);
+		param_act(XTF_NO_INVERT, "--kazaa", invert);
 		if (*flags & IPP2P_DATA_KAZAA)
 			xtables_error(PARAMETER_PROBLEM,
 				"ipp2p: use `--kazaa' OR `--kazaa-data' but not both of them!");
@@ -103,64 +103,64 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		break;
 
 	case 'b':		/*cmd: bit*/
-		xtables_param_act(XTF_ONLY_ONCE, "--kazaa", *flags & IPP2P_BIT);
-		xtables_param_act(XTF_NO_INVERT, "--kazaa", invert);
+		param_act(XTF_ONLY_ONCE, "--kazaa", *flags & IPP2P_BIT);
+		param_act(XTF_NO_INVERT, "--kazaa", invert);
 		*flags    |= IPP2P_BIT;
 		info->cmd |= IPP2P_BIT;
 		break;
 
 	case 'c':		/*cmd: apple*/
-		xtables_param_act(XTF_ONLY_ONCE, "--apple", *flags & IPP2P_APPLE);
-		xtables_param_act(XTF_NO_INVERT, "--apple", invert);
+		param_act(XTF_ONLY_ONCE, "--apple", *flags & IPP2P_APPLE);
+		param_act(XTF_NO_INVERT, "--apple", invert);
 		*flags    |= IPP2P_APPLE;
 		info->cmd |= IPP2P_APPLE;
 		break;
 
 	case 'd':		/*cmd: soul*/
-		xtables_param_act(XTF_ONLY_ONCE, "--soul", *flags & IPP2P_SOUL);
-		xtables_param_act(XTF_NO_INVERT, "--soul", invert);
+		param_act(XTF_ONLY_ONCE, "--soul", *flags & IPP2P_SOUL);
+		param_act(XTF_NO_INVERT, "--soul", invert);
 		*flags    |= IPP2P_SOUL;
 		info->cmd |= IPP2P_SOUL;
 		break;
 
 	case 'e':		/*cmd: winmx*/
-		xtables_param_act(XTF_ONLY_ONCE, "--winmx", *flags & IPP2P_WINMX);
-		xtables_param_act(XTF_NO_INVERT, "--winmx", invert);
+		param_act(XTF_ONLY_ONCE, "--winmx", *flags & IPP2P_WINMX);
+		param_act(XTF_NO_INVERT, "--winmx", invert);
 		*flags    |= IPP2P_WINMX;
 		info->cmd |= IPP2P_WINMX;
 		break;
 
 	case 'f':		/*cmd: ares*/
-		xtables_param_act(XTF_ONLY_ONCE, "--ares", *flags & IPP2P_ARES);
-		xtables_param_act(XTF_NO_INVERT, "--ares", invert);
+		param_act(XTF_ONLY_ONCE, "--ares", *flags & IPP2P_ARES);
+		param_act(XTF_NO_INVERT, "--ares", invert);
 		*flags    |= IPP2P_ARES;
 		info->cmd |= IPP2P_ARES;
 		break;
 
 	case 'g':		/*cmd: mute*/
-		xtables_param_act(XTF_ONLY_ONCE, "--mute", *flags & IPP2P_MUTE);
-		xtables_param_act(XTF_NO_INVERT, "--mute", invert);
+		param_act(XTF_ONLY_ONCE, "--mute", *flags & IPP2P_MUTE);
+		param_act(XTF_NO_INVERT, "--mute", invert);
 		*flags    |= IPP2P_MUTE;
 		info->cmd |= IPP2P_MUTE;
 		break;
 
 	case 'h':		/*cmd: waste*/
-		xtables_param_act(XTF_ONLY_ONCE, "--waste", *flags & IPP2P_WASTE);
-		xtables_param_act(XTF_NO_INVERT, "--waste", invert);
+		param_act(XTF_ONLY_ONCE, "--waste", *flags & IPP2P_WASTE);
+		param_act(XTF_NO_INVERT, "--waste", invert);
 		*flags    |= IPP2P_WASTE;
 		info->cmd |= IPP2P_WASTE;
 		break;
 
 	case 'i':		/*cmd: xdcc*/
-		xtables_param_act(XTF_ONLY_ONCE, "--xdcc", *flags & IPP2P_XDCC);
-		xtables_param_act(XTF_NO_INVERT, "--xdcc", invert);
+		param_act(XTF_ONLY_ONCE, "--xdcc", *flags & IPP2P_XDCC);
+		param_act(XTF_NO_INVERT, "--xdcc", invert);
 		*flags    |= IPP2P_XDCC;
 		info->cmd |= IPP2P_XDCC;
 		break;
 
 	case 'j':		/*cmd: debug*/
-		xtables_param_act(XTF_ONLY_ONCE, "--debug", info->debug);
-		xtables_param_act(XTF_NO_INVERT, "--debug", invert);
+		param_act(XTF_ONLY_ONCE, "--debug", info->debug);
+		param_act(XTF_NO_INVERT, "--debug", invert);
 		info->debug = 1;
 		break;
 
