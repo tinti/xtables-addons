@@ -103,8 +103,8 @@ static int ipp2p_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		break;
 
 	case 'b':		/*cmd: bit*/
-		param_act(XTF_ONLY_ONCE, "--kazaa", *flags & IPP2P_BIT);
-		param_act(XTF_NO_INVERT, "--kazaa", invert);
+		param_act(XTF_ONLY_ONCE, "--bit", *flags & IPP2P_BIT);
+		param_act(XTF_NO_INVERT, "--bit", invert);
 		*flags    |= IPP2P_BIT;
 		info->cmd |= IPP2P_BIT;
 		break;
