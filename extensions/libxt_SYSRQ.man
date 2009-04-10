@@ -25,7 +25,7 @@ ipsec --proto esp --tunnel-src 10.10.25.1 --tunnel-dst 10.10.25.7
 You should also limit the rate at which connections can be received to limit
 the CPU time taken by illegal requests, for example:
 .IP
--A INPUT 0s 10.10.25.1 -m mac --mac-source aa:bb:cc:dd:ee:ff -d 10.10.25.7
+-A INPUT -s 10.10.25.1 -m mac --mac-source aa:bb:cc:dd:ee:ff -d 10.10.25.7
 -p udp --dport 9 -m limit --limit 5/minute -j SYSRQ
 .PP
 This extension does not take any options. The \fB-p udp\fP options are
