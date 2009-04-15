@@ -1,5 +1,6 @@
 
 
+- condition: compile fix for 2.6.30-rc
 - fuzzy: fix bogus comparison logic leftover from move to new 1.4.3 API
 - ipp2p: fix bogus varargs call
 - ipp2p: fix typo in error message

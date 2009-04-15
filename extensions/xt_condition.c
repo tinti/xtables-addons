@@ -161,7 +161,9 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 
 	var->refcount = 1;
 	var->enabled  = false;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
 	var->status_proc->owner = THIS_MODULE;
+#endif
 	var->status_proc->data  = var;
 	wmb();
 	var->status_proc->read_proc  = condition_proc_read;
