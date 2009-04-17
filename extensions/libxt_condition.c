@@ -74,7 +74,7 @@ static void condition_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_condition_mtinfo *info = (const void *)match->data;
 
-	printf("--condition %s\"%s\" ", (info->invert) ? "! " : "", info->name);
+	printf("%s--condition \"%s\" ", info->invert ? "! " : "", info->name);
 }
 
 static struct xtables_match condition_mt_reg = {
