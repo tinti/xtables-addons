@@ -68,7 +68,7 @@ static bool iface_valid_name(const char *name)
 static void iface_mt_help(void)
 {
 	printf(
-	_MODULE_NAME " match v%s rev:%#2x options:\n"
+	_MODULE_NAME " match options:\n"
 	"    --iface interface\t\tName of interface\n"
 	"[!] --up\n"
 	"[!] --down\t\t\tmatch if UP flag (not) set\n"
@@ -84,8 +84,7 @@ static void iface_mt_help(void)
 	"[!] --multicast\t\tmatch if MULTICAST flag (not) set\n"
 	"[!] --dynamic\t\t\tmatch if DYNAMIC flag (not) set\n"
 	"[!] --lower_up\t\t\tmatch if LOWER_UP flag (not) set\n"
-	"[!] --dormant\t\t\tmatch if DORMANT flag (not) set\n",
-	XTABLES_VERSION, _MODULE_REVISION);
+	"[!] --dormant\t\t\tmatch if DORMANT flag (not) set\n");
 }
 
 static int iface_mt_parse(int c, char **argv, int invert, unsigned int *flags,
