@@ -68,7 +68,7 @@ static bool iface_valid_name(const char *name)
 static void iface_mt_help(void)
 {
 	printf(
-	_MODULE_NAME " match options:\n"
+	"iface match options:\n"
 	"    --iface interface\t\tName of interface\n"
 	"[!] --up\n"
 	"[!] --down\t\t\tmatch if UP flag (not) set\n"
@@ -203,8 +203,8 @@ static void iface_mt_save(const void *ip, const struct xt_entry_match *match)
 
 static struct xtables_match iface_mt_reg = {
 	.version	= XTABLES_VERSION,
-	.name		= _MODULE_NAME,
-	.revision	= _MODULE_REVISION,
+	.name		= "iface",
+	.revision	= 0,
 	.family		= AF_INET,
 	.size		= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 	.userspacesize	= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
@@ -218,8 +218,8 @@ static struct xtables_match iface_mt_reg = {
 
 static struct xtables_match iface_mt6_reg = {
 	.version	= XTABLES_VERSION,
-	.name		= _MODULE_NAME,
-	.revision	= _MODULE_REVISION,
+	.name		= "iface",
+	.revision	= 0,
 	.family		= AF_INET6,
 	.size		= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 	.userspacesize	= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),

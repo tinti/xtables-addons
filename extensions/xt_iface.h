@@ -1,9 +1,6 @@
 #ifndef _LINUX_NETFILTER_XT_IFACE_H
 #define _LINUX_NETFILTER_XT_IFACE_H 1
 
-#define _MODULE_NAME "iface"
-#define _MODULE_REVISION 0
-
 #define XT_IFACE_FLAGCOUNT 11
 
 enum {

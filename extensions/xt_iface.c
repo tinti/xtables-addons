@@ -58,8 +58,8 @@ static bool xt_iface_mt(const struct sk_buff *skb,
 
 static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 	{
-		.name       = _MODULE_NAME,
-		.revision   = _MODULE_REVISION,
+		.name       = "iface",
+		.revision   = 0,
 		.family     = NFPROTO_IPV4,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 		.match      = xt_iface_mt,
@@ -67,8 +67,8 @@ static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 		.me         = THIS_MODULE,
 	},
 	{
-		.name       = _MODULE_NAME,
-		.revision   = _MODULE_REVISION,
+		.name       = "iface",
+		.revision   = 0,
 		.family     = NFPROTO_IPV6,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 		.match      = xt_iface_mt,
