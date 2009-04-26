@@ -28,7 +28,6 @@ static const struct option iface_mt_opts[] = {
 	{.name = "noarp",	.has_arg = false, .val = 'n'},
 	{.name = "arp",		.has_arg = false, .val = 'N'}, /* not noarp */
 	{.name = "promisc",	.has_arg = false, .val = 'o'},
-	{.name = "promiscous",	.has_arg = false, .val = 'o'}, /* eq promisc */
 	{.name = "multicast",	.has_arg = false, .val = 'm'},
 	{.name = "dynamic",	.has_arg = false, .val = 'd'},
 	{.name = "lower_up",	.has_arg = false, .val = 'w'},
@@ -79,8 +78,7 @@ static void iface_mt_help(void)
 	"[!] --running\t\t\tmatch if RUNNING flag (not) set\n"
 	"[!] --noarp\n"
 	"[!] --arp\t\t\tmatch if NOARP flag (not) set\n"
-	"[!] --promisc\n"
-	"[!] --promiscous\t\tmatch if PROMISC flag (not) set\n"
+	"[!] --promisc\t\t\tmatch if PROMISC flag (not) set\n"
 	"[!] --multicast\t\tmatch if MULTICAST flag (not) set\n"
 	"[!] --dynamic\t\t\tmatch if DYNAMIC flag (not) set\n"
 	"[!] --lower_up\t\t\tmatch if LOWER_UP flag (not) set\n"
