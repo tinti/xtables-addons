@@ -60,7 +60,7 @@ static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 	{
 		.name       = _MODULE_NAME,
 		.revision   = _MODULE_REVISION,
-		.family     = AF_INET,
+		.family     = NFPROTO_IPV4,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 		.match      = xt_iface_mt,
 		.data       = 0,
@@ -69,7 +69,7 @@ static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 	{
 		.name       = _MODULE_NAME,
 		.revision   = _MODULE_REVISION,
-		.family     = AF_INET6,
+		.family     = NFPROTO_IPV6,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 		.match      = xt_iface_mt,
 		.data       = 0,
