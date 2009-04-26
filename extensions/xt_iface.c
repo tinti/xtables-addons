@@ -42,14 +42,14 @@ static bool xt_iface_mt(const struct sk_buff *skb,
 	bool retval;
 	int i;
 
-	retval =
-	    (dev = dev_get_by_name(&init_net, info->ifname)) != NULL;
+	dev    = dev_get_by_name(&init_net, info->ifname);
+	retval = dev != NULL;
 	if (retval) {
 		for (i = 0; i < XT_IFACE_FLAGCOUNT && retval; ++i) {
 			if (info->flags & xt_iface_lookup[i].iface_flag)
-				retval = retval && (dev->flags & xt_iface_lookup[i].iff_flag);
+				retval &= dev->flags & xt_iface_lookup[i].iff_flag;
 			if (info->invflags & xt_iface_lookup[i].iface_flag)
-				retval = retval && !(dev->flags & xt_iface_lookup[i].iff_flag);
+				retval &= !(dev->flags & xt_iface_lookup[i].iff_flag);
 		}
 		dev_put(dev);
 	}

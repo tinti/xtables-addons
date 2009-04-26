@@ -62,7 +62,7 @@ static bool iface_valid_name(const char *name)
 {
 	char invalid_chars[] = ".+!*";
 
-	return !(strlen(name) >= IFNAMSIZ || strcspn(name, invalid_chars) != strlen(name));
+	return strlen(name) < IFNAMSIZ && strpbrk(name, invalid_chars) == NULL;
 }
 
 static void iface_mt_help(void)
