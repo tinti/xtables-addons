@@ -1,8 +1,6 @@
 #ifndef _LINUX_NETFILTER_XT_IFACE_H
 #define _LINUX_NETFILTER_XT_IFACE_H 1
 
-#define XT_IFACE_FLAGCOUNT 11
-
 enum {
 	XT_IFACE_UP          = 1 << 0,
 	XT_IFACE_BROADCAST   = 1 << 1,

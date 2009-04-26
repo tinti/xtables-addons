@@ -19,7 +19,7 @@ MODULE_ALIAS("ipt_iface");
 MODULE_ALIAS("ip6t_iface");
 //MODULE_ALIAS("arpt_iface");
 
-static struct xt_iface_flag_pairs xt_iface_lookup[XT_IFACE_FLAGCOUNT] =
+static struct xt_iface_flag_pairs xt_iface_lookup[] =
 {
 	{.iface_flag = XT_IFACE_UP,		.iff_flag = IFF_UP},
 	{.iface_flag = XT_IFACE_BROADCAST,	.iff_flag = IFF_BROADCAST},
@@ -45,7 +45,7 @@ static bool xt_iface_mt(const struct sk_buff *skb,
 	dev    = dev_get_by_name(&init_net, info->ifname);
 	retval = dev != NULL;
 	if (retval) {
-		for (i = 0; i < XT_IFACE_FLAGCOUNT && retval; ++i) {
+		for (i = 0; i < ARRAY_SIZE(xt_iface_lookup) && retval; ++i) {
 			if (info->flags & xt_iface_lookup[i].iface_flag)
 				retval &= dev->flags & xt_iface_lookup[i].iff_flag;
 			if (info->invflags & xt_iface_lookup[i].iface_flag)
