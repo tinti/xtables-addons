@@ -63,6 +63,37 @@ if [[ -n "$ksourcedir" ]]; then
 	kinclude_CFLAGS="$kinclude_CFLAGS -I $ksourcedir/include";
 fi;
 
+#
+# check kernel version
+#
+if grep -q "CentOS release 5\." /etc/redhat-release 2>/dev/null ||
+    grep -q "Red Hat Enterprise Linux Server release 5" /etc/redhat-release 2>/dev/null; then
+	# しまった!
+	# Well, just a warning. Maybe the admin updated the kernel.
+	echo "WARNING: This distribution is not officially supported.";
+fi;
+krel="$(make -sC ${kbuilddir} kernelrelease)";
+krel="${krel%%-*}";
+kmajor="${krel%%.*}";
+krel="${krel#*.}";
+kminor="${krel%%.*}";
+krel="${krel#*.}";
+kmicro="${krel%%.*}";
+krel="${krel#*.}";
+kstable="${krel%%.*}";
+if test -z "$kstable"; then
+	kstable=0;
+fi;
+echo "Found kernel version $kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
+if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 30; then
+	echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
+elif test \( "$kmajor" -lt 2 -o "$kminor" -lt 6 -o "$kmicro" -lt 17 \) -o \
+    \( "$kmajor" -eq 2 -a "$kminor" -eq 6 -a "$kmicro" -eq 18 -a \
+    "$kstable" -lt 5 \); then
+	echo "ERROR: That kernel version is not supported. Please see INSTALL for minimum configuration.";
+	exit 1;
+fi;
+
 AC_SUBST([regular_CFLAGS])
 AC_SUBST([xtables_CFLAGS])
 AC_SUBST([kinclude_CFLAGS])
