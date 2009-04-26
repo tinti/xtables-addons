@@ -62,7 +62,7 @@ static bool iface_valid_name(const char *name)
 {
 	char invalid_chars[] = ".+!*";
 
-	return !((strlen(name) >= IFNAMSIZ) || (strcspn(name, invalid_chars) != strlen(name)));
+	return !(strlen(name) >= IFNAMSIZ || strcspn(name, invalid_chars) != strlen(name));
 }
 
 static void iface_mt_help(void)
@@ -158,7 +158,7 @@ static void iface_mt_check(unsigned int flags)
 	if (!(flags & XT_IFACE_IFACE))
 		xtables_error(PARAMETER_PROBLEM,
 			"iface: You must specify an interface");
-	if ((flags == 0) || (flags == XT_IFACE_IFACE))
+	if (flags == 0 || flags == XT_IFACE_IFACE)
 		xtables_error(PARAMETER_PROBLEM,
 			"iface: You must specify at least one option");
 }
