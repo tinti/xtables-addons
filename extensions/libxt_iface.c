@@ -17,22 +17,22 @@
 #include "xt_iface.h"
 
 static const struct option iface_mt_opts[] = {
-	{.name = "iface",	.has_arg = true,  .flag = 0, .val = 'i'},
-	{.name = "up",		.has_arg = false, .flag = 0, .val = 'u'},
-	{.name = "down",	.has_arg = false, .flag = 0, .val = 'U'}, /* not up */
-	{.name = "broadcast",	.has_arg = false, .flag = 0, .val = 'b'},
-	{.name = "loopback",	.has_arg = false, .flag = 0, .val = 'l'},
-	{.name = "pointopoint",	.has_arg = false, .flag = 0, .val = 'p'},
-	{.name = "pointtopoint",.has_arg = false, .flag = 0, .val = 'p'}, /* eq pointopoint */
-	{.name = "running",	.has_arg = false, .flag = 0, .val = 'r'},
-	{.name = "noarp",	.has_arg = false, .flag = 0, .val = 'n'},
-	{.name = "arp",		.has_arg = false, .flag = 0, .val = 'N'}, /* not noarp */
-	{.name = "promisc",	.has_arg = false, .flag = 0, .val = 'o'},
-	{.name = "promiscous",	.has_arg = false, .flag = 0, .val = 'o'}, /* eq promisc */
-	{.name = "multicast",	.has_arg = false, .flag = 0, .val = 'm'},
-	{.name = "dynamic",	.has_arg = false, .flag = 0, .val = 'd'},
-	{.name = "lower_up",	.has_arg = false, .flag = 0, .val = 'w'},
-	{.name = "dormant",	.has_arg = false, .flag = 0, .val = 'a'},
+	{.name = "iface",	.has_arg = true,  .val = 'i'},
+	{.name = "up",		.has_arg = false, .val = 'u'},
+	{.name = "down",	.has_arg = false, .val = 'U'}, /* not up */
+	{.name = "broadcast",	.has_arg = false, .val = 'b'},
+	{.name = "loopback",	.has_arg = false, .val = 'l'},
+	{.name = "pointopoint",	.has_arg = false, .val = 'p'},
+	{.name = "pointtopoint",.has_arg = false, .val = 'p'}, /* eq pointopoint */
+	{.name = "running",	.has_arg = false, .val = 'r'},
+	{.name = "noarp",	.has_arg = false, .val = 'n'},
+	{.name = "arp",		.has_arg = false, .val = 'N'}, /* not noarp */
+	{.name = "promisc",	.has_arg = false, .val = 'o'},
+	{.name = "promiscous",	.has_arg = false, .val = 'o'}, /* eq promisc */
+	{.name = "multicast",	.has_arg = false, .val = 'm'},
+	{.name = "dynamic",	.has_arg = false, .val = 'd'},
+	{.name = "lower_up",	.has_arg = false, .val = 'w'},
+	{.name = "dormant",	.has_arg = false, .val = 'a'},
 	{.name = NULL},
 };
 
@@ -113,43 +113,42 @@ static int iface_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 				"iface: Invalid interface name!");
 		strcpy(info->ifname, optarg);
 		*flags |= XT_IFACE_IFACE;
-		return 1;
+		return true;
 	case 'u': /* UP */
 		iface_setflag(info, flags, invert, XT_IFACE_UP, "up");
-		return 1;
+		return true;
 	case 'b': /* BROADCAST */
 		iface_setflag(info, flags, invert, XT_IFACE_BROADCAST, "broadcast");
-		return 1;
+		return true;
 	case 'l': /* LOOPBACK */
 		iface_setflag(info, flags, invert, XT_IFACE_LOOPBACK, "loopback");
-		return 1;
+		return true;
 	case 'p': /* POINTOPOINT */
 		iface_setflag(info, flags, invert, XT_IFACE_POINTOPOINT, "pointopoint");
-		return 1;
+		return true;
 	case 'r': /* RUNNING */
 		iface_setflag(info, flags, invert, XT_IFACE_RUNNING, "running");
-		return 1;
+		return true;
 	case 'n': /* NOARP */
 		iface_setflag(info, flags, invert, XT_IFACE_NOARP, "noarp");
-		return 1;
+		return true;
 	case 'o': /* PROMISC */
 		iface_setflag(info, flags, invert, XT_IFACE_PROMISC, "promisc");
-		return 1;
+		return true;
 	case 'm': /* MULTICAST */
 		iface_setflag(info, flags, invert, XT_IFACE_MULTICAST, "multicast");
-		return 1;
+		return true;
 	case 'd': /* DYNAMIC */
 		iface_setflag(info, flags, invert, XT_IFACE_DYNAMIC, "dynamic");
-		return 1;
+		return true;
 	case 'w': /* LOWER_UP */
 		iface_setflag(info, flags, invert, XT_IFACE_LOWER_UP, "lower_up");
-		return 1;
+		return true;
 	case 'a': /* DORMANT */
 		iface_setflag(info, flags, invert, XT_IFACE_DORMANT, "dormant");
-		return 1;
-	default:
-		return 0;
+		return true;
 	}
+	return false;
 }
 
 static void iface_mt_check(unsigned int flags)
