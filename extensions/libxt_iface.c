@@ -30,7 +30,7 @@ static const struct option iface_mt_opts[] = {
 	{.name = "promisc",	.has_arg = false, .val = 'o'},
 	{.name = "multicast",	.has_arg = false, .val = 'm'},
 	{.name = "dynamic",	.has_arg = false, .val = 'd'},
-	{.name = "lower_up",	.has_arg = false, .val = 'w'},
+	{.name = "lower-up",	.has_arg = false, .val = 'w'},
 	{.name = "dormant",	.has_arg = false, .val = 'a'},
 	{.name = NULL},
 };
@@ -81,7 +81,7 @@ static void iface_mt_help(void)
 	"[!] --promisc\t\t\tmatch if PROMISC flag (not) set\n"
 	"[!] --multicast\t\tmatch if MULTICAST flag (not) set\n"
 	"[!] --dynamic\t\t\tmatch if DYNAMIC flag (not) set\n"
-	"[!] --lower_up\t\t\tmatch if LOWER_UP flag (not) set\n"
+	"[!] --lower-up\t\t\tmatch if LOWER_UP flag (not) set\n"
 	"[!] --dormant\t\t\tmatch if DORMANT flag (not) set\n");
 }
 
