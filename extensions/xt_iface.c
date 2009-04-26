@@ -19,7 +19,7 @@ MODULE_ALIAS("ipt_iface");
 MODULE_ALIAS("ip6t_iface");
 //MODULE_ALIAS("arpt_iface");
 
-static struct xt_iface_flag_pairs xt_iface_lookup[] =
+static const struct xt_iface_flag_pairs xt_iface_lookup[] =
 {
 	{.iface_flag = XT_IFACE_UP,		.iff_flag = IFF_UP},
 	{.iface_flag = XT_IFACE_BROADCAST,	.iff_flag = IFF_BROADCAST},

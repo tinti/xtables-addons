@@ -16,7 +16,7 @@
 #include <xtables.h>
 #include "xt_iface.h"
 
-static struct option iface_mt_opts[] = {
+static const struct option iface_mt_opts[] = {
 	{.name = "iface",	.has_arg = true,  .flag = 0, .val = 'i'},
 	{.name = "up",		.has_arg = false, .flag = 0, .val = 'u'},
 	{.name = "down",	.has_arg = false, .flag = 0, .val = 'U'}, /* not up */
@@ -60,7 +60,7 @@ static void iface_setflag(struct xt_iface_mtinfo *info,
 
 static bool iface_valid_name(const char *name)
 {
-	char invalid_chars[] = ".+!*";
+	static const char invalid_chars[] = ".+!*";
 
 	return strlen(name) < IFNAMSIZ && strpbrk(name, invalid_chars) == NULL;
 }
