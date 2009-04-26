@@ -17,22 +17,22 @@
 #include "xt_iface.h"
 
 static const struct option iface_mt_opts[] = {
-	{.name = "iface",	.has_arg = true,  .val = 'i'},
-	{.name = "up",		.has_arg = false, .val = 'u'},
-	{.name = "down",	.has_arg = false, .val = 'U'}, /* not up */
-	{.name = "broadcast",	.has_arg = false, .val = 'b'},
-	{.name = "loopback",	.has_arg = false, .val = 'l'},
-	{.name = "pointopoint",	.has_arg = false, .val = 'p'},
-	{.name = "pointtopoint",.has_arg = false, .val = 'p'}, /* eq pointopoint */
-	{.name = "running",	.has_arg = false, .val = 'r'},
-	{.name = "noarp",	.has_arg = false, .val = 'n'},
-	{.name = "arp",		.has_arg = false, .val = 'N'}, /* not noarp */
-	{.name = "promisc",	.has_arg = false, .val = 'o'},
-	{.name = "multicast",	.has_arg = false, .val = 'm'},
-	{.name = "dynamic",	.has_arg = false, .val = 'd'},
-	{.name = "lower-up",	.has_arg = false, .val = 'w'},
-	{.name = "dormant",	.has_arg = false, .val = 'a'},
-	{.name = NULL},
+	{.name = "iface",        .has_arg = true,  .val = 'i'},
+	{.name = "up",           .has_arg = false, .val = 'u'},
+	{.name = "down",         .has_arg = false, .val = 'U'}, /* not up */
+	{.name = "broadcast",    .has_arg = false, .val = 'b'},
+	{.name = "loopback",     .has_arg = false, .val = 'l'},
+	{.name = "pointopoint",  .has_arg = false, .val = 'p'},
+	{.name = "pointtopoint", .has_arg = false, .val = 'p'}, /* eq pointopoint */
+	{.name = "running",      .has_arg = false, .val = 'r'},
+	{.name = "noarp",        .has_arg = false, .val = 'n'},
+	{.name = "arp",          .has_arg = false, .val = 'N'}, /* not noarp */
+	{.name = "promisc",      .has_arg = false, .val = 'o'},
+	{.name = "multicast",    .has_arg = false, .val = 'm'},
+	{.name = "dynamic",      .has_arg = false, .val = 'd'},
+	{.name = "lower-up",     .has_arg = false, .val = 'w'},
+	{.name = "dormant",      .has_arg = false, .val = 'a'},
+	{NULL},
 };
 
 static void iface_print_opt(const struct xt_iface_mtinfo *info,
@@ -68,21 +68,19 @@ static void iface_mt_help(void)
 {
 	printf(
 	"iface match options:\n"
-	"    --iface interface\t\tName of interface\n"
-	"[!] --up\n"
-	"[!] --down\t\t\tmatch if UP flag (not) set\n"
-	"[!] --broadcast\t\tmatch if BROADCAST flag (not) set\n"
-	"[!] --loopback\t\t\tmatch if LOOPBACK flag (not) set\n"
+	"    --iface interface    Name of interface\n"
+	"[!] --up / --down        match if UP flag (not) set\n"
+	"[!] --broadcast          match if BROADCAST flag (not) set\n"
+	"[!] --loopback           match if LOOPBACK flag (not) set\n"
 	"[!] --pointopoint\n"
-	"[!] --pointtopoint\t\tmatch if POINTOPOINT flag (not) set\n"
-	"[!] --running\t\t\tmatch if RUNNING flag (not) set\n"
-	"[!] --noarp\n"
-	"[!] --arp\t\t\tmatch if NOARP flag (not) set\n"
-	"[!] --promisc\t\t\tmatch if PROMISC flag (not) set\n"
-	"[!] --multicast\t\tmatch if MULTICAST flag (not) set\n"
-	"[!] --dynamic\t\t\tmatch if DYNAMIC flag (not) set\n"
-	"[!] --lower-up\t\t\tmatch if LOWER_UP flag (not) set\n"
-	"[!] --dormant\t\t\tmatch if DORMANT flag (not) set\n");
+	"[!] --pointtopoint       match if POINTOPOINT flag (not) set\n"
+	"[!] --running            match if RUNNING flag (not) set\n"
+	"[!] --noarp / --arp      match if NOARP flag (not) set\n"
+	"[!] --promisc            match if PROMISC flag (not) set\n"
+	"[!] --multicast          match if MULTICAST flag (not) set\n"
+	"[!] --dynamic            match if DYNAMIC flag (not) set\n"
+	"[!] --lower-up           match if LOWER_UP flag (not) set\n"
+	"[!] --dormant            match if DORMANT flag (not) set\n");
 }
 
 static int iface_mt_parse(int c, char **argv, int invert, unsigned int *flags,

@@ -1,5 +1,6 @@
 
 
+- add "iface" match
 - fuzzy: need to account for kernel-level modified variables in .userspacesize
 - geoip: remove XT_ALIGN from .userspacesize when used with offsetof
 - SYSRQ: ignore non-UDP packets
