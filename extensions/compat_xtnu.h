@@ -138,6 +138,9 @@ extern struct xt_match *xtnu_request_find_match(unsigned int,
 	const char *, uint8_t);
 extern int xtnu_neigh_hh_output(struct hh_cache *, struct sk_buff *);
 extern void xtnu_csum_replace2(__u16 __bitwise *, __be16, __be16);
+extern void xtnu_csum_replace4(__u16 __bitwise *, __be32, __be32);
+extern void xtnu_proto_csum_replace4(__u16 __bitwise *, struct sk_buff *,
+	__be32, __be32, bool);
 extern int xtnu_skb_linearize(struct sk_buff *);
 
 #endif /* _COMPAT_XTNU_H */

@@ -6,6 +6,7 @@ build_DHCPMAC=m
 build_ECHO=
 build_IPMARK=m
 build_LOGMARK=m
+build_RAWNAT=m
 build_STEAL=m
 build_SYSRQ=m
 build_TARPIT=m
