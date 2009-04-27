@@ -70,7 +70,7 @@ if grep -q "CentOS release 5\." /etc/redhat-release 2>/dev/null ||
     grep -q "Red Hat Enterprise Linux Server release 5" /etc/redhat-release 2>/dev/null; then
 	# しまった!
 	# Well, just a warning. Maybe the admin updated the kernel.
-	echo "WARNING: This distribution is not officially supported.";
+	echo "WARNING: This distribution's shipped kernel is not supported.";
 fi;
 krel="$(make -sC ${kbuilddir} kernelrelease)";
 krel="${krel%%-*}";
