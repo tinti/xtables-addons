@@ -18,8 +18,8 @@ enum {
 
 struct xt_iface_mtinfo {
 	char ifname[IFNAMSIZ];
-	u_int16_t flags;
-	u_int16_t invflags;
+	__u16 flags;
+	__u16 invflags;
 };
 
 #endif
