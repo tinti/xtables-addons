@@ -16,11 +16,6 @@ enum {
 	XT_IFACE_IFACE       = 1 << 15,
 };
 
-struct xt_iface_flag_pairs {
-	u_int16_t iface_flag;
-	u_int32_t iff_flag;
-};
-
 struct xt_iface_mtinfo {
 	char ifname[IFNAMSIZ];
 	u_int16_t flags;

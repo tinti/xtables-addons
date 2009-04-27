@@ -12,6 +12,11 @@
 #include <linux/netfilter/x_tables.h>
 #include "xt_iface.h"
 
+struct xt_iface_flag_pairs {
+	uint16_t iface_flag;
+	uint32_t iff_flag;
+};
+
 MODULE_AUTHOR("Gáspár Lajos <gaspar.lajos@glsys.eu>");
 MODULE_DESCRIPTION("Xtables: iface match module");
 MODULE_LICENSE("GPL");
