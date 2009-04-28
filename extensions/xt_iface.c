@@ -11,6 +11,7 @@
 #include <linux/skbuff.h>
 #include <linux/netfilter/x_tables.h>
 #include "xt_iface.h"
+#include "compat_xtables.h"
 
 struct xt_iface_flag_pairs {
 	uint16_t iface_flag;
@@ -47,7 +48,11 @@ static bool xt_iface_mt(const struct sk_buff *skb,
 	bool retval;
 	int i;
 
-	dev    = dev_get_by_name(&init_net, info->ifname);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+	dev = dev_get_by_name(&init_net, info->ifname);
+#else
+	dev = dev_get_by_name(info->ifname);
+#endif
 	retval = dev != NULL;
 	if (retval) {
 		for (i = 0; i < ARRAY_SIZE(xt_iface_lookup) && retval; ++i) {
