@@ -68,7 +68,6 @@ static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 		.family     = NFPROTO_IPV4,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 		.match      = xt_iface_mt,
-		.data       = 0,
 		.me         = THIS_MODULE,
 	},
 	{
@@ -77,7 +76,6 @@ static struct xt_match xt_iface_mt_reg[] __read_mostly = {
 		.family     = NFPROTO_IPV6,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 		.match      = xt_iface_mt,
-		.data       = 0,
 		.me         = THIS_MODULE,
 	},
 };
