@@ -1,12 +1,14 @@
 
 
+Xtables-addons 1.15 (April 30 2009)
+===================================
 - build: add kernel version check to configure
 - condition: compile fix for 2.6.30-rc
 - condition: fix intrapositional negation sign
 - fuzzy: fix bogus comparison logic leftover from move to new 1.4.3 API
 - ipp2p: fix bogus varargs call
 - ipp2p: fix typo in error message
-- add "iface" match
+- added "iface" match
 - added rawpost table (for use with RAWNAT)
 - added RAWSNAT/RAWDNAT targets
 
