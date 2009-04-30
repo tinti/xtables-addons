@@ -9,6 +9,10 @@
 typedef _Bool bool;
 enum { false = 0, true = 1, };
 #endif
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
+typedef __u16 __bitwise __sum16;
+typedef __u32 __bitwise __wsum;
+#endif
 
 struct flowi;
 struct hh_cache;
@@ -121,6 +125,13 @@ static inline struct xtnu_target *xtcompat_nutarget(const struct xt_target *t)
 	memcpy(&q, t->name + sizeof(t->name) - sizeof(void *), sizeof(void *));
 	return q;
 }
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
+static inline __wsum csum_unfold(__sum16 n)
+{
+	return (__force __wsum)n;
+}
+#endif
 
 extern int xtnu_ip_local_out(struct sk_buff *);
 extern int xtnu_ip_route_me_harder(struct sk_buff **, unsigned int);

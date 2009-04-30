@@ -79,6 +79,7 @@ static void rawnat4_update_l4(struct sk_buff *skb, __be32 oldip, __be32 newip)
 	void *transport_hdr = (void *)iph + ip_hdrlen(skb);
 	struct tcphdr *tcph;
 	struct udphdr *udph;
+	bool cond;
 
 	switch (iph->protocol) {
 	case IPPROTO_TCP:
@@ -88,7 +89,11 @@ static void rawnat4_update_l4(struct sk_buff *skb, __be32 oldip, __be32 newip)
 	case IPPROTO_UDP:
 	case IPPROTO_UDPLITE:
 		udph = transport_hdr;
-		if (udph->check != 0 || skb->ip_summed == CHECKSUM_PARTIAL) {
+		cond = udph->check != 0;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+		cond |= skb->ip_summed == CHECKSUM_PARTIAL;
+#endif
+		if (cond) {
 			inet_proto_csum_replace4(&udph->check, skb,
 				oldip, newip, true);
 			if (udph->check == 0)
@@ -200,6 +205,7 @@ static void rawnat6_update_l4(struct sk_buff *skb, unsigned int l4proto,
 	struct tcphdr *tcph;
 	struct udphdr *udph;
 	unsigned int i;
+	bool cond;
 
 	switch (l4proto) {
 	case IPPROTO_TCP:
@@ -211,7 +217,11 @@ static void rawnat6_update_l4(struct sk_buff *skb, unsigned int l4proto,
 	case IPPROTO_UDP:
 	case IPPROTO_UDPLITE:
 		udph = (void *)iph + l4offset;
-		if (udph->check != 0 || skb->ip_summed == CHECKSUM_PARTIAL) {
+		cond = udph->check;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+		cond |= skb->ip_summed == CHECKSUM_PARTIAL;
+#endif
+		if (cond) {
 			for (i = 0; i < 4; ++i)
 				inet_proto_csum_replace4(&udph->check, skb,
 					oldip->s6_addr32[i],

@@ -20,11 +20,6 @@
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
-typedef __u16 __bitwise __sum16;
-typedef __u32 __bitwise __wsum;
-#endif
-
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_run(const struct sk_buff *skb,
     const struct net_device *in, const struct net_device *out,
@@ -452,17 +447,23 @@ void xtnu_proto_csum_replace4(__sum16 *sum, struct sk_buff *skb,
     __be32 from, __be32 to, bool pseudohdr)
 {
 	__be32 diff[] = {~from, to};
+	const void *dv = diff; /* kludge for < v2.6.19-555-g72685fc */
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 	if (skb->ip_summed != CHECKSUM_PARTIAL) {
-		*sum = csum_fold(csum_partial(diff, sizeof(diff),
+		*sum = csum_fold(csum_partial(dv, sizeof(diff),
 		       ~csum_unfold(*sum)));
 		if (skb->ip_summed == CHECKSUM_COMPLETE && pseudohdr)
-			skb->csum = ~csum_partial(diff, sizeof(diff),
+			skb->csum = ~csum_partial(dv, sizeof(diff),
 			            ~skb->csum);
 	} else if (pseudohdr) {
-		*sum = ~csum_fold(csum_partial(diff, sizeof(diff),
+		*sum = ~csum_fold(csum_partial(dv, sizeof(diff),
 		       csum_unfold(*sum)));
 	}
+#else
+	*sum = csum_fold(csum_partial(dv, sizeof(diff),
+	       ~csum_unfold(*sum)));
+#endif
 }
 EXPORT_SYMBOL_GPL(xtnu_proto_csum_replace4);
 #endif
