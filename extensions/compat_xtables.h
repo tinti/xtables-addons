@@ -37,6 +37,7 @@
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
 #	define neigh_hh_output xtnu_neigh_hh_output
 #	define IPPROTO_UDPLITE 136
+#	define CSUM_MANGLED_0 ((__force __sum16)0xffff)
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
@@ -70,6 +71,7 @@
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
 #	define csum_replace2 xtnu_csum_replace2
 #	define csum_replace4 xtnu_csum_replace4
+#	define inet_proto_csum_replace4 xtnu_proto_csum_replace4
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
 #	define csum_replace2 nf_csum_replace2
 #	define csum_replace4 nf_csum_replace4
