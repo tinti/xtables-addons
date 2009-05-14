@@ -200,22 +200,7 @@ static struct xtables_match iface_mt_reg = {
 	.version	= XTABLES_VERSION,
 	.name		= "iface",
 	.revision	= 0,
-	.family		= AF_INET,
-	.size		= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
-	.userspacesize	= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
-	.help		= iface_mt_help,
-	.parse		= iface_mt_parse,
-	.final_check	= iface_mt_check,
-	.print		= iface_mt_print,
-	.save		= iface_mt_save,
-	.extra_opts	= iface_mt_opts,
-};
-
-static struct xtables_match iface_mt6_reg = {
-	.version	= XTABLES_VERSION,
-	.name		= "iface",
-	.revision	= 0,
-	.family		= AF_INET6,
+	.family		= AF_UNSPEC,
 	.size		= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 	.userspacesize	= XT_ALIGN(sizeof(struct xt_iface_mtinfo)),
 	.help		= iface_mt_help,
@@ -229,5 +214,4 @@ static struct xtables_match iface_mt6_reg = {
 static void _init(void)
 {
 	xtables_register_match(&iface_mt_reg);
-	xtables_register_match(&iface_mt6_reg);
 }
