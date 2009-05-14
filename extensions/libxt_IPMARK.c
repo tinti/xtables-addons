@@ -143,26 +143,10 @@ ipmark_tg_save(const void *entry, const struct xt_entry_target *target)
 		printf("--or-mask 0x%x ", (unsigned int)info->ormask);
 }
 
-static struct xtables_target ipmark_tg4_reg = {
+static struct xtables_target ipmark_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "IPMARK",
-	.family        = PF_INET,
-	.revision      = 0,
-	.size          = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
-	.userspacesize = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
-	.help          = ipmark_tg_help,
-	.init          = ipmark_tg_init,
-	.parse         = ipmark_tg_parse,
-	.final_check   = ipmark_tg_check,
-	.print         = ipmark_tg_print,
-	.save          = ipmark_tg_save,
-	.extra_opts    = ipmark_tg_opts,
-};
-
-static struct xtables_target ipmark_tg6_reg = {
-	.version       = XTABLES_VERSION,
-	.name          = "IPMARK",
-	.family        = PF_INET6,
+	.family        = PF_UNSPEC,
 	.revision      = 0,
 	.size          = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
@@ -177,6 +161,5 @@ static struct xtables_target ipmark_tg6_reg = {
 
 static __attribute__((constructor)) void ipmark_tg_ldr(void)
 {
-	xtables_register_target(&ipmark_tg4_reg);
-	xtables_register_target(&ipmark_tg6_reg);
+	xtables_register_target(&ipmark_tg_reg);
 }
