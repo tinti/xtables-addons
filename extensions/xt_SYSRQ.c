@@ -272,7 +272,7 @@ static bool sysrq_tg_check(const struct xt_tgchk_param *par)
 static struct xt_target sysrq_tg_reg[] __read_mostly = {
 	{
 		.name       = "SYSRQ",
-		.revision   = 0,
+		.revision   = 1,
 		.family     = NFPROTO_IPV4,
 		.target     = sysrq_tg4,
 		.checkentry = sysrq_tg_check,
@@ -280,7 +280,7 @@ static struct xt_target sysrq_tg_reg[] __read_mostly = {
 	},
 	{
 		.name       = "SYSRQ",
-		.revision   = 0,
+		.revision   = 1,
 		.family     = NFPROTO_IPV6,
 		.target     = sysrq_tg6,
 		.checkentry = sysrq_tg_check,

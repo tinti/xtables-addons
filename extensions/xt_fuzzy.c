@@ -142,7 +142,7 @@ static bool fuzzy_mt_check(const struct xt_mtchk_param *par)
 static struct xt_match fuzzy_mt_reg[] __read_mostly = {
 	{
 		.name       = "fuzzy",
-		.revision   = 0,
+		.revision   = 1,
 		.family     = NFPROTO_IPV4,
 		.match      = fuzzy_mt,
 		.checkentry = fuzzy_mt_check,
@@ -151,7 +151,7 @@ static struct xt_match fuzzy_mt_reg[] __read_mostly = {
 	},
 	{
 		.name       = "fuzzy",
-		.revision   = 0,
+		.revision   = 1,
 		.family     = NFPROTO_IPV6,
 		.match      = fuzzy_mt,
 		.checkentry = fuzzy_mt_check,

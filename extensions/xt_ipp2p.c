@@ -890,7 +890,7 @@ ipp2p_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 
 static struct xt_match ipp2p_mt_reg __read_mostly = {
 	.name       = "ipp2p",
-	.revision   = 0,
+	.revision   = 1,
 	.family     = NFPROTO_IPV4,
 	.match      = ipp2p_mt,
 	.matchsize  = sizeof(struct ipt_p2p_info),

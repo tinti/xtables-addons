@@ -24,6 +24,7 @@ static void sysrq_tg_check(unsigned int flags)
 static struct xtables_target sysrq_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "SYSRQ",
+	.revision      = 1,
 	.family        = PF_UNSPEC,
 	.size          = XT_ALIGN(0),
 	.userspacesize = XT_ALIGN(0),

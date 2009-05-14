@@ -228,7 +228,7 @@ static void ipp2p_mt_save(const void *entry, const struct xt_entry_match *match)
 static struct xtables_match ipp2p_mt_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "ipp2p",
-	.revision      = 0,
+	.revision      = 1,
 	.family        = AF_INET,
 	.size          = XT_ALIGN(sizeof(struct ipt_p2p_info)),
 	.userspacesize = XT_ALIGN(sizeof(struct ipt_p2p_info)),

@@ -222,7 +222,7 @@ static void xt_geoip_mt_destroy(const struct xt_mtdtor_param *par)
 
 static struct xt_match xt_geoip_match __read_mostly = {
 	.name       = "geoip",
-	.revision   = 0,
+	.revision   = 1,
 	.family     = NFPROTO_IPV4,
 	.match      = xt_geoip_mt,
 	.checkentry = xt_geoip_mt_checkentry,

@@ -79,7 +79,7 @@ static void condition_save(const void *ip, const struct xt_entry_match *match)
 
 static struct xtables_match condition_mt_reg = {
 	.name 		= "condition",
-	.revision	= 0,
+	.revision	= 1,
 	.family		= PF_UNSPEC,
 	.version 	= XTABLES_VERSION,
 	.size 		= XT_ALIGN(sizeof(struct xt_condition_mtinfo)),

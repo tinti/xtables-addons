@@ -261,6 +261,7 @@ geoip_save(const void *ip, const struct xt_entry_match *match)
 static struct xtables_match geoip_match = {
 	 .family        = AF_INET,
 	 .name          = "geoip",
+	 .revision      = 1,
 	 .version       = XTABLES_VERSION,
 	 .size          = XT_ALIGN(sizeof(struct xt_geoip_match_info)),
 	 .userspacesize = offsetof(struct xt_geoip_match_info, mem),

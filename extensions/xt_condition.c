@@ -206,7 +206,7 @@ static void condition_mt_destroy(const struct xt_mtdtor_param *par)
 static struct xt_match condition_mt_reg[] __read_mostly = {
 	{
 		.name       = "condition",
-		.revision   = 0,
+		.revision   = 1,
 		.family     = NFPROTO_IPV4,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
 		.match      = condition_mt,
@@ -216,7 +216,7 @@ static struct xt_match condition_mt_reg[] __read_mostly = {
 	},
 	{
 		.name       = "condition",
-		.revision   = 0,
+		.revision   = 1,
 		.family     = NFPROTO_IPV6,
 		.matchsize  = XT_ALIGN(sizeof(struct xt_condition_mtinfo)),
 		.match      = condition_mt,

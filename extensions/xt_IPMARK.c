@@ -82,7 +82,7 @@ ipmark_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 static struct xt_target ipmark_tg_reg[] __read_mostly = {
 	{
 		.name       = "IPMARK",
-		.revision   = 0,
+		.revision   = 1,
 		.family     = NFPROTO_IPV4,
 		.table      = "mangle",
 		.target     = ipmark_tg4,
@@ -91,7 +91,7 @@ static struct xt_target ipmark_tg_reg[] __read_mostly = {
 	},
 	{
 		.name       = "IPMARK",
-		.revision   = 0,
+		.revision   = 1,
 		.family     = NFPROTO_IPV6,
 		.table      = "mangle",
 		.target     = ipmark_tg6,

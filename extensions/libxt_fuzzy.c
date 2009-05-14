@@ -101,6 +101,7 @@ static void fuzzy_mt_save(const void *ip, const struct xt_entry_match *match)
 
 static struct xtables_match fuzzy_mt_reg = { 
 	.name          = "fuzzy",
+	.revision      = 1,
 	.version       = XTABLES_VERSION,
 	.size          = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
 	.userspacesize = offsetof(struct xt_fuzzy_mtinfo, packets_total),
