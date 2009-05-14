@@ -21,21 +21,10 @@ static void sysrq_tg_check(unsigned int flags)
 {
 }
 
-static struct xtables_target sysrq_tg4_reg = {
+static struct xtables_target sysrq_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "SYSRQ",
-	.family        = PF_INET,
-	.size          = XT_ALIGN(0),
-	.userspacesize = XT_ALIGN(0),
-	.help          = sysrq_tg_help,
-	.parse         = sysrq_tg_parse,
-	.final_check   = sysrq_tg_check,
-};
-
-static struct xtables_target sysrq_tg6_reg = {
-	.version       = XTABLES_VERSION,
-	.name          = "SYSRQ",
-	.family        = PF_INET6,
+	.family        = PF_UNSPEC,
 	.size          = XT_ALIGN(0),
 	.userspacesize = XT_ALIGN(0),
 	.help          = sysrq_tg_help,
@@ -45,6 +34,5 @@ static struct xtables_target sysrq_tg6_reg = {
 
 static __attribute__((constructor)) void sysrq_tg_ldr(void)
 {
-	xtables_register_target(&sysrq_tg4_reg);
-	xtables_register_target(&sysrq_tg6_reg);
+	xtables_register_target(&sysrq_tg_reg);
 }
