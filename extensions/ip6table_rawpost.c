@@ -69,7 +69,9 @@ static int __init rawpost6_table_init(void)
 {
 	int ret;
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
 	rwlock_init(&rawpost6_itable.lock);
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 	rawpost6_ptable = ip6t_register_table(&init_net, &rawpost6_itable,
 	                  &rawpost6_initial.repl);

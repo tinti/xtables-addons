@@ -1,5 +1,8 @@
 
 
+- RAWNAT: make iptable_rawpost compile with 2.6.30-rc5
+
+
 Xtables-addons 1.15 (April 30 2009)
 ===================================
 - build: add kernel version check to configure

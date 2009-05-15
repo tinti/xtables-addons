@@ -70,7 +70,9 @@ static int __init rawpost4_table_init(void)
 {
 	int ret;
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
 	rwlock_init(&rawpost4_itable.lock);
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 	rawpost4_ptable = ipt_register_table(&init_net, &rawpost4_itable,
 	                  &rawpost4_initial.repl);
