@@ -31,17 +31,14 @@ AM_CFLAGS      := ${regular_CFLAGS} -I${top_srcdir}/include ${xtables_CFLAGS} ${
 AM_DEPFLAGS     = -Wp,-MMD,$(@D)/.$(@F).d,-MT,$@
 
 VU := 0
-am__1verbose_CC_0     = @echo "  CC      " $@;
-am__1verbose_CCLD_0   = @echo "  CCLD    " $@;
-am__1verbose_GEN_0    = @echo "  GEN     " $@;
-am__1verbose_SILENT_0 = @
-am__1verbose_CC_1     = @echo "  CC      " $@ "<-" $<;
-am__1verbose_CCLD_1   = @echo "  CCLD    " $@ "<-" $^;
-am__1verbose_GEN_1    = @echo "  GEN     " $@ "<-" $<;
-am__verbose_CC        = ${am__1verbose_CC_${VU}}
-am__verbose_CCLD      = ${am__1verbose_CCLD_${VU}}
-am__verbose_GEN       = ${am__1verbose_GEN_${VU}}
-am__verbose_SILENT    = ${am__1verbose_GEN_${VU}}
+am__v_CC_0     = @echo "  CC      " $@;
+am__v_CCLD_0   = @echo "  CCLD    " $@;
+am__v_GEN_0    = @echo "  GEN     " $@;
+am__v_SILENT_0 = @
+AM_V_CC        = ${am__v_CC_${VU}}
+AM_V_CCLD      = ${am__v_CCLD_${VU}}
+AM_V_GEN       = ${am__v_GEN_${VU}}
+AM_V_silent    = ${am__v_GEN_${VU}}
 
 
 #
@@ -95,23 +92,23 @@ distclean: clean
 .PHONY: modules modules_install clean_modules
 
 modules:
-	${am__verbose_SILENT}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} modules; fi;
+	${AM_V_silent}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} modules; fi;
 
 modules_install:
-	${am__verbose_SILENT}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} INSTALL_MOD_PATH=${DESTDIR} modules_install; fi;
+	${AM_V_silent}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} INSTALL_MOD_PATH=${DESTDIR} modules_install; fi;
 
 clean_modules:
-	${am__verbose_SILENT}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} clean; fi;
+	${AM_V_silent}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} clean; fi;
 
 
 #
 #	Shared libraries
 #
 lib%.so: lib%.oo
-	${am__verbose_CCLD}${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $<;
+	${AM_V_CCLD}${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $<;
 
 lib%.oo: ${srcdir}/lib%.c
-	${am__verbose_CC}${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} -D_INIT=lib$*_init -DPIC -fPIC ${CFLAGS} -o $@ -c $<;
+	${AM_V_CC}${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} -D_INIT=lib$*_init -DPIC -fPIC ${CFLAGS} -o $@ -c $<;
 
 
 #
@@ -128,7 +125,7 @@ wlist_targets := $(patsubst ${srcdir}/libxt_%.man,%,${wcman_targets})
 	rm -f $@.tmp;
 
 man_run    = \
-	${am__verbose_GEN}for ext in $(1); do \
+	${AM_V_GEN}for ext in $(1); do \
 		f="${srcdir}/libxt_$$ext.man"; \
 		if [ -f "$$f" ]; then \
 			echo ".SS $$ext"; \
