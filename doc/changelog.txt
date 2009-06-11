@@ -2,6 +2,7 @@
 
 - IPMARK: print missing --shift parameter
 - build: use readlink -f in extensions/ipset/
+- build: support for Linux 2.6.30
 
 
 Xtables-addons 1.16 (May 27 2009)

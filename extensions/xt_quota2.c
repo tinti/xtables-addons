@@ -104,7 +104,9 @@ static struct quota_counter *q2_get_counter(const struct xt_quota_mtinfo2 *q)
 	if (p == NULL || IS_ERR(p))
 		goto out;
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
 	p->owner        = THIS_MODULE;
+#endif
 	p->data         = e;
 	p->read_proc    = quota_proc_read;
 	p->write_proc   = quota_proc_write;
