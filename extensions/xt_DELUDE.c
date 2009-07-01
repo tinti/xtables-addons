@@ -119,19 +119,18 @@ static void delude_send_reset(struct sk_buff *oldskb, unsigned int hook)
 		addr_type = RTN_LOCAL;
 
 	/* ip_route_me_harder expects skb->dst to be set */
-	dst_hold(oldskb->dst);
-	nskb->dst = oldskb->dst;
+	skb_dst_set(nskb, dst_clone(skb_dst(oldskb)));
 
 	if (ip_route_me_harder(&nskb, addr_type))
 		goto free_nskb;
 	else
 		niph = ip_hdr(nskb);
 
-	niph->ttl       = dst_metric(nskb->dst, RTAX_HOPLIMIT);
+	niph->ttl       = dst_metric(skb_dst(nskb), RTAX_HOPLIMIT);
 	nskb->ip_summed = CHECKSUM_NONE;
 
 	/* "Never happens" */
-	if (nskb->len > dst_mtu(nskb->dst))
+	if (nskb->len > dst_mtu(skb_dst(nskb)))
 		goto free_nskb;
 
 	nf_ct_attach(nskb, oldskb);

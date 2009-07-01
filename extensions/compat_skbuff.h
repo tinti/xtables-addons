@@ -4,6 +4,23 @@
 struct tcphdr;
 struct udphdr;
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 30)
+static inline void skb_dst_set(struct sk_buff *skb, struct dst_entry *dst)
+{
+	skb->dst = dst;
+}
+
+static inline struct dst_entry *skb_dst(const struct sk_buff *skb)
+{
+	return skb->dst;
+}
+
+static inline struct rtable *skb_rtable(const struct sk_buff *skb)
+{
+	return (void *)skb->dst;
+}
+#endif
+
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
 #	define skb_ifindex(skb) \
 		(((skb)->input_dev != NULL) ? (skb)->input_dev->ifindex : 0)

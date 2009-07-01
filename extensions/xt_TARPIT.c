@@ -167,20 +167,20 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 	nskb->ip_summed = CHECKSUM_NONE;
 
 	/* Adjust IP TTL */
-	niph->ttl = dst_metric(nskb->dst, RTAX_HOPLIMIT);
+	niph->ttl = dst_metric(skb_dst(nskb), RTAX_HOPLIMIT);
 
 	/* Adjust IP checksum */
 	niph->check = 0;
 	niph->check = ip_fast_csum(skb_network_header(nskb), niph->ihl);
 
 	/* "Never happens" */
-	if (nskb->len > dst_mtu(nskb->dst))
+	if (nskb->len > dst_mtu(skb_dst(nskb)))
 		goto free_nskb;
 
 	nf_ct_attach(nskb, oldskb);
 
-	NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_OUT, nskb, NULL, nskb->dst->dev,
-		dst_output);
+	NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_OUT, nskb, NULL,
+		skb_dst(nskb)->dev, dst_output);
 	return;
 
  free_nskb:
@@ -192,7 +192,7 @@ tarpit_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
-	const struct rtable *rt = (const void *)skb->dst;
+	const struct rtable *rt = skb_rtable(skb);
 
 	/* Do we have an input route cache entry? (Not in PREROUTING.) */
 	if (rt == NULL)
