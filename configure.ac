@@ -79,10 +79,14 @@ krel="${krel#*.}";
 kminor="${krel%%.*}";
 krel="${krel#*.}";
 kmicro="${krel%%.*}";
-krel="${krel#*.}";
-kstable="${krel%%.*}";
-if test -z "$kstable"; then
+krel2="${krel#*.}";
+if test "$krel" = "$krel2"; then
 	kstable=0;
+else
+	kstable="${krel%%.*}";
+	if test -z "$kstable"; then
+		kstable=0;
+	fi;
 fi;
 echo "Found kernel version $kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
 if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 30; then
