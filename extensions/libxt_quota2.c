@@ -121,7 +121,7 @@ static void quota_mt2_print(const void *ip, const struct xt_entry_match *match,
 
 static struct xtables_match quota_mt2_reg = {
 	.family        = AF_UNSPEC,
-	.revision      = 2,
+	.revision      = 3,
 	.name          = "quota2",
 	.version       = XTABLES_VERSION,
 	.size          = XT_ALIGN(sizeof (struct xt_quota_mtinfo2)),

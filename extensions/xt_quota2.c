@@ -71,6 +71,22 @@ static int quota_proc_write(struct file *file, const char __user *input,
 	return size;
 }
 
+static struct quota_counter *q2_new_counter(const struct xt_quota_mtinfo2 *q)
+{
+	struct quota_counter *e;
+
+	e = kmalloc(sizeof(struct quota_counter), GFP_KERNEL);
+	if (e == NULL)
+		return NULL;
+
+	e->quota = q->quota;
+	spin_lock_init(&e->lock);
+	INIT_LIST_HEAD(&e->list);
+	atomic_set(&e->ref, 1);
+	strncpy(e->name, q->name, sizeof(e->name));
+	return e;
+}
+
 /**
  * q2_get_counter - get ref to counter or create new
  * @name:	name of counter
@@ -80,24 +96,20 @@ static struct quota_counter *q2_get_counter(const struct xt_quota_mtinfo2 *q)
 	struct proc_dir_entry *p;
 	struct quota_counter *e;
 
+	if (*q->name == '\0')
+		return q2_new_counter(q);
+
 	spin_lock_bh(&counter_list_lock);
-	list_for_each_entry(e, &counter_list, list) {
+	list_for_each_entry(e, &counter_list, list)
 		if (strcmp(e->name, q->name) == 0) {
 			atomic_inc(&e->ref);
 			spin_unlock_bh(&counter_list_lock);
 			return e;
 		}
-	}
 
-	e = kmalloc(sizeof(struct quota_counter), GFP_KERNEL);
+	e = q2_new_counter(q);
 	if (e == NULL)
 		goto out;
-
-	e->quota = q->quota;
-	spin_lock_init(&e->lock);
-	INIT_LIST_HEAD(&e->list);
-	atomic_set(&e->ref, 1);
-	strncpy(e->name, q->name, sizeof(e->name));
 
 	p = e->procfs_entry = create_proc_entry(e->name, quota_list_perms,
 	                      proc_xt_quota);
@@ -130,15 +142,16 @@ static bool quota_mt2_check(const struct xt_mtchk_param *par)
 		return false;
 
 	q->name[sizeof(q->name)-1] = '\0';
-	if (*q->name == '\0' || *q->name == '.' ||
-	    strchr(q->name, '/') != NULL) {
-		printk(KERN_ERR "xt_quota.2: illegal name\n");
+	if (*q->name == '.' || strchr(q->name, '/') != NULL) {
+		printk(KERN_ERR "xt_quota<%u>: illegal name\n",
+		       par->match->revision);
 		return false;
 	}
 
 	q->master = q2_get_counter(q);
 	if (q->master == NULL) {
-		printk(KERN_ERR "xt_quota.2: memory alloc failure\n");
+		printk(KERN_ERR "xt_quota<%u>: memory alloc failure\n",
+		       par->match->revision);
 		return false;
 	}
 
@@ -149,6 +162,11 @@ static void quota_mt2_destroy(const struct xt_mtdtor_param *par)
 {
 	struct xt_quota_mtinfo2 *q = par->matchinfo;
 	struct quota_counter *e = q->master;
+
+	if (*e->name == '\0') {
+		kfree(e);
+		return;
+	}
 
 	spin_lock_bh(&counter_list_lock);
 	if (!atomic_dec_and_test(&e->ref)) {
@@ -194,7 +212,7 @@ quota_mt2(const struct sk_buff *skb, const struct xt_match_param *par)
 static struct xt_match quota_mt2_reg[] __read_mostly = {
 	{
 		.name       = "quota2",
-		.revision   = 2,
+		.revision   = 3,
 		.family     = NFPROTO_IPV4,
 		.checkentry = quota_mt2_check,
 		.match      = quota_mt2,
@@ -204,7 +222,7 @@ static struct xt_match quota_mt2_reg[] __read_mostly = {
 	},
 	{
 		.name       = "quota2",
-		.revision   = 2,
+		.revision   = 3,
 		.family     = NFPROTO_IPV6,
 		.checkentry = quota_mt2_check,
 		.match      = quota_mt2,
