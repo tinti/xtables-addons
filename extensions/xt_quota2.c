@@ -21,6 +21,9 @@
 #include "xt_quota2.h"
 #include "compat_xtables.h"
 
+/**
+ * @lock:	lock to protect quota writers from each other
+ */
 struct xt_quota_counter {
 	u_int64_t quota;
 	spinlock_t lock;
@@ -72,19 +75,24 @@ static int quota_proc_write(struct file *file, const char __user *input,
 }
 
 static struct xt_quota_counter *
-q2_new_counter(const struct xt_quota_mtinfo2 *q)
+q2_new_counter(const struct xt_quota_mtinfo2 *q, bool anon)
 {
 	struct xt_quota_counter *e;
+	unsigned int size;
 
-	e = kmalloc(sizeof(*e), GFP_KERNEL);
+	/* Do not need all the procfs things for anonymous counters. */
+	size = anon ? offsetof(typeof(*e), list) : sizeof(*e);
+	e = kmalloc(size, GFP_KERNEL);
 	if (e == NULL)
 		return NULL;
 
 	e->quota = q->quota;
 	spin_lock_init(&e->lock);
-	INIT_LIST_HEAD(&e->list);
-	atomic_set(&e->ref, 1);
-	strncpy(e->name, q->name, sizeof(e->name));
+	if (!anon) {
+		INIT_LIST_HEAD(&e->list);
+		atomic_set(&e->ref, 1);
+		strncpy(e->name, q->name, sizeof(e->name));
+	}
 	return e;
 }
 
@@ -99,7 +107,7 @@ q2_get_counter(const struct xt_quota_mtinfo2 *q)
 	struct xt_quota_counter *e;
 
 	if (*q->name == '\0')
-		return q2_new_counter(q);
+		return q2_new_counter(q, true);
 
 	spin_lock_bh(&counter_list_lock);
 	list_for_each_entry(e, &counter_list, list)
@@ -109,7 +117,7 @@ q2_get_counter(const struct xt_quota_mtinfo2 *q)
 			return e;
 		}
 
-	e = q2_new_counter(q);
+	e = q2_new_counter(q, false);
 	if (e == NULL)
 		goto out;
 

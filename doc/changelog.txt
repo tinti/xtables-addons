@@ -1,7 +1,8 @@
 
 
 - build: support for Linux 2.6.31-rc1
-- quota2: support nameless counters
+- quota2: support anonymous counters
+- quota2: reduce memory footprint for anonymous counters
 
 
 Xtables-addons 1.17 (June 16 2009)
