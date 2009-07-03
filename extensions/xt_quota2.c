@@ -189,14 +189,12 @@ quota_mt2(const struct sk_buff *skb, const struct xt_match_param *par)
 	struct xt_quota_counter *e = q->master;
 	bool ret = q->flags & XT_QUOTA_INVERT;
 
+	spin_lock_bh(&e->lock);
 	if (q->flags & XT_QUOTA_GROW) {
-		spin_lock_bh(&e->lock);
 		e->quota += (q->flags & XT_QUOTA_PACKET) ? 1 : skb->len;
 		q->quota = e->quota;
-		spin_unlock_bh(&e->lock);
 		ret = true;
 	} else {
-		spin_lock_bh(&e->lock);
 		if (e->quota >= skb->len) {
 			e->quota -= (q->flags & XT_QUOTA_PACKET) ? 1 : skb->len;
 			ret = !ret;
@@ -205,9 +203,8 @@ quota_mt2(const struct sk_buff *skb, const struct xt_match_param *par)
 			e->quota = 0;
 		}
 		q->quota = e->quota;
-		spin_unlock_bh(&e->lock);
 	}
-
+	spin_unlock_bh(&e->lock);
 	return ret;
 }
 
