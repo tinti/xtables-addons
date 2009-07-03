@@ -10,7 +10,7 @@ enum xt_quota_flags {
 	XT_QUOTA_COUNTER_NAME_LENGTH = 31,
 };
 
-struct quota_counter;
+struct xt_quota_counter;
 
 struct xt_quota_mtinfo2 {
 	char name[XT_QUOTA_COUNTER_NAME_LENGTH];
@@ -20,7 +20,7 @@ struct xt_quota_mtinfo2 {
 	aligned_u64 quota;
 
 	/* Used internally by the kernel */
-	struct quota_counter *master __attribute__((aligned(8)));
+	struct xt_quota_counter *master __attribute__((aligned(8)));
 };
 
 #endif /* _XT_QUOTA_H */

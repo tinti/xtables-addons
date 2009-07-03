@@ -21,7 +21,7 @@
 #include "xt_quota2.h"
 #include "compat_xtables.h"
 
-struct quota_counter {
+struct xt_quota_counter {
 	u_int64_t quota;
 	spinlock_t lock;
 	struct list_head list;
@@ -44,7 +44,7 @@ module_param_named(gid, quota_list_gid, uint, S_IRUGO | S_IWUSR);
 static int quota_proc_read(char *page, char **start, off_t offset,
                            int count, int *eof, void *data)
 {
-	struct quota_counter *e = data;
+	struct xt_quota_counter *e = data;
 	int ret;
 
 	spin_lock_bh(&e->lock);
@@ -56,7 +56,7 @@ static int quota_proc_read(char *page, char **start, off_t offset,
 static int quota_proc_write(struct file *file, const char __user *input,
                             unsigned long size, void *data)
 {
-	struct quota_counter *e = data;
+	struct xt_quota_counter *e = data;
 	char buf[sizeof("18446744073709551616")];
 
 	if (size > sizeof(buf))
@@ -71,11 +71,12 @@ static int quota_proc_write(struct file *file, const char __user *input,
 	return size;
 }
 
-static struct quota_counter *q2_new_counter(const struct xt_quota_mtinfo2 *q)
+static struct xt_quota_counter *
+q2_new_counter(const struct xt_quota_mtinfo2 *q)
 {
-	struct quota_counter *e;
+	struct xt_quota_counter *e;
 
-	e = kmalloc(sizeof(struct quota_counter), GFP_KERNEL);
+	e = kmalloc(sizeof(*e), GFP_KERNEL);
 	if (e == NULL)
 		return NULL;
 
@@ -91,10 +92,11 @@ static struct quota_counter *q2_new_counter(const struct xt_quota_mtinfo2 *q)
  * q2_get_counter - get ref to counter or create new
  * @name:	name of counter
  */
-static struct quota_counter *q2_get_counter(const struct xt_quota_mtinfo2 *q)
+static struct xt_quota_counter *
+q2_get_counter(const struct xt_quota_mtinfo2 *q)
 {
 	struct proc_dir_entry *p;
-	struct quota_counter *e;
+	struct xt_quota_counter *e;
 
 	if (*q->name == '\0')
 		return q2_new_counter(q);
@@ -161,7 +163,7 @@ static bool quota_mt2_check(const struct xt_mtchk_param *par)
 static void quota_mt2_destroy(const struct xt_mtdtor_param *par)
 {
 	struct xt_quota_mtinfo2 *q = par->matchinfo;
-	struct quota_counter *e = q->master;
+	struct xt_quota_counter *e = q->master;
 
 	if (*e->name == '\0') {
 		kfree(e);
@@ -184,7 +186,7 @@ static bool
 quota_mt2(const struct sk_buff *skb, const struct xt_match_param *par)
 {
 	struct xt_quota_mtinfo2 *q = (void *)par->matchinfo;
-	struct quota_counter *e = q->master;
+	struct xt_quota_counter *e = q->master;
 	bool ret = q->flags & XT_QUOTA_INVERT;
 
 	if (q->flags & XT_QUOTA_GROW) {
