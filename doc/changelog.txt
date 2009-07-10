@@ -4,6 +4,7 @@
 - quota2: support anonymous counters
 - quota2: reduce memory footprint for anonymous counters
 - quota2: extend locked period during cleanup (locking bugfix)
+- quota2: use strtoull instead of strtoul
 
 
 Xtables-addons 1.17 (June 16 2009)

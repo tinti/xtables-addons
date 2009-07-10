@@ -69,7 +69,7 @@ static int quota_proc_write(struct file *file, const char __user *input,
 	buf[sizeof(buf)-1] = '\0';
 
 	spin_lock_bh(&e->lock);
-	e->quota = simple_strtoul(buf, NULL, 0);
+	e->quota = simple_strtoull(buf, NULL, 0);
 	spin_unlock_bh(&e->lock);
 	return size;
 }
