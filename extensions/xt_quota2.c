@@ -29,7 +29,7 @@ struct xt_quota_counter {
 	spinlock_t lock;
 	struct list_head list;
 	atomic_t ref;
-	char name[XT_QUOTA_COUNTER_NAME_LENGTH];
+	char name[sizeof(((struct xt_quota_mtinfo2 *)NULL)->name)];
 	struct proc_dir_entry *procfs_entry;
 };
 

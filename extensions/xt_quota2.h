@@ -6,14 +6,12 @@ enum xt_quota_flags {
 	XT_QUOTA_GROW   = 1 << 1,
 	XT_QUOTA_PACKET = 1 << 2,
 	XT_QUOTA_MASK   = 0x7,
-
-	XT_QUOTA_COUNTER_NAME_LENGTH = 31,
 };
 
 struct xt_quota_counter;
 
 struct xt_quota_mtinfo2 {
-	char name[XT_QUOTA_COUNTER_NAME_LENGTH];
+	char name[31];
 	u_int8_t flags;
 
 	/* Comparison-invariant */
