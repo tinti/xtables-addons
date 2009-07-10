@@ -11,7 +11,7 @@ enum xt_quota_flags {
 struct xt_quota_counter;
 
 struct xt_quota_mtinfo2 {
-	char name[31];
+	char name[15];
 	u_int8_t flags;
 
 	/* Comparison-invariant */
