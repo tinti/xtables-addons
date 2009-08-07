@@ -173,7 +173,7 @@ static void quota_mt2_destroy(const struct xt_mtdtor_param *par)
 	struct xt_quota_mtinfo2 *q = par->matchinfo;
 	struct xt_quota_counter *e = q->master;
 
-	if (*e->name == '\0') {
+	if (*q->name == '\0') {
 		kfree(e);
 		return;
 	}
