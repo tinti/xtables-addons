@@ -314,9 +314,7 @@ static struct xt_match xt_psd_reg = {
 
 static int __init xt_psd_init(void)
 {
-	if(xt_register_match(&xt_psd_reg)) {
-		memset(&state, 0, sizeof(state));
-	}
+	xt_register_match(&xt_psd_reg);
 	spin_lock_init(&(state.lock));
 	return 0;
 }
