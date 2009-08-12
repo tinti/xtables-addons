@@ -113,7 +113,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	const struct xt_psd_info *psdinfo = match->matchinfo;
 
 	/* IP header */
-        iph = (struct iphdr*) pskb->network_header;
+	iph = ip_hdr(pskb);
 
 	/* Sanity check */
 	if (ntohs(iph->frag_off) & IP_OFFSET) {
@@ -133,7 +133,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 
 	addr.s_addr = iph->saddr;
 
-	tcph = (struct tcphdr*)((u_int32_t *)iph + iph->ihl);
+	tcph = (void *)iph + ip_hdrlen(pskb);
 
 	/* Yep, it´s dirty */
 	src_port = tcph->source;
