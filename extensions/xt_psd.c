@@ -135,7 +135,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 
 	tcph = (void *)iph + ip_hdrlen(pskb);
 
-	/* Yep, it´s dirty */
+	/* Yep, it's dirty */
 	src_port = tcph->source;
 	dest_port = tcph->dest;
 
@@ -303,7 +303,7 @@ out_match:
 	return true;
 }
 
-static struct xt_match xt_psd_reg = {
+static struct xt_match xt_psd_reg __read_mostly = {
 	.name		= "psd",
     .family		= AF_INET,
     .revision	= 9,
