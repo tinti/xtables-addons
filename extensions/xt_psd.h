@@ -32,10 +32,10 @@
 #define HASH_MAX			0x10
 
 struct xt_psd_info {
-	unsigned int weight_threshold;
-	unsigned int delay_threshold;
-	unsigned short lo_ports_weight;
-	unsigned short hi_ports_weight;
+	__u32 weight_threshold;
+	__u32 delay_threshold;
+	__u16 lo_ports_weight;
+	__u16 hi_ports_weight;
 };
 
 #endif /*_LINUX_NETFILTER_XT_PSD_H*/
