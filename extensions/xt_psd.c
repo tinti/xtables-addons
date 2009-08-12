@@ -101,8 +101,8 @@ static inline int hashfunc(struct in_addr addr)
 static bool
 xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 {
-	struct iphdr *ip_hdr;
-	struct tcphdr *tcp_hdr;
+	struct iphdr *iph;
+	struct tcphdr *tcph;
 	struct in_addr addr;
 	u_int16_t src_port,dest_port;
   	u_int8_t tcp_flags, proto;
@@ -113,16 +113,16 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	const struct xt_psd_info *psdinfo = match->matchinfo;
 
 	/* IP header */
-        ip_hdr = (struct iphdr*) pskb->network_header;
+        iph = (struct iphdr*) pskb->network_header;
 
 	/* Sanity check */
-	if (ntohs(ip_hdr->frag_off) & IP_OFFSET) {
+	if (ntohs(iph->frag_off) & IP_OFFSET) {
 		pr_debug(KBUILD_MODNAME "sanity check failed\n");
 		return false;
 	}
 
 	/* TCP or UDP ? */
-	proto = ip_hdr->protocol;
+	proto = iph->protocol;
 
 	if (proto != IPPROTO_TCP && proto != IPPROTO_UDP) {
 		pr_debug(KBUILD_MODNAME "protocol not supported\n");
@@ -131,16 +131,16 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 
 	/* Get the source address, source & destination ports, and TCP flags */
 
-	addr.s_addr = ip_hdr->saddr;
+	addr.s_addr = iph->saddr;
 
-	tcp_hdr = (struct tcphdr*)((u_int32_t *)ip_hdr + ip_hdr->ihl);
+	tcph = (struct tcphdr*)((u_int32_t *)iph + iph->ihl);
 
 	/* Yep, it´s dirty */
-	src_port = tcp_hdr->source;
-	dest_port = tcp_hdr->dest;
+	src_port = tcph->source;
+	dest_port = tcph->dest;
 
 	if (proto == IPPROTO_TCP) {
-		tcp_flags = *((u_int8_t*)tcp_hdr + 13);
+		tcp_flags = *((u_int8_t*)tcph + 13);
 	}
 	else {
 		tcp_flags = 0x00;
@@ -186,7 +186,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 			}
 
 			/* TCP/ACK and/or TCP/RST to a new port? This could be an outgoing connection. */
-			if (proto == IPPROTO_TCP && (tcp_hdr->ack || tcp_hdr->rst))
+			if (proto == IPPROTO_TCP && (tcph->ack || tcph->rst))
 				goto out_no_match;
 
 			/* Packet to a new port, and not TCP/ACK: update the timestamp */
@@ -197,13 +197,13 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 				goto out_match;
 
 			/* Specify if destination address, source port, TOS or TTL are not fixed */
-			if (curr->dest_addr.s_addr != ip_hdr->daddr)
+			if (curr->dest_addr.s_addr != iph->daddr)
 				curr->flags |= HF_DADDR_CHANGING;
 			if (curr->src_port != src_port)
 				curr->flags |= HF_SPORT_CHANGING;
-			if (curr->tos != ip_hdr->tos)
+			if (curr->tos != iph->tos)
 				curr->flags |= HF_TOS_CHANGING;
-			if (curr->ttl != ip_hdr->ttl)
+			if (curr->ttl != iph->ttl)
 				curr->flags |= HF_TTL_CHANGING;
 
 			/* Update the total weight */
@@ -239,7 +239,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	}
 
 	/* We don't need an ACK from a new source address */
-	if (proto == IPPROTO_TCP && tcp_hdr->ack)
+	if (proto == IPPROTO_TCP && tcph->ack)
 		goto out_no_match;
 
 	/* Got too many source addresses with the same hash value? Then remove the
@@ -283,7 +283,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	/* And fill in the fields */
 	curr->timestamp = now;
 	curr->src_addr = addr;
-	curr->dest_addr.s_addr = ip_hdr->daddr;
+	curr->dest_addr.s_addr = iph->daddr;
 	curr->src_port = src_port;
 	curr->count = 1;
 	curr->weight = (ntohs(dest_port) < 1024) ? psdinfo->lo_ports_weight : psdinfo->hi_ports_weight;
@@ -291,8 +291,8 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	curr->ports[0].proto = proto;
 	curr->ports[0].and_flags = tcp_flags;
 	curr->ports[0].or_flags = tcp_flags;
-	curr->tos = ip_hdr->tos;
-	curr->ttl = ip_hdr->ttl;
+	curr->tos = iph->tos;
+	curr->ttl = iph->ttl;
 
 out_no_match:
 	spin_unlock(&state.lock);
