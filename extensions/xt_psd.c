@@ -303,17 +303,12 @@ out_match:
 	return true;
 }
 
-static bool xt_psd_checkentry(const struct xt_mtchk_param *par) {
-	return true;
-}
-
 static struct xt_match xt_psd_reg = {
 	.name		= "psd",
     .family		= AF_INET,
     .revision	= 9,
 	.match		= xt_psd_match,
 	.matchsize	= sizeof(struct xt_psd_info),
-	.checkentry	= xt_psd_checkentry,
 	.me			= THIS_MODULE 
 };
 
