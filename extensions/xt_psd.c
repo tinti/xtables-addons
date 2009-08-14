@@ -164,9 +164,11 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	last = NULL;
 	if ((curr = *(head = &state.hash[hash = hashfunc(addr)])))
 		do {
-			if (curr->src_addr.s_addr == addr.s_addr) break;
+			if (curr->src_addr.s_addr == addr.s_addr)
+				break;
 			count++;
-			if (curr->next) last = curr;
+			if (curr->next)
+				last = curr;
 		} while ((curr = curr->next));
 
 	if (curr) {
@@ -245,7 +247,8 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	/* Got too many source addresses with the same hash value? Then remove the
 	 * oldest one from the hash table, so that they can't take too much of our
 	 * CPU time even with carefully chosen spoofed IP addresses. */
-	if (count >= HASH_MAX && last) last->next = NULL;
+	if (count >= HASH_MAX && last)
+		last->next = NULL;
 
 	/* We're going to re-use the oldest list entry, so remove it from the hash
 	 * table first (if it is really already in use, and isn't removed from the
@@ -258,10 +261,11 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 		head = &last;
 	last = NULL;
 	if ((curr = *head))
-	do {
-		if (curr == &state.list[state.index]) break;
-		last = curr;
-	} while ((curr = curr->next));
+		do {
+			if (curr == &state.list[state.index])
+				break;
+			last = curr;
+		} while ((curr = curr->next));
 
 	/* Then, remove it */
 	if (curr) {
@@ -273,7 +277,8 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 
 	/* Get our list entry */
 	curr = &state.list[state.index++];
-	if (state.index >= LIST_SIZE) state.index = 0;
+	if (state.index >= LIST_SIZE)
+		state.index = 0;
 
 	/* Link it into the hash table */
 	head = &state.hash[hash];
