@@ -93,7 +93,7 @@ static inline int hashfunc(struct in_addr addr)
 	hash = 0;
 	do {
 		hash ^= value;
-	} while ((value >>= HASH_LOG));
+	} while ((value >>= HASH_LOG) != 0);
 
 	return hash & (HASH_SIZE - 1);
 }
@@ -148,7 +148,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 
 	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
 	 * them spoof us. [DHCP needs this feature - HW] */
-	if (!addr.s_addr) {
+	if (addr.s_addr == 0) {
 		pr_debug(KBUILD_MODNAME "spoofed source address (0.0.0.0)\n");
 		return false;
 	}
@@ -162,16 +162,16 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	/* Do we know this source address already? */
 	count = 0;
 	last = NULL;
-	if ((curr = *(head = &state.hash[hash = hashfunc(addr)])))
+	if ((curr = *(head = &state.hash[hash = hashfunc(addr)])) != NULL)
 		do {
 			if (curr->src_addr.s_addr == addr.s_addr)
 				break;
 			count++;
-			if (curr->next)
+			if (curr->next != NULL)
 				last = curr;
-		} while ((curr = curr->next));
+		} while ((curr = curr->next) != NULL);
 
-	if (curr) {
+	if (curr != NULL) {
 
 		/* We know this address, and the entry isn't too old. Update it. */
 		if (now - curr->timestamp <= (psdinfo->delay_threshold*HZ)/100 &&
@@ -233,9 +233,9 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 		 * remove from the hash table. We'll allocate a new entry instead since
 		 * this one might get re-used too soon. */
 		curr->src_addr.s_addr = 0;
-		if (last)
+		if (last != NULL)
 			last->next = last->next->next;
-		else if (*head)
+		else if (*head != NULL)
 			*head = (*head)->next;
 		last = NULL;
 	}
@@ -247,7 +247,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	/* Got too many source addresses with the same hash value? Then remove the
 	 * oldest one from the hash table, so that they can't take too much of our
 	 * CPU time even with carefully chosen spoofed IP addresses. */
-	if (count >= HASH_MAX && last)
+	if (count >= HASH_MAX && last != NULL)
 		last->next = NULL;
 
 	/* We're going to re-use the oldest list entry, so remove it from the hash
@@ -255,23 +255,23 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	 * hash table already because of the HASH_MAX check above). */
 
 	/* First, find it */
-	if (state.list[state.index].src_addr.s_addr)
+	if (state.list[state.index].src_addr.s_addr != 0)
 		head = &state.hash[hashfunc(state.list[state.index].src_addr)];
 	else
 		head = &last;
 	last = NULL;
-	if ((curr = *head))
+	if ((curr = *head) != NULL)
 		do {
 			if (curr == &state.list[state.index])
 				break;
 			last = curr;
-		} while ((curr = curr->next));
+		} while ((curr = curr->next) != NULL);
 
 	/* Then, remove it */
-	if (curr) {
-		if (last)
+	if (curr != NULL) {
+		if (last != NULL)
 			last->next = last->next->next;
-		else if (*head)
+		else if (*head != NULL)
 			*head = (*head)->next;
 	}
 
