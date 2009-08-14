@@ -309,7 +309,7 @@ static struct xt_match xt_psd_reg __read_mostly = {
 	.revision  = 1,
 	.match		= xt_psd_match,
 	.matchsize	= sizeof(struct xt_psd_info),
-	.me			= THIS_MODULE 
+	.me			= THIS_MODULE,
 };
 
 static int __init xt_psd_init(void)

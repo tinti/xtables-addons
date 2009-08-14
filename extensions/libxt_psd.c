@@ -1,6 +1,6 @@
-/* 
-  Shared library add-on to iptables to add PSD support 
-   
+/*
+  Shared library add-on to iptables to add PSD support
+
   Copyright (C) 2000,2001 astaro AG
 
   This file is distributed under the terms of the GNU General Public
@@ -50,7 +50,7 @@ static const struct option psd_mt_opts[] = {
 /* Initialize the target. */
 static void psd_mt_init(struct xt_entry_match *match) {
 	struct xt_psd_info *psdinfo = (struct xt_psd_info *)match->data;
-	psdinfo->weight_threshold = SCAN_WEIGHT_THRESHOLD;  
+	psdinfo->weight_threshold = SCAN_WEIGHT_THRESHOLD;
 	psdinfo->delay_threshold = SCAN_DELAY_THRESHOLD;
 	psdinfo->lo_ports_weight = PORT_WEIGHT_PRIV;
 	psdinfo->hi_ports_weight = PORT_WEIGHT_HIGH;
@@ -60,13 +60,13 @@ static void psd_mt_init(struct xt_entry_match *match) {
 #define XT_PSD_OPT_DTRESH 0x02
 #define XT_PSD_OPT_LPWEIGHT 0x04
 #define XT_PSD_OPT_HPWEIGHT 0x08
-        
+
 static int psd_mt_parse(int c, char **argv, int invert, unsigned int *flags,
-                     const void *entry, struct xt_entry_match **match) 
+                     const void *entry, struct xt_entry_match **match)
 {
 	struct xt_psd_info *psdinfo = (struct xt_psd_info *)(*match)->data;
 	unsigned int num;
-	
+
 	switch (c) {
 		/* PSD-weight-threshold */
 		case '1':
@@ -134,7 +134,7 @@ static void psd_mt_print(const void *ip, const struct xt_entry_match *match, int
 }
 
 /* Saves the union ipt_targinfo in parsable form to stdout. */
-static void psd_mt_save(const void *ip, const struct xt_entry_match *match) 
+static void psd_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_psd_info *psdinfo = (const struct xt_psd_info *)match->data;
 	printf("--psd-weight-threshold %u ", psdinfo->weight_threshold);
@@ -143,7 +143,7 @@ static void psd_mt_save(const void *ip, const struct xt_entry_match *match)
 	printf("--psd-hi-ports-weight %u ", psdinfo->hi_ports_weight);
 }
 
-static struct xtables_match psd_mt_reg = { 
+static struct xtables_match psd_mt_reg = {
 	.name			= "psd",
 	.version		= XTABLES_VERSION,
 	.revision   	= 1,
@@ -163,4 +163,4 @@ static __attribute__((constructor)) void psd_mt_ldr(void)
 {
 	xtables_register_match(&psd_mt_reg);
 }
-    
+
