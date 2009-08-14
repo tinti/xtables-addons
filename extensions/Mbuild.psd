@@ -1,1 +1,0 @@
-obj-${build_psd}	     += libxt_psd.so

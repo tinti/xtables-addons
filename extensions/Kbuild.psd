@@ -1,1 +1,0 @@
-obj-${build_psd}		 += xt_psd.o

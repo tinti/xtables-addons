@@ -25,6 +25,7 @@ obj-${build_ipset}       += ipset/
 obj-${build_ipv4options} += xt_ipv4options.o
 obj-${build_length2}     += xt_length2.o
 obj-${build_lscan}       += xt_lscan.o
+obj-${build_psd}         += xt_psd.o
 obj-${build_quota2}      += xt_quota2.o
 
 -include ${M}/*.Kbuild
