@@ -59,7 +59,7 @@ struct port {
  */
 struct host {
 	struct host *next;						/* Next entry with the same hash */
-	clock_t timestamp;						/* Last update time */
+	unsigned long timestamp;					/* Last update time */
 	struct in_addr src_addr;				/* Source address */
 	struct in_addr dest_addr;				/* Destination address */
 	unsigned short src_port;				/* Source port */
@@ -106,7 +106,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	struct in_addr addr;
 	u_int16_t src_port,dest_port;
   	u_int8_t tcp_flags, proto;
-	clock_t now;
+	unsigned long now;
 	struct host *curr, *last, **head;
 	int hash, index, count;
 	/* Parameters from userspace */
