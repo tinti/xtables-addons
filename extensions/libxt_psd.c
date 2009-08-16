@@ -70,53 +70,45 @@ static int psd_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 	switch (c) {
 		/* PSD-weight-threshold */
 		case '1':
-			if(*flags & XT_PSD_OPT_CTRESH) {
+			if (*flags & XT_PSD_OPT_CTRESH)
 				xtables_error(PARAMETER_PROBLEM,"Can't specify --psd-weight-threshold twice");
-			}
-			if(!xtables_strtoui(optarg, NULL,&num,0,PSD_MAX_RATE)) {
+			if (!xtables_strtoui(optarg, NULL, &num, 0, PSD_MAX_RATE))
 				xtables_error(PARAMETER_PROBLEM, "bad --psd-weight-threshold '%s'", optarg);
-        	}
 			psdinfo->weight_threshold = num;
 			*flags |= XT_PSD_OPT_CTRESH;
 			return true;
 
 		/* PSD-delay-threshold */
 		case '2':
-			if(*flags & XT_PSD_OPT_DTRESH) {
+			if (*flags & XT_PSD_OPT_DTRESH)
 				xtables_error(PARAMETER_PROBLEM, "Can't specify --psd-delay-threshold twice");
-			}
-        	if(!xtables_strtoui(optarg, NULL,&num,0,PSD_MAX_RATE)) {
-        		xtables_error(PARAMETER_PROBLEM,"bad --psd-delay-threshold '%s'", optarg);
-        	}
+			if (!xtables_strtoui(optarg, NULL, &num, 0, PSD_MAX_RATE))
+				xtables_error(PARAMETER_PROBLEM, "bad --psd-delay-threshold '%s'", optarg);
 			psdinfo->delay_threshold = num;
 			*flags |= XT_PSD_OPT_DTRESH;
 			return true;
 
 		/* PSD-lo-ports-weight */
 		case '3':
-			if(*flags & XT_PSD_OPT_LPWEIGHT) {
+			if (*flags & XT_PSD_OPT_LPWEIGHT)
 				xtables_error(PARAMETER_PROBLEM, "Can't specify --psd-lo-ports-weight twice");
-			}
-			if(!xtables_strtoui(optarg, NULL,&num,0,PSD_MAX_RATE)) {
-				xtables_error(PARAMETER_PROBLEM,"bad --psd-lo-ports-weight '%s'", optarg);
-			}
+			if (!xtables_strtoui(optarg, NULL, &num, 0, PSD_MAX_RATE))
+				xtables_error(PARAMETER_PROBLEM, "bad --psd-lo-ports-weight '%s'", optarg);
 			psdinfo->lo_ports_weight = num;
 			*flags |= XT_PSD_OPT_LPWEIGHT;
 			return true;
 
 		/* PSD-hi-ports-weight */
 		case '4':
-			if(*flags & XT_PSD_OPT_HPWEIGHT) {
+			if (*flags & XT_PSD_OPT_HPWEIGHT)
 				xtables_error(PARAMETER_PROBLEM, "Can't specify --psd-hi-ports-weight twice");
-			}
-			if(!xtables_strtoui(optarg, NULL, &num, 0, PSD_MAX_RATE)) {
+			if (!xtables_strtoui(optarg, NULL, &num, 0, PSD_MAX_RATE))
 				xtables_error(PARAMETER_PROBLEM, "bad --psd-hi-ports-weight '%s'", optarg);
-        	}
 			psdinfo->hi_ports_weight = num;
 			*flags |= XT_PSD_OPT_HPWEIGHT;
 			return true;
-		}
-		return false;
+	}
+	return false;
 }
 
 /* Final check; nothing. */

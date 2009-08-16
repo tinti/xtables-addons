@@ -139,12 +139,10 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	src_port = tcph->source;
 	dest_port = tcph->dest;
 
-	if (proto == IPPROTO_TCP) {
+	if (proto == IPPROTO_TCP)
 		tcp_flags = *((u_int8_t*)tcph + 13);
-	}
-	else {
+	else
 		tcp_flags = 0x00;
-	}
 
 	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
 	 * them spoof us. [DHCP needs this feature - HW] */
