@@ -1373,7 +1373,7 @@ static int ip_set_restore(void *data,
 		while (members_size + set->type->reqsize <=
 		       set_restore->members_size) {
 			line++;
-			DP("members: %d, line %d", members_size, line);
+		       	DP("members: %d, line %d", members_size, line);
 			res = __ip_set_addip(index,
 					   data + used + members_size,
 					   set->type->reqsize);
@@ -1911,12 +1911,22 @@ ip_set_sockfn_get(struct sock *sk, int optval, void *user, int *len)
 		    	res = -ENOENT;
 		    	goto done;
 		}
+
+#define SETLIST(set)	(strcmp(set->type->typename, "setlist") == 0)
+
 		used = 0;
 		if (index == IP_SET_INVALID_ID) {
-			/* Save all sets */
+			/* Save all sets: ugly setlist type dependency */
+			int setlist = 0;
+		setlists:
 			for (i = 0; i < ip_set_max && res == 0; i++) {
-				if (ip_set_list[i] != NULL)
+				if (ip_set_list[i] != NULL
+				    && !(setlist ^ SETLIST(ip_set_list[i])))
 					res = ip_set_save_set(i, data, &used, *len);
+			}
+			if (!setlist) {
+				setlist = 1;
+				goto setlists;
 			}
 		} else {
 			/* Save an individual set */

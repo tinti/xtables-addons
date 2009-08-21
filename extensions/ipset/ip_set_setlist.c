@@ -21,7 +21,7 @@
  * after  ==> ref, index
  */
 
-static inline bool
+static inline int
 next_index_eq(const struct ip_set_setlist *map, int i, ip_set_id_t index)
 {
 	return i < map->size && map->index[i] == index;
@@ -38,17 +38,15 @@ setlist_utest(struct ip_set *set, const void *data, u_int32_t size,
 	struct ip_set *s;
 	
 	if (req->before && req->ref[0] == '\0')
-		return -EINVAL;
+		return 0;
 
 	index = __ip_set_get_byname(req->name, &s);
 	if (index == IP_SET_INVALID_ID)
-		return -EEXIST;
+		return 0;
 	if (req->ref[0] != '\0') {
 		ref = __ip_set_get_byname(req->ref, &s);
-		if (ref == IP_SET_INVALID_ID) {
-			res = -EEXIST;
+		if (ref == IP_SET_INVALID_ID)
 			goto finish;
-		}
 	}
 	for (i = 0; i < map->size
 		    && map->index[i] != IP_SET_INVALID_ID; i++) {
@@ -172,7 +170,7 @@ setlist_kadd(struct ip_set *set,
 	return res;
 }
 
-static inline bool
+static inline int
 unshift_setlist(struct ip_set_setlist *map, int i)
 {
 	int j;
