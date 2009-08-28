@@ -77,7 +77,7 @@ install: modules_install subdirs-install ${targets_install}
 	install -pm0755 ${targets_install} "${DESTDIR}${xtlibdir}/";
 
 clean: clean_modules
-	@for i in ${subdirs_list}; do make -C $$i clean; done;
+	@for i in ${subdirs_list}; do ${MAKE} -C $$i clean; done;
 	rm -f *.oo *.so;
 
 distclean: clean
@@ -92,13 +92,13 @@ distclean: clean
 .PHONY: modules modules_install clean_modules
 
 modules:
-	${AM_V_silent}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} modules; fi;
+	${AM_V_silent}if [ -n "${kbuilddir}" ]; then ${MAKE} -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} modules; fi;
 
 modules_install:
-	${AM_V_silent}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} INSTALL_MOD_PATH=${DESTDIR} modules_install; fi;
+	${AM_V_silent}if [ -n "${kbuilddir}" ]; then ${MAKE} -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} INSTALL_MOD_PATH=${DESTDIR} modules_install; fi;
 
 clean_modules:
-	${AM_V_silent}if [ -n "${kbuilddir}" ]; then make -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} clean; fi;
+	${AM_V_silent}if [ -n "${kbuilddir}" ]; then ${MAKE} -C ${kbuilddir} M=${abssrcdir} XA_TOPSRCDIR=${abstop_srcdir} clean; fi;
 
 
 #
