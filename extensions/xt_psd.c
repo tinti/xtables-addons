@@ -20,6 +20,7 @@
   2009-08-07 Mohd Nawawi Mohamad Jamili <nawawi@tracenetworkcorporation.com> : ported to xtables-addons
 */
 
+#define pr_fmt(x) KBUILD_MODNAME ": " x
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/skbuff.h>
@@ -117,7 +118,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 
 	/* Sanity check */
 	if (ntohs(iph->frag_off) & IP_OFFSET) {
-		pr_debug(KBUILD_MODNAME "sanity check failed\n");
+		pr_debug("sanity check failed\n");
 		return false;
 	}
 
@@ -125,7 +126,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	proto = iph->protocol;
 
 	if (proto != IPPROTO_TCP && proto != IPPROTO_UDP) {
-		pr_debug(KBUILD_MODNAME "protocol not supported\n");
+		pr_debug("protocol not supported\n");
 		return false;
 	}
 
@@ -147,7 +148,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
 	 * them spoof us. [DHCP needs this feature - HW] */
 	if (addr.s_addr == 0) {
-		pr_debug(KBUILD_MODNAME "spoofed source address (0.0.0.0)\n");
+		pr_debug("spoofed source address (0.0.0.0)\n");
 		return false;
 	}
 
