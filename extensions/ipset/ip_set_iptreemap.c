@@ -14,6 +14,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/ip.h>
+#include <linux/jiffies.h>
 #include <linux/skbuff.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
