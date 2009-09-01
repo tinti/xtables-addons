@@ -1,0 +1,112 @@
+Pknock match implements so-called Port-Knocking, a stealthy system
+for network authentication: client sends packets to selected
+ports in a specific sequence (= simple mode, see Example 1 below), or HMAC
+payload to a single port (= complex mode, see Example 2 below),
+to target machine that has pknock rule(s) installed. The target machine
+then decides whether to unblock or block (again) pknock-protected port with
+listening service. This can be, for instance, used to avoid brute force
+attacks on ssh or ftp services.
+.PP
+Example prerequisites:
+.IP
+modprobe cn
+.IP
+modprobe xt_pknock
+.PP
+Example 1 (TCP mode, manual closing of opened port not possible):
+.IP
+iptables -P INPUT DROP
+.IP
+iptables -A INPUT -p tcp -m pknock --knockports 4002,4001,4004 --strict
+--name SSH --time 10 --autoclose 60 --dport 22 -j ACCEPT
+.PP
+The rule will open tcp port 22 after successfull reception of TCP SYN packets
+to ports 4002, 4001, 4004 in this sequence (a.k.a port-knocking), for the IP
+that sent them. Port numbers in connect sequence must follow each other, no
+other ports may be "knocked" inbetween. The rule is named '\fBSSH\fP' - file of
+the same name for tracking port knocking states will be created in
+\fB/proc/net/xt_pknock\fP .
+Port knocks must follow each other with delay <= 10 seconds. The port 22 will
+be auto-closed in 60 minutes since its opening.
+.PP
+Example 2 (UDP mode - nonreplayable and nonspoofable, manual closing
+of opened port possible, secure, also called "SPA" = Secure Port
+Authorization):
+.IP
+iptables -A INPUT -p udp -m pknock --knockports 4000 --name FTP
+--opensecret foo --closesecret bar --autoclose 240 -j DROP
+.IP
+iptables -A INPUT -p tcp -m pknock --checkip --name FTP --dport 21 -j ACCEPT
+.PP
+First rule will create 'ALLOWED' record in /proc/net/xt_pknock/FTP after
+successfull reception of UDP packet to port 4000. The packet payload must be
+constructed as HMAC256 using 'foo' as a key, and clients IP in network byteorder
+unsigned long format, concatenated with minutes since epoch in the same format,
+as HMAC'd content (a.k.a Simple Packet Authorization, also called "SPA").
+In such case, any subsequent attempt to connect to port 21 from clients IP
+will trigger ACCEPT in the second rule.
+.PP
+Similarly, upon reception of UDP packet, constructed the same way, but with
+key 'bar', the first rule will remove previously installed 'ALLOWED' state
+record from /proc/net/xt_pknock/FTP, which means that the second rule will
+stop matching for subsequent attempts to connect to port 21.
+In case no close-secret packet is received within 4 hours, the first rule
+will remove 'ALLOWED' record from /proc/net/xt_pknock/FTP itself.
+.PP
+Things worth noting:
+.PP
+\fBGeneral\fP:
+.PP
+Specifying \fB--autoclose 0\fP means no autoclose will be performed at all.
+.PP
+xt_pknock is capable of sending information about successful match
+via netlink socket to userspace, should you need to implement your own
+way of received portknock handling.
+Be sure to read documentation in 'doc/xtables-addons/pknock' directory,
+or visit the original site - http://portknocko.berlios.de/ .
+.PP
+\fBTCP mode\fP:
+.PP
+This mode is not immune against eavesdropping, spoofing and
+replaying of the port knock sequence by someone else (but its use may still
+be sufficient for scenarios, where these factors are not necessarilly
+so important, such as bare shielding of SSH port from brute-force attacks).
+If you need these features, you should use UDP mode.
+.PP
+It is always wise to specify 3 or more ports, that dont subsequently
+follow each other in ascending or descending sequence, to avoid triggering
+the rule by a portscan.
+.PP
+Specifying inter-knock timeout with \fB--time\fP is mandatory in TCP mode,
+to avoid permanent DoS by clogging up peer knock-state tracking table
+that xt_pknock internally keeps, forever, should there be a DDoS on the
+first-in-row knock port from more hostile IPs than what is the actual size
+of this table (16, can be changed via 'peer_hasht_ents' module parameter).
+It is also wise to use as short \fB--time\fP as possible (1 second)
+for this very reason, too. You may also consider increasing the size
+of peer knock-state tracking table. Using \fB--strict\fP also helps,
+as it requires the knock sequence to be exact. This means that if the
+hostile IP client sends more knocks to the same port, xt_pknock will
+mark such attempt as failed knock sequence and will forget it immediately.
+To completely thwart this kind of DDoS, knock-ports would need to have
+an additional rate-limit protection. Or you may consider using UDP mode.
+.PP
+\fBUDP mode\fP:
+.PP
+This mode is immune against eavesdropping, replaying and spoofing attacks.
+It is also immune against DDoS attack on the knockport.
+.PP
+For this mode to work, the clock difference on the client and on the server
+must be below 1 minute. Synchronizing time on both ends by means
+of NTP or rdate is strongly suggested.
+.PP
+There is a rate limiter built into xt_pknock, that blocks any subsequent
+opening attempt in UDP mode, should it arrive in period shorter than 1
+minute since the first successfull opening. This is intentional;
+it thwarts eventual spoofing attacks.
+.PP
+Becouse the payload value of UDP knock packet is influenced by client's IP,
+UDP mode cannot be used across NAT.
+.PP
+For sending UDP "SPA" packets, you may use either \fBknock.sh\fP or
+\fBknock-orig.sh\fP. You'll find these in 'doc/xtables-addons/pknock/util'.
