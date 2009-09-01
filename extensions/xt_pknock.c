@@ -773,6 +773,9 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 
 	epoch_min = get_epoch_minute();
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+	sg_init_table(sg, ARRAY_SIZE(sg));
+#endif
 	sg_set_buf(&sg[0], &ipsrc, sizeof(ipsrc));
 	sg_set_buf(&sg[1], &epoch_min, sizeof(epoch_min));
 
