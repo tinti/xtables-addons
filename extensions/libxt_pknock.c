@@ -20,7 +20,7 @@
 //#include <linux/netfilter_ipv4/ipt_pknock.h>
 #include "xt_pknock.h"
 
-static const struct option pknock_opts[] = {
+static const struct option pknock_mt_opts[] = {
 	/* .name, .has_arg, .flag, .val */
 	{ "knockports",	1,	0, 'k' },
 	{ "time",		1,	0, 't' },
@@ -33,8 +33,7 @@ static const struct option pknock_opts[] = {
 	{ .name = NULL }
 };
 
-/* Function which prints out usage message. */
-static void pknock_help(void)
+static void pknock_mt_help(void)
 {
 	printf("pknock match options:\n"
 		" --knockports port[,port,port,...]	"
@@ -224,7 +223,7 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 	return 1;
 }
 
-static int pknock_parse(int c, char **argv, int invert, unsigned int *flags,
+static int pknock_mt_parse(int c, char **argv, int invert, unsigned int *flags,
                 		const void *e, struct xt_entry_match **match)
 {
 	const struct ipt_entry *entry = e;
@@ -232,8 +231,7 @@ static int pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 			entry->ip.proto, entry->ip.invflags);
 }
 
-/* Final check. */
-static void pknock_check(unsigned int flags)
+static void pknock_mt_check(unsigned int flags)
 {
 	if (!flags)
 		xtables_error(PARAMETER_PROBLEM, PKNOCK "expection an option.\n");
@@ -271,8 +269,7 @@ static void pknock_check(unsigned int flags)
 	}
 }
 
-/* Prints out the matchinfo. */
-static void pknock_print(const void *ip,
+static void pknock_mt_print(const void *ip,
 						const struct xt_entry_match *match, int numeric)
 {
 	const struct xt_pknock_mtinfo *info = (void *)match->data;
@@ -295,8 +292,7 @@ static void pknock_print(const void *ip,
 		printf("closesecret ");
 }
 
-/* Saves the union ipt_matchinfo in parsable form to stdout. */
-static void pknock_save(const void *ip, const struct xt_entry_match *match)
+static void pknock_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	int i;
 	const struct xt_pknock_mtinfo *info = (void *)match->data;
@@ -321,22 +317,22 @@ static void pknock_save(const void *ip, const struct xt_entry_match *match)
 		printf("--checkip ");
 }
 
-static struct xtables_match pknock_match = {
+static struct xtables_match pknock_mt_reg = {
 	.name		= "pknock",
 	.version	= XTABLES_VERSION,
 	.revision      = 1,
 	.family		= AF_INET,
 	.size          = XT_ALIGN(sizeof(struct xt_pknock_mtinfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_pknock_mtinfo)),
-	.help		= pknock_help,
-	.parse		= pknock_parse,
-	.final_check	= pknock_check,
-	.print		= pknock_print,
-	.save		= pknock_save,
-	.extra_opts	= pknock_opts
+	.help          = pknock_mt_help,
+	.parse         = pknock_mt_parse,
+	.final_check   = pknock_mt_check,
+	.print         = pknock_mt_print,
+	.save          = pknock_mt_save,
+	.extra_opts    = pknock_mt_opts,
 };
 
-void _init(void)
+static __attribute__((constructor)) void pknock_mt_ldr(void)
 {
-	xtables_register_match(&pknock_match);
+	xtables_register_match(&pknock_mt_reg);
 }
