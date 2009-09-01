@@ -34,6 +34,10 @@
 #include "xt_pknock.h"
 #include "compat_xtables.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+#	define PK_CRYPTO 1
+#endif
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("J. Federico Hernandez Scarso, Luis A. Floreani");
 MODULE_DESCRIPTION("netfilter match for Port Knocking and SPA");
@@ -65,6 +69,7 @@ static struct proc_dir_entry *pde = NULL;
 
 static DEFINE_SPINLOCK(list_lock);
 
+#ifdef PK_CRYPTO
 static struct {
 	char				*algo;
 	struct crypto_hash	*tfm;
@@ -75,6 +80,7 @@ static struct {
 	.tfm	= NULL,
 	.size	= 0
 };
+#endif
 
 module_param(rule_hashsize, int, S_IRUGO);
 module_param(peer_hashsize, int, S_IRUGO);
@@ -660,6 +666,7 @@ msg_to_userspace_nl(const struct ipt_pknock *info,
 	return true;
 }
 
+#ifdef PK_CRYPTO
 /**
  * Transforms a sequence of characters to hexadecimal.
  *
@@ -788,6 +795,7 @@ pass_security(struct peer *peer, const struct ipt_pknock *info,
 	}
 	return true;
 }
+#endif /* PK_CRYPTO */
 
 /**
  * It updates the peer matching status.
@@ -814,6 +822,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
 		return false;
 	}
 
+#ifdef PK_CRYPTO
 	/* If security is needed. */
 	if (info->option & IPT_PKNOCK_OPENSECRET ) {
 		if (hdr->proto != IPPROTO_UDP)
@@ -823,6 +832,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
 			return false;
 		}
 	}
+#endif
 
 	/* Just update the timer when there is a state change. */
 	update_rule_timer(rule);
@@ -861,6 +871,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
 	return false;
 }
 
+#ifdef PK_CRYPTO
 /**
  * Make the peer no more ALLOWED sending a payload with a special secret for
  * closure.
@@ -885,6 +896,7 @@ is_close_knock(const struct peer *peer, const struct ipt_pknock *info,
 	}
 	return false;
 }
+#endif /* PK_CRYPTO */
 
 static bool pknock_mt(const struct sk_buff *skb,
     const struct xt_match_param *par)
@@ -914,8 +926,13 @@ static bool pknock_mt(const struct sk_buff *skb,
 		break;
 
 	case IPPROTO_UDP:
+#ifdef PK_CRYPTO
 		hdr_len = (iph->ihl * 4) + sizeof(struct udphdr);
 		break;
+#else
+		pr_debug("UDP protocol not supported\n");
+		return false;
+#endif
 
 	default:
 		printk(KERN_INFO PKNOCK 
@@ -948,6 +965,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 	/* Sets, updates, removes or checks the peer matching status. */
 	if (info->option & IPT_PKNOCK_KNOCKPORT) {
 		if ((ret = is_allowed(peer))) {
+#ifdef PK_CRYPTO
 			if (info->option & IPT_PKNOCK_CLOSESECRET && 
 							iph->protocol == IPPROTO_UDP)
 			{
@@ -957,6 +975,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 					ret = false;
 				}
 			}
+#endif
 				goto out;
 		}
 
@@ -997,13 +1016,16 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 	if (!(info->option & IPT_PKNOCK_NAME))
 		RETURN_ERR("You must specify --name option.\n");
 
+#ifdef PK_CRYPTO
 	if ((info->option & IPT_PKNOCK_OPENSECRET) && (info->ports_count != 1))
 		RETURN_ERR("--opensecret must have just one knock port\n");
+#endif
 
 	if (info->option & IPT_PKNOCK_KNOCKPORT) {
 		if (info->option & IPT_PKNOCK_CHECKIP) {
 			RETURN_ERR("Can't specify --knockports with --checkip.\n");
 		}
+#ifdef PK_CRYPTO
 		if ((info->option & IPT_PKNOCK_OPENSECRET) &&
 				!(info->option & IPT_PKNOCK_CLOSESECRET)) 
 		{
@@ -1014,6 +1036,7 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 		{
 			RETURN_ERR("--closesecret must go with --opensecret.\n");
 		}
+#endif
 	}
 
 	if (info->option & IPT_PKNOCK_CHECKIP) {
@@ -1021,16 +1044,19 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 		{
 			RETURN_ERR("Can't specify --checkip with --knockports.\n");
 		}
+#ifdef PK_CRYPTO
 		if ((info->option & IPT_PKNOCK_OPENSECRET) ||
 				(info->option & IPT_PKNOCK_CLOSESECRET))
 		{
 			RETURN_ERR("Can't specify --opensecret and --closesecret"
 							" with --checkip.\n");
 		}
+#endif
 		if (info->option & IPT_PKNOCK_TIME)
 			RETURN_ERR("Can't specify --time with --checkip.\n");
 	}
 
+#ifdef PK_CRYPTO
 	if (info->option & IPT_PKNOCK_OPENSECRET) {
 		if (info->open_secret_len == info->close_secret_len) {
 			if (memcmp(info->open_secret, info->close_secret,
@@ -1040,6 +1066,7 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 			}
 		}
 	}
+#endif
 
 	return true;
 }
@@ -1066,6 +1093,7 @@ static int __init xt_pknock_mt_init(void)
 {
 	printk(KERN_INFO PKNOCK "register.\n");
 
+#ifdef PK_CRYPTO
 	if (request_module(crypto.algo) < 0) {
 		printk(KERN_ERR PKNOCK "request_module('%s') error.\n",
                         crypto.algo);
@@ -1083,6 +1111,9 @@ static int __init xt_pknock_mt_init(void)
 	crypto.size = crypto_hash_digestsize(crypto.tfm);
 	crypto.desc.tfm = crypto.tfm;
 	crypto.desc.flags = 0;
+#else
+	pr_info("No crypto support for < 2.6.19\n");
+#endif
 
 	if (!(pde = proc_mkdir("xt_pknock", init_net__proc_net))) {
 		printk(KERN_ERR PKNOCK "proc_mkdir() error in _init().\n");
@@ -1098,7 +1129,9 @@ static void __exit xt_pknock_mt_exit(void)
 	xt_unregister_match(&xt_pknock_mt_reg);
 	kfree(rule_hashtable);
 
+#ifdef PK_CRYPTO
 	if (crypto.tfm != NULL) crypto_free_hash(crypto.tfm);
+#endif
 }
 
 module_init(xt_pknock_mt_init);
