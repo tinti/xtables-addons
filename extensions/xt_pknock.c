@@ -1104,6 +1104,8 @@ static struct xt_match xt_pknock_mt_reg __read_mostly = {
 
 static int __init xt_pknock_mt_init(void)
 {
+	if (gc_expir_time < DEFAULT_GC_EXPIRATION_TIME)
+		gc_expir_time = DEFAULT_GC_EXPIRATION_TIME;
 #ifdef PK_CRYPTO
 	if (request_module(crypto.algo) < 0) {
 		printk(KERN_ERR PKNOCK "request_module('%s') error.\n",

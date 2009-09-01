@@ -4,6 +4,8 @@
 - added reworked xt_pknock module
   Changes from pknock v0.5:
   - pknock: "strict" and "checkip" flags were not displayed in `iptables -L`
+  - pknock: the GC expire time's lower bound is now the default gc time
+    (65000 msec) to avoid rendering anti-spoof protection in SPA mode useless
 
 
 Xtables-addons 1.18 (September 09 2009)
