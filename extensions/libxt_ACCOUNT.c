@@ -13,7 +13,7 @@
 #include <linux/netfilter_ipv4/ip_tables.h>
 #include "xt_ACCOUNT.h"
 
-static struct option opts[] = {
+static struct option account_tg_opts[] = {
 	{ .name = "addr",        .has_arg = 1, .flag = 0, .val = 'a' },
 	{ .name = "tname",       .has_arg = 1, .flag = 0, .val = 't' },
 	{ .name = 0 }
@@ -25,18 +25,18 @@ static struct option opts[] = {
 #endif
 
 /* Function which prints out usage message. */
-static void help(void)
+static void account_tg_help(void)
 {
 	printf(
 "ACCOUNT v%s options:\n"
 " --%s ip/netmask\t\tBase network IP and netmask used for this table\n"
 " --%s name\t\t\tTable name for the userspace library\n",
-XTABLES_VERSION, opts[0].name, opts[1].name);
+XTABLES_VERSION, account_tg_opts[0].name, account_tg_opts[1].name);
 }
 
 /* Initialize the target. */
 static void
-init(struct xt_entry_target *t)
+account_tg_init(struct xt_entry_target *t)
 {
 	struct ipt_acc_info *accountinfo = (struct ipt_acc_info *)t->data;
 
@@ -49,7 +49,7 @@ init(struct xt_entry_target *t)
 /* Function which parses command options; returns true if it
    ate an option */
 
-static int parse(int c, char **argv, int invert, unsigned int *flags,
+static int account_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 		const void *entry, struct xt_entry_target **target)
 {
 	struct ipt_acc_info *accountinfo = (struct ipt_acc_info *)(*target)->data;
@@ -60,11 +60,11 @@ static int parse(int c, char **argv, int invert, unsigned int *flags,
 	case 'a':
 		if (*flags & IPT_ACCOUNT_OPT_ADDR)
 			xtables_error(PARAMETER_PROBLEM, "Can't specify --%s twice",
-				opts[0].name);
+				account_tg_opts[0].name);
 
 		if (xtables_check_inverse(optarg, &invert, NULL, 0))
 			xtables_error(PARAMETER_PROBLEM, "Unexpected `!' after --%s",
-				opts[0].name);
+				account_tg_opts[0].name);
 
 #ifdef XTABLES_VERSION_CODE
 		xtables_ipparse_any(optarg, &addrs, &mask, &naddrs);
@@ -84,16 +84,19 @@ static int parse(int c, char **argv, int invert, unsigned int *flags,
 	case 't':
 		if (*flags & IPT_ACCOUNT_OPT_TABLE)
 			xtables_error(PARAMETER_PROBLEM,
-				"Can't specify --%s twice", opts[1].name);
+				"Can't specify --%s twice",
+				account_tg_opts[1].name);
 
 		if (xtables_check_inverse(optarg, &invert, NULL, 0))
 			xtables_error(PARAMETER_PROBLEM,
-				"Unexpected `!' after --%s", opts[1].name);
+				"Unexpected `!' after --%s",
+				account_tg_opts[1].name);
 
 		if (strlen(optarg) > ACCOUNT_TABLE_NAME_LEN - 1)
 			xtables_error(PARAMETER_PROBLEM,
 				"Maximum table name length %u for --%s",
-				ACCOUNT_TABLE_NAME_LEN - 1, opts[1].name);
+				ACCOUNT_TABLE_NAME_LEN - 1,
+				account_tg_opts[1].name);
 
 		strcpy(accountinfo->table_name, optarg);
 		*flags |= IPT_ACCOUNT_OPT_TABLE;
@@ -105,12 +108,11 @@ static int parse(int c, char **argv, int invert, unsigned int *flags,
 	return 1;
 }
 
-/* Final check; nothing. */
-static void final_check(unsigned int flags)
+static void account_tg_check(unsigned int flags)
 {
 	if (!(flags & IPT_ACCOUNT_OPT_ADDR) || !(flags & IPT_ACCOUNT_OPT_TABLE))
 		xtables_error(PARAMETER_PROBLEM, "ACCOUNT: needs --%s and --%s",
-			opts[0].name, opts[1].name);
+			account_tg_opts[0].name, account_tg_opts[1].name);
 }
 
 static const char *print_helper_ip(struct in_addr a)
@@ -131,7 +133,7 @@ static const char *print_helper_mask(struct in_addr a)
 #endif
 }
 
-static void print_it(const void *ip,
+static void account_tg_print_it(const void *ip,
 		const struct xt_entry_target *target, char do_prefix)
 {
 	const struct ipt_acc_info *accountinfo
@@ -144,7 +146,7 @@ static void print_it(const void *ip,
 	// Network information
 	if (do_prefix)
 		printf("--");
-	printf("%s ", opts[0].name);
+	printf("%s ", account_tg_opts[0].name);
 
 	a.s_addr = accountinfo->net_ip;
 	printf("%s", print_helper_ip(a));
@@ -155,44 +157,42 @@ static void print_it(const void *ip,
 	if (do_prefix)
 		printf("--");
 
-	printf("%s %s", opts[1].name, accountinfo->table_name);
+	printf("%s %s", account_tg_opts[1].name, accountinfo->table_name);
 }
 
 
 static void
-print(const void *ip,
+account_tg_print(const void *ip,
 	const struct xt_entry_target *target,
 	int numeric)
 {
-	print_it(ip, target, 0);
+	account_tg_print_it(ip, target, 0);
 }
 
 /* Saves the union ipt_targinfo in parsable form to stdout. */
 static void
-save(const void *ip, const struct xt_entry_target *target)
+account_tg_save(const void *ip, const struct xt_entry_target *target)
 {
-	print_it(ip, target, 1);
+	account_tg_print_it(ip, target, 1);
 }
 
-static
-struct xtables_target account
-= {
+static struct xtables_target account_tg_reg = {
 	.next          = NULL,
 	.name          = "ACCOUNT",
 	.family        = AF_INET,
 	.version       = XTABLES_VERSION,
 	.size          = XT_ALIGN(sizeof(struct ipt_acc_info)),
 	.userspacesize = offsetof(struct ipt_acc_info, table_nr),
-	.help          = &help,
-	.init          = &init,
-	.parse         = &parse,
-	.final_check   = &final_check,
-	.print         = &print,
-	.save          = &save,
-	.extra_opts    = opts
+	.help          = account_tg_help,
+	.init          = account_tg_init,
+	.parse         = account_tg_parse,
+	.final_check   = account_tg_check,
+	.print         = account_tg_print,
+	.save          = account_tg_save,
+	.extra_opts    = account_tg_opts,
 };
 
-void _init(void)
+static __attribute__((constructor)) void account_tg_ldr(void)
 {
-	xtables_register_target(&account);
+	xtables_register_target(&account_tg_reg);
 }

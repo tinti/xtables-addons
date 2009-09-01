@@ -1037,7 +1037,7 @@ static struct nf_sockopt_ops ipt_acc_sockopts = {
 	.get = ipt_acc_get_ctl
 };
 
-static int __init init(void)
+static int __init account_tg_init(void)
 {
 	init_MUTEX(&ipt_acc_userspace_mutex);
 
@@ -1087,7 +1087,7 @@ error_cleanup:
 	return -EINVAL;
 }
 
-static void __exit fini(void)
+static void __exit account_tg_exit(void)
 {
 	xt_unregister_target(&xt_acc_reg);
 
@@ -1098,6 +1098,6 @@ static void __exit fini(void)
 	free_page((unsigned long)ipt_acc_tmpbuf);
 }
 
-module_init(init);
-module_exit(fini);
+module_init(account_tg_init);
+module_exit(account_tg_exit);
 MODULE_LICENSE("GPL");
