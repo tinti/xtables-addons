@@ -206,43 +206,10 @@ static int ipt_acc_table_insert(char *name, uint32_t ip, uint32_t netmask)
 	return -1;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
 static bool ipt_acc_checkentry(const struct xt_tgchk_param *par)
-#else
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
-static bool ipt_acc_checkentry(const char *tablename,
-#else
-static int ipt_acc_checkentry(const char *tablename,
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-				const void *e,
-#else
-				const struct ipt_entry *e,
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17)
-				const struct xt_target *target,
-#endif
-				void *targinfo,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-				unsigned int targinfosize,
-#endif
-				unsigned int hook_mask)
-#endif /* >= 2.6.28 */
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
 	struct ipt_acc_info *info = par->targinfo;
-#else
-	struct ipt_acc_info *info = targinfo;
-#endif
 	int table_nr;
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-	if (targinfosize != IPT_ALIGN(sizeof(struct ipt_acc_info))) {
-		DEBUGP("ACCOUNT: targinfosize %u != %u\n",
-			targinfosize, IPT_ALIGN(sizeof(struct ipt_acc_info)));
-		return 0;
-	}
-#endif
 
 	spin_lock_bh(&ipt_acc_lock);
 	table_nr = ipt_acc_table_insert(info->table_name, info->net_ip,
@@ -251,51 +218,19 @@ static int ipt_acc_checkentry(const char *tablename,
 
 	if (table_nr == -1) {
 		printk("ACCOUNT: Table insert problem. Aborting\n");
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
 		return false;
-#else
-		return 0;
-#endif
 	}
 	/* Table nr caching so we don't have to do an extra string compare
 	   for every packet */
 	info->table_nr = table_nr;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
 	return true;
-#else
-	return 1;
-#endif
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
 static void ipt_acc_destroy(const struct xt_tgdtor_param *par)
-#else
-static void ipt_acc_destroy(
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17)
-				const struct xt_target *target,
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
-				void *targinfo)
-#else
-				void *targinfo,
-				unsigned int targinfosize)
-#endif
-#endif /* >= 2.6.28 */
 {
 	unsigned int i;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
 	struct ipt_acc_info *info = par->targinfo;
-#else
-	struct ipt_acc_info *info = targinfo;
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
-	if (targinfosize != IPT_ALIGN(sizeof(struct ipt_acc_info))) {
-		DEBUGP("ACCOUNT: targinfosize %u != %u\n",
-			targinfosize, IPT_ALIGN(sizeof(struct ipt_acc_info)));
-	}
-#endif
 
 	spin_lock_bh(&ipt_acc_lock);
 
@@ -483,50 +418,14 @@ static void ipt_acc_depth2_insert(struct ipt_acc_mask_8 *mask_8,
 	}
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
 static unsigned int ipt_acc_target(struct sk_buff *skb, const struct xt_target_param *par)
-#else
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
-static unsigned int ipt_acc_target(struct sk_buff *skb,
-#else
-static unsigned int ipt_acc_target(struct sk_buff **pskb,
-#endif
-				const struct net_device *in,
-				const struct net_device *out,
-				unsigned int hooknum,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17)
-				const struct xt_target *target,
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
-				const void *targinfo)
-#else
-				const void *targinfo,
-				void *userinfo)
-#endif
-#endif /* 2.6.28 */
 {
 	const struct ipt_acc_info *info =
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
 		par->targinfo;
-#else
-		(const struct ipt_acc_info *)targinfo;
-#endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
 	uint32_t src_ip = ip_hdr(skb)->saddr;
 	uint32_t dst_ip = ip_hdr(skb)->daddr;
 	uint32_t size = ntohs(ip_hdr(skb)->tot_len);
-#else
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-	uint32_t src_ip = ip_hdr(*pskb)->saddr;
-	uint32_t dst_ip = ip_hdr(*pskb)->daddr;
-	uint32_t size = ntohs(ip_hdr(*pskb)->tot_len);
-#else
-	uint32_t src_ip = (*pskb)->nh.iph->saddr;
-	uint32_t dst_ip = (*pskb)->nh.iph->daddr;
-	uint32_t size = ntohs((*pskb)->nh.iph->tot_len);
-#endif
-#endif
 
 	spin_lock_bh(&ipt_acc_lock);
 
@@ -1122,19 +1021,11 @@ static int ipt_acc_get_ctl(struct sock *sk, int cmd, void *user, int *len)
 	return ret;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,21)
 static struct xt_target xt_acc_reg = {
-#else
-static struct ipt_target ipt_acc_reg = {
-#endif
 	.name = "ACCOUNT",
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,21)
 	.family = AF_INET,
-#endif
 	.target = ipt_acc_target,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17)
 	.targetsize = sizeof(struct ipt_acc_info),
-#endif
 	.checkentry = ipt_acc_checkentry,
 	.destroy = ipt_acc_destroy,
 	.me = THIS_MODULE
@@ -1184,11 +1075,7 @@ static int __init init(void)
 		goto error_cleanup;
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,21)
 	if (xt_register_target(&xt_acc_reg))
-#else
-	if (ipt_register_target(&ipt_acc_reg))
-#endif
 		goto error_cleanup;
 
 	return 0;
@@ -1206,11 +1093,7 @@ error_cleanup:
 
 static void __exit fini(void)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,21)
 	xt_unregister_target(&xt_acc_reg);
-#else
-	ipt_unregister_target(&ipt_acc_reg);
-#endif
 
 	nf_unregister_sockopt(&ipt_acc_sockopts);
 
