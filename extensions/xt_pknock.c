@@ -257,7 +257,6 @@ pknock_seq_show(struct seq_file *s, void *v)
 	const struct list_head *pos, *n;
 	const struct peer *peer;
 	unsigned long expir_time;
-        uint32_t ip;
 
 	const struct list_head *peer_head = v;
 
@@ -266,12 +265,11 @@ pknock_seq_show(struct seq_file *s, void *v)
 
 	list_for_each_safe(pos, n, peer_head) {
 		peer = list_entry(pos, struct peer, head);
-		ip = htonl(peer->ip);
 		expir_time = time_before(jiffies/HZ,
 						peer->timestamp + rule->max_time)
 				? ((peer->timestamp + rule->max_time)-(jiffies/HZ)) : 0;
 
-		seq_printf(s, "src=%u.%u.%u.%u ", NIPQUAD(ip));
+		seq_printf(s, "src=%u.%u.%u.%u ", NIPQUAD(peer->ip));
 		seq_printf(s, "proto=%s ", (peer->proto == IPPROTO_TCP) ?
                                                 "TCP" : "UDP");
 		seq_printf(s, "status=%s ", status_itoa(peer->status));
@@ -550,8 +548,6 @@ static struct peer *get_peer(struct xt_pknock_rule *rule, uint32_t ip)
 	struct list_head *pos, *n;
 	unsigned int hash;
 
-	ip = ntohl(ip);
-
 	hash = pknock_hash(&ip, sizeof(ip), ipt_pknock_hash_rnd, peer_hashsize);
 
 	list_for_each_safe(pos, n, &rule->peer_head[hash]) {
@@ -590,7 +586,7 @@ static struct peer *new_peer(uint32_t ip, uint8_t proto)
 	}
 
 	INIT_LIST_HEAD(&peer->head);
-	peer->ip	= ntohl(ip);
+	peer->ip	= ip;
 	peer->proto	= proto;
 	peer->timestamp = jiffies/HZ;
 	peer->login_min = 0;
@@ -832,7 +828,7 @@ pass_security(struct peer *peer, const struct xt_pknock_mtinfo *info,
 	}
 	/* Check for OPEN secret */
 	if (!has_secret(info->open_secret,
-					info->open_secret_len, htonl(peer->ip),
+					info->open_secret_len, peer->ip,
 					payload, payload_len))
 		return false;
 
@@ -930,7 +926,7 @@ is_close_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 {
 	/* Check for CLOSE secret. */
 	if (has_secret(info->close_secret,
-				info->close_secret_len, htonl(peer->ip),
+				info->close_secret_len, peer->ip,
 				payload, payload_len))
 	{
 		pk_debug("RESET", peer);
