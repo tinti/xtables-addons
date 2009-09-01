@@ -290,6 +290,10 @@ static void pknock_mt_print(const void *ip,
 		printf("opensecret ");
 	if (info->option & XT_PKNOCK_CLOSESECRET)
 		printf("closesecret ");
+	if (info->option & XT_PKNOCK_STRICT)
+		printf("strict ");
+	if (info->option & XT_PKNOCK_CHECKIP)
+		printf("checkip ");
 }
 
 static void pknock_mt_save(const void *ip, const struct xt_entry_match *match)

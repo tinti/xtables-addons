@@ -1,6 +1,9 @@
 
 
 - build: compile fixes for 2.6.31-rt
+- added reworked xt_pknock module
+  Changes from pknock v0.5:
+  - pknock: "strict" and "checkip" flags were not displayed in `iptables -L`
 
 
 Xtables-addons 1.18 (September 09 2009)
