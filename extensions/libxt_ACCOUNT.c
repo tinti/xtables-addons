@@ -10,7 +10,6 @@
 #include <getopt.h>
 #include <stddef.h>
 #include <xtables.h>
-#include <linux/netfilter_ipv4/ip_tables.h>
 #include "xt_ACCOUNT.h"
 
 static struct option account_tg_opts[] = {
@@ -19,19 +18,14 @@ static struct option account_tg_opts[] = {
 	{ .name = 0 }
 };
 
-/* Compat glue for iptables 1.4.0 */
-#ifndef XTABLES_VERSION
-#define XTABLES_VERSION IPTABLES_VERSION
-#endif
-
 /* Function which prints out usage message. */
 static void account_tg_help(void)
 {
 	printf(
-"ACCOUNT v%s options:\n"
+"ACCOUNT target options:\n"
 " --%s ip/netmask\t\tBase network IP and netmask used for this table\n"
 " --%s name\t\t\tTable name for the userspace library\n",
-XTABLES_VERSION, account_tg_opts[0].name, account_tg_opts[1].name);
+account_tg_opts[0].name, account_tg_opts[1].name);
 }
 
 /* Initialize the target. */
@@ -66,12 +60,7 @@ static int account_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 			xtables_error(PARAMETER_PROBLEM, "Unexpected `!' after --%s",
 				account_tg_opts[0].name);
 
-#ifdef XTABLES_VERSION_CODE
 		xtables_ipparse_any(optarg, &addrs, &mask, &naddrs);
-#else
-		parse_hostnetworkmask(optarg, &addrs, &mask, &naddrs);
-#endif
-
 		if (naddrs > 1)
 			xtables_error(PARAMETER_PROBLEM, "multiple IP addresses not allowed");
 
@@ -117,20 +106,12 @@ static void account_tg_check(unsigned int flags)
 
 static const char *print_helper_ip(struct in_addr a)
 {
-#ifdef XTABLES_VERSION_CODE
 	return xtables_ipaddr_to_numeric(&a);
-#else
-	return addr_to_dotted(&a);
-#endif
 }
 
 static const char *print_helper_mask(struct in_addr a)
 {
-#ifdef XTABLES_VERSION_CODE
 	return xtables_ipmask_to_numeric(&a);
-#else
-	return mask_to_dotted(&a);
-#endif
 }
 
 static void account_tg_print_it(const void *ip,
@@ -177,7 +158,6 @@ account_tg_save(const void *ip, const struct xt_entry_target *target)
 }
 
 static struct xtables_target account_tg_reg = {
-	.next          = NULL,
 	.name          = "ACCOUNT",
 	.family        = AF_INET,
 	.version       = XTABLES_VERSION,
