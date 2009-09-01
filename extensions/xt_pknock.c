@@ -8,6 +8,7 @@
  *
  * This program is released under the terms of GNU GPL version 2.
  */
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 #include <linux/module.h>
 #include <linux/version.h>
 #include <linux/skbuff.h>
@@ -53,7 +54,7 @@ enum {
 			"(S) peer: %u.%u.%u.%u - %s.\n",			\
 			NIPQUAD((peer)->ip), msg)
 #else
-	#define DEBUGP(msg, peer)
+	#define DEBUGP(msg, peer) do {} while (false);
 #endif
 
 static uint32_t ipt_pknock_hash_rnd;
@@ -385,15 +386,13 @@ add_rule(struct ipt_pknock *info)
 
 		if (rulecmp(info, rule) == 0) {
 			rule->ref_count++;
-#if DEBUG
 			if (info->option & IPT_PKNOCK_CHECKIP) {
-				printk(KERN_DEBUG PKNOCK "add_rule() (AC)"
+				pr_debug("add_rule() (AC)"
 					" rule found: %s - "
 					"ref_count: %d\n",
 					rule->rule_name,
 					rule->ref_count);
 			}
-#endif
 			return true;
 		}
 	}
@@ -433,9 +432,7 @@ add_rule(struct ipt_pknock *info)
 	rule->status_proc->data = rule;
 
 	list_add(&rule->head, &rule_hashtable[hash]);
-#if DEBUG
-	printk(KERN_INFO PKNOCK "(A) rule_name: %s - created.\n", rule->rule_name);
-#endif
+	pr_debug("(A) rule_name: %s - created.\n", rule->rule_name);
 	return true;
 }
 
@@ -467,9 +464,7 @@ remove_rule(struct ipt_pknock *info)
 		}
 	}
 	if (!found) {
-#if DEBUG
-		printk(KERN_INFO PKNOCK "(N) rule not found: %s.\n", info->rule_name);
-#endif
+		pr_debug("(N) rule not found: %s.\n", info->rule_name);
 		return;
 	}
 	if (rule && rule->ref_count == 0) {
@@ -485,9 +480,7 @@ remove_rule(struct ipt_pknock *info)
 
 		if (rule->status_proc)
 			remove_proc_entry(info->rule_name, pde);
-#if DEBUG
-		printk(KERN_INFO PKNOCK "(D) rule deleted: %s.\n", rule->rule_name);
-#endif
+		pr_debug("(D) rule deleted: %s.\n", rule->rule_name);
 		if (timer_pending(&rule->timer))
 			del_timer(&rule->timer);
 
@@ -758,9 +751,7 @@ has_secret(unsigned char *secret, int secret_len, uint32_t ipsrc,
 	crypt_to_hex(hexresult, result, crypto.size);
 
 	if (memcmp(hexresult, payload, hexa_size) != 0) {
-#if DEBUG
-		printk(KERN_INFO PKNOCK "secret match failed\n");
-#endif
+		pr_debug("secret match failed\n");
 		goto out;
 	}
 
@@ -859,13 +850,11 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
 		time = jiffies/HZ;
 
 		if (is_time_exceeded(peer, info->max_time)) {
-#if DEBUG
 			DEBUGP("TIME EXCEEDED", peer);
 			DEBUGP("DESTROYED", peer);
-			printk(KERN_INFO PKNOCK "max_time: %ld - time: %ld\n",
+			pr_debug("max_time: %ld - time: %ld\n",
 					peer->timestamp + info->max_time,
 					time);
-#endif
 			remove_peer(peer);
 			return false;
 		}
@@ -986,9 +975,8 @@ static bool pknock_mt(const struct sk_buff *skb,
 	}
 
 out:
-#if DEBUG
-	if (ret) DEBUGP("PASS OK", peer);
-#endif
+	if (ret != 0)
+		DEBUGP("PASS OK", peer);
 	spin_unlock_bh(&list_lock);
 	return ret;
 }
