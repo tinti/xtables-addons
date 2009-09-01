@@ -36,6 +36,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("J. Federico Hernandez Scarso, Luis A. Floreani");
 MODULE_DESCRIPTION("netfilter match for Port Knocking and SPA");
+MODULE_ALIAS("ipt_pknock");
 
 enum {
 	GC_EXPIRATION_TIME 	= 65000, /* in msecs */
