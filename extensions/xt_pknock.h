@@ -8,10 +8,10 @@
  *
  * This program is released under the terms of GNU GPL version 2.
  */
-#ifndef _IPT_PKNOCK_H
-#define _IPT_PKNOCK_H
+#ifndef _XT_PKNOCK_H
+#define _XT_PKNOCK_H
 
-#define PKNOCK "ipt_pknock: "
+#define PKNOCK "xt_pknock: "
 
 #define IPT_PKNOCK_KNOCKPORT	0x01
 #define IPT_PKNOCK_TIME			0x02
@@ -91,4 +91,4 @@ struct transport_data {
 };
 
 #endif /* __KERNEL__ */
-#endif /* _IPT_PKNOCK_H */
+#endif /* _XT_PKNOCK_H */

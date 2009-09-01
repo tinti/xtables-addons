@@ -902,7 +902,8 @@ is_close_knock(const struct peer *peer, const struct ipt_pknock *info,
 	return false;
 }
 
-static bool match(const struct sk_buff *skb, const struct xt_match_param *par)
+static bool pknock_mt(const struct sk_buff *skb,
+    const struct xt_match_param *par)
 {
 	const struct ipt_pknock *info = par->matchinfo;
 	struct ipt_pknock_rule *rule = NULL;
@@ -996,7 +997,7 @@ out:
 
 #define RETURN_ERR(err) do { printk(KERN_ERR PKNOCK err); return false; } while (0)
 
-static bool checkentry(const struct xt_mtchk_param *par)
+static bool pknock_mt_check(const struct xt_mtchk_param *par)
 {
 	struct ipt_pknock *info = par->matchinfo;
 
@@ -1061,24 +1062,24 @@ static bool checkentry(const struct xt_mtchk_param *par)
 	return true;
 }
 
-static void destroy(const struct xt_mtdtor_param *par)
+static void pknock_mt_destroy(const struct xt_mtdtor_param *par)
 {
 	struct ipt_pknock *info = par->matchinfo;
 	/* Removes a rule only if it exits and ref_count is equal to 0. */
 	remove_rule(info);
 }
 
-static struct xt_match ipt_pknock_match __read_mostly = {
+static struct xt_match xt_pknock_mt_reg __read_mostly = {
 	.name		= "pknock",
 	.family		= NFPROTO_IPV4,
 	.matchsize	= sizeof (struct ipt_pknock),
-	.match		= match,
-	.checkentry	= checkentry,
-	.destroy	= destroy,
+	.match      = pknock_mt,
+	.checkentry = pknock_mt_check,
+	.destroy    = pknock_mt_destroy,
 	.me			= THIS_MODULE
 };
 
-static int __init ipt_pknock_init(void)
+static int __init xt_pknock_mt_init(void)
 {
 	printk(KERN_INFO PKNOCK "register.\n");
 
@@ -1100,22 +1101,22 @@ static int __init ipt_pknock_init(void)
 	crypto.desc.tfm = crypto.tfm;
 	crypto.desc.flags = 0;
 
-	if (!(pde = proc_mkdir("ipt_pknock", init_net__proc_net))) {
+	if (!(pde = proc_mkdir("xt_pknock", init_net__proc_net))) {
 		printk(KERN_ERR PKNOCK "proc_mkdir() error in _init().\n");
 		return -1;
 	}
-	return xt_register_match(&ipt_pknock_match);
+	return xt_register_match(&xt_pknock_mt_reg);
 }
 
-static void __exit ipt_pknock_fini(void)
+static void __exit xt_pknock_mt_exit(void)
 {
 	printk(KERN_INFO PKNOCK "unregister.\n");
-	remove_proc_entry("ipt_pknock", init_net__proc_net);
-	xt_unregister_match(&ipt_pknock_match);
+	remove_proc_entry("xt_pknock", init_net__proc_net);
+	xt_unregister_match(&xt_pknock_mt_reg);
 	kfree(rule_hashtable);
 
 	if (crypto.tfm != NULL) crypto_free_hash(crypto.tfm);
 }
 
-module_init(ipt_pknock_init);
-module_exit(ipt_pknock_fini);
+module_init(xt_pknock_mt_init);
+module_exit(xt_pknock_mt_exit);
