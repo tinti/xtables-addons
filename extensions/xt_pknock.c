@@ -86,7 +86,7 @@ MODULE_DESCRIPTION("netfilter match for Port Knocking and SPA");
 MODULE_ALIAS("ipt_pknock");
 
 enum {
-	GC_EXPIRATION_TIME 	= 65000, /* in msecs */
+	DEFAULT_GC_EXPIRATION_TIME = 65000, /* in msecs */
 	DEFAULT_RULE_HASH_SIZE  = 8,
 	DEFAULT_PEER_HASH_SIZE  = 16,
 };
@@ -103,7 +103,7 @@ static uint32_t ipt_pknock_hash_rnd;
 
 static unsigned int rule_hashsize	= DEFAULT_RULE_HASH_SIZE;
 static unsigned int peer_hashsize	= DEFAULT_PEER_HASH_SIZE;
-static unsigned int ipt_pknock_gc_expir_time = GC_EXPIRATION_TIME;
+static unsigned int gc_expir_time = DEFAULT_GC_EXPIRATION_TIME;
 static int nl_multicast_group		= -1;
 
 static struct list_head *rule_hashtable;
@@ -125,9 +125,13 @@ static struct {
 #endif
 
 module_param(rule_hashsize, int, S_IRUGO);
+MODULE_PARM_DESC(rule_hashsize, "Buckets in rule hash table (default: 8)");
 module_param(peer_hashsize, int, S_IRUGO);
-module_param(ipt_pknock_gc_expir_time, int, S_IRUGO);
+MODULE_PARM_DESC(peer_hashsize, "Buckets in peer hash table (default: 16)");
+module_param(gc_expir_time, int, S_IRUGO);
+MODULE_PARM_DESC(gc_expir_time, "Time until garbage collection after valid knock packet (default: 65000 msec)");
 module_param(nl_multicast_group, int, S_IRUGO);
+MODULE_PARM_DESC(nl_multicast_group, "Netlink multicast group number for pknock messages");
 
 /**
  * Calculates a value from 0 to max from a hash of the arguments.
@@ -313,7 +317,7 @@ static void update_rule_timer(struct xt_pknock_rule *rule)
 	if (timer_pending(&rule->timer))
 		del_timer(&rule->timer);
 
-	rule->timer.expires = jiffies + msecs_to_jiffies(ipt_pknock_gc_expir_time);
+	rule->timer.expires = jiffies + msecs_to_jiffies(gc_expir_time);
 	add_timer(&rule->timer);
 }
 
