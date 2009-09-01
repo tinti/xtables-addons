@@ -1100,4 +1100,7 @@ static void __exit account_tg_exit(void)
 
 module_init(account_tg_init);
 module_exit(account_tg_exit);
+MODULE_DESCRIPTION("Xtables: per-IP accounting for large prefixes");
+MODULE_AUTHOR("Intra2net AG <opensource@intra2net.com>");
+MODULE_ALIAS("ipt_ACCOUNT");
 MODULE_LICENSE("GPL");
