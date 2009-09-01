@@ -36,6 +36,7 @@
 
 #include <net/route.h>
 #include "xt_ACCOUNT.h"
+#include "compat_xtables.h"
 
 #if (PAGE_SIZE < 4096)
 #error "ipt_ACCOUNT needs at least a PAGE_SIZE of 4096"
@@ -413,14 +414,14 @@ static void ipt_acc_depth2_insert(struct ipt_acc_mask_8 *mask_8,
 	}
 }
 
-static unsigned int ipt_acc_target(struct sk_buff *skb, const struct xt_target_param *par)
+static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct ipt_acc_info *info =
 		par->targinfo;
 
-	uint32_t src_ip = ip_hdr(skb)->saddr;
-	uint32_t dst_ip = ip_hdr(skb)->daddr;
-	uint32_t size = ntohs(ip_hdr(skb)->tot_len);
+	uint32_t src_ip = ip_hdr(*pskb)->saddr;
+	uint32_t dst_ip = ip_hdr(*pskb)->daddr;
+	uint32_t size = ntohs(ip_hdr(*pskb)->tot_len);
 
 	spin_lock_bh(&ipt_acc_lock);
 
