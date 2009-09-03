@@ -42,9 +42,9 @@
 #error "ipt_ACCOUNT needs at least a PAGE_SIZE of 4096"
 #endif
 
-static struct ipt_acc_table *ipt_acc_tables = NULL;
-static struct ipt_acc_handle *ipt_acc_handles = NULL;
-static void *ipt_acc_tmpbuf = NULL;
+static struct ipt_acc_table *ipt_acc_tables;
+static struct ipt_acc_handle *ipt_acc_handles;
+static void *ipt_acc_tmpbuf;
 
 /* Spinlock used for manipulating the current accounting tables/data */
 static DEFINE_SPINLOCK(ipt_acc_lock);
