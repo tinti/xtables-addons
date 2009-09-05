@@ -146,7 +146,7 @@ static void print_it(const void *ip,
         printf("--");
     printf("%s ", opts[0].name);
 
-    a.s_addr = accountinfo->net_ip;	
+    a.s_addr = accountinfo->net_ip;
     printf("%s", print_helper_ip(a));
     a.s_addr = accountinfo->net_mask;
     printf("%s", print_helper_mask(a));

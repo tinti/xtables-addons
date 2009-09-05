@@ -39,24 +39,24 @@ struct ipt_acc_table {
     char name[ACCOUNT_TABLE_NAME_LEN];     /* name of the table */
     uint32_t ip;                          /* base IP of network */
     uint32_t netmask;                     /* netmask of the network */
-    unsigned char depth;                   /* size of network: 
+    unsigned char depth;                   /* size of network:
                                                  0: 8 bit, 1: 16bit, 2: 24 bit */
-    uint32_t refcount;                    /* refcount of this table. 
+    uint32_t refcount;                    /* refcount of this table.
                                                  if zero, destroy it */
     uint32_t itemcount;                   /* number of IPs in this table */
-    void *data;                            /* pointer to the actual data, 
+    void *data;                            /* pointer to the actual data,
                                                  depending on netmask */
 };
 
 /* Internal handle structure */
 struct ipt_acc_handle {
-    uint32_t ip;                          /* base IP of network. Used for 
+    uint32_t ip;                          /* base IP of network. Used for
                                                  caculating the final IP during
                                                  get_data() */
-    unsigned char depth;                   /* size of network. See above for 
+    unsigned char depth;                   /* size of network. See above for
                                                  details */
     uint32_t itemcount;                   /* number of IPs in this table */
-    void *data;                            /* pointer to the actual data, 
+    void *data;                            /* pointer to the actual data,
                                                  depending on size */
 };
 
@@ -69,8 +69,8 @@ struct ipt_acc_handle_sockopt {
                                                  HANDLE_READ_FLUSH */
 };
 
-/* Used for every IP entry 
-   Size is 16 bytes so that 256 (class C network) * 16 
+/* Used for every IP entry
+   Size is 16 bytes so that 256 (class C network) * 16
    fits in one kernel (zero) page */
 struct ipt_acc_ip {
     uint32_t src_packets;
