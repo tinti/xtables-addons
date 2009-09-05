@@ -104,16 +104,6 @@ static void account_tg_check(unsigned int flags)
 			account_tg_opts[0].name, account_tg_opts[1].name);
 }
 
-static const char *print_helper_ip(struct in_addr a)
-{
-	return xtables_ipaddr_to_numeric(&a);
-}
-
-static const char *print_helper_mask(struct in_addr a)
-{
-	return xtables_ipmask_to_numeric(&a);
-}
-
 static void account_tg_print_it(const void *ip,
 		const struct xt_entry_target *target, char do_prefix)
 {
@@ -130,9 +120,9 @@ static void account_tg_print_it(const void *ip,
 	printf("%s ", account_tg_opts[0].name);
 
 	a.s_addr = accountinfo->net_ip;
-	printf("%s", print_helper_ip(a));
+	printf("%s", xtables_ipaddr_to_numeric(&a));
 	a.s_addr = accountinfo->net_mask;
-	printf("%s", print_helper_mask(a));
+	printf("%s", xtables_ipmask_to_numeric(&a));
 
 	printf(" ");
 	if (do_prefix)
