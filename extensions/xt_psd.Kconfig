@@ -1,0 +1,6 @@
+config NETFILTER_XT_MATCH_PSD
+	tristate  'psd match support'
+	depends on NETFILTER_XTABLES && NETFILTER_ADVANCED
+	---help---
+	This option adds a `psd' match, which allows you to create rules in
+	any iptables table wich will detect TCP and UDP port scans.

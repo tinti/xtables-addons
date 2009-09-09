@@ -21,4 +21,5 @@ build_ipset=m
 build_ipv4options=m
 build_length2=m
 build_lscan=m
+build_psd=m
 build_quota2=m
