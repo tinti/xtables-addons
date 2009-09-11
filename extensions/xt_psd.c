@@ -118,7 +118,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	iph = ip_hdr(pskb);
 
 	/* Sanity check */
-	if (ntohs(iph->frag_off) & IP_OFFSET) {
+	if (iph->frag_off & htons(IP_OFFSET)) {
 		pr_debug("sanity check failed\n");
 		return false;
 	}
