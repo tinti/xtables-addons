@@ -79,11 +79,10 @@ krel="${krel#*.}";
 kminor="${krel%%.*}";
 krel="${krel#*.}";
 kmicro="${krel%%.*}";
-krel2="${krel#*.}";
-if test "$krel" = "$krel2"; then
+if test "$kmicro" = "$krel"; then
 	kstable=0;
 else
-	kstable="${krel%%.*}";
+	kstable="${krel#*.}";
 	if test -z "$kstable"; then
 		kstable=0;
 	fi;
