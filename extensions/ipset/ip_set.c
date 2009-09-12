@@ -39,7 +39,7 @@
 static struct list_head set_type_list;		/* all registered sets */
 static struct ip_set **ip_set_list;		/* all individual sets */
 static DEFINE_RWLOCK(ip_set_lock);		/* protects the lists and the hash */
-static DECLARE_MUTEX(ip_set_app_mutex);		/* serializes user access */
+static struct semaphore ip_set_app_mutex;	/* serializes user access */
 static ip_set_id_t ip_set_max = CONFIG_IP_NF_SET_MAX;
 static ip_set_id_t ip_set_bindings_hash_size =  CONFIG_IP_NF_SET_HASHSIZE;
 static struct list_head *ip_set_hash;		/* hash of bindings */
@@ -2016,6 +2016,7 @@ static int __init ip_set_init(void)
 	int res;
 	ip_set_id_t i;
 
+	sema_init(&ip_set_app_mutex, 1);
 	get_random_bytes(&ip_set_hash_random, 4);
 	if (max_sets)
 		ip_set_max = max_sets;
