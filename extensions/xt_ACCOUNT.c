@@ -30,7 +30,6 @@
 
 #include <linux/kernel.h>
 #include <linux/mm.h>
-#include <linux/semaphore.h>
 #include <linux/string.h>
 #include <linux/spinlock.h>
 #include <asm/uaccess.h>
