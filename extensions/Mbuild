@@ -1,3 +1,5 @@
+# -*- Makefile -*-
+
 obj-${build_ACCOUNT}     += libxt_ACCOUNT.so
 obj-${build_CHAOS}       += libxt_CHAOS.so
 obj-${build_DELUDE}      += libxt_DELUDE.so

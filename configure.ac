@@ -103,5 +103,6 @@ AC_SUBST([kinclude_CFLAGS])
 AC_SUBST([kbuilddir])
 AC_SUBST([ksourcedir])
 AC_SUBST([xtlibdir])
-AC_CONFIG_FILES([Makefile extensions/GNUmakefile extensions/ipset/Makefile])
+AC_CONFIG_FILES([Makefile Makefile.iptrules Makefile.mans
+	extensions/Makefile extensions/ipset/Makefile])
 AC_OUTPUT
