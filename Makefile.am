@@ -5,16 +5,16 @@ SUBDIRS          = extensions
 
 man_MANS := xtables-addons.8
 
-xtables-addons.8: ${srcdir}/xtables-addons.8.in extensions/matches.man extensions/targets.man
-	${am__verbose_GEN}sed -e '/@MATCHES@/ r extensions/matches.man' -e '/@TARGET@/ r extensions/targets.man' $< >$@;
+.PHONY: FORCE
+FORCE:
 
-extensions/%:
-	${MAKE} ${AM_MAKEFLAGS} -C $(@D) $(@F)
+xtables-addons.8: FORCE
+	${MAKE} -f Makefile.mans all;
 
-install-exec-local:
+install-exec-hook:
 	depmod -a || :;
 
-config.status: extensions/GNUmakefile.in
+config.status: Makefile.iptrules.in
 
 .PHONY: tarball
 tarball:

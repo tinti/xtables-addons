@@ -46,6 +46,9 @@ Configuring and compiling
 	/lib/modules/$(running version)/build, which usually points to
 	the right directory. (If not, you need to install something.)
 
+	For RPM building, it should be /usr/src/linux-obj/...
+	or whatever location the distro makes use of.
+
 --with-xtables=
 
 	Specifies the path to the directory where we may find
@@ -55,11 +58,11 @@ Configuring and compiling
 	include/xtables.h. (The latter to support both standard
 	/usr/include and the iptables source root.)
 
---with-libxtdir=
+--with-xtlibdir=
 
 	Specifies the path to where the newly built extensions should
 	be installed when `make install` is run. It uses the same
-	default as the Xtables package, ${libexecdir}/xtables.
+	default as the Xtables/iptables package, ${libexecdir}/xtables.
 
 If you want to enable debugging, use
 
@@ -72,14 +75,9 @@ much easier.)
 Build-time options
 ==================
 
-V= controls the kernel's make verbosity.
+V= controls the verbosity of make commands.
 V=0	"silent" (output filename)
 V=1	"verbose" (entire gcc command line)
-
-VU= controls the Xt-a make verbosity.
-VU=0	output filename
-VU=1	output filename and source file
-VU=2	entire gcc command line
 
 
 Note to distribution packagers

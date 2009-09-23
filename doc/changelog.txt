@@ -1,10 +1,18 @@
 
 
-- build: support for Linux 2.6.31-rc1
+- build: compile fixes for 2.6.31-rt
+
+
+Xtables-addons 1.18 (September 09 2009)
+=======================================
+- build: support for Linux 2.6.31
+- ipset: fast forward to v3.2
 - quota2: support anonymous counters
 - quota2: reduce memory footprint for anonymous counters
 - quota2: extend locked period during cleanup (locking bugfix)
 - quota2: use strtoull instead of strtoul
+- merged xt_ACCOUNT module
+- merged xt_psd module
 
 
 Xtables-addons 1.17 (June 16 2009)

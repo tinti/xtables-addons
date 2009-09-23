@@ -55,7 +55,7 @@ struct condition_variable {
 
 /* proc_lock is a user context only semaphore used for write access */
 /*           to the conditions' list.                               */
-static DECLARE_MUTEX(proc_lock);
+static struct semaphore proc_lock;
 
 static LIST_HEAD(conditions_list);
 static struct proc_dir_entry *proc_net_condition;
@@ -232,6 +232,7 @@ static int __init condition_mt_init(void)
 {
 	int ret;
 
+	sema_init(&proc_lock, 1);
 	proc_net_condition = proc_mkdir(dir_name, init_net__proc_net);
 	if (proc_net_condition == NULL)
 		return -EACCES;

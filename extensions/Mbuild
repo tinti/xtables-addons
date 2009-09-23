@@ -1,3 +1,5 @@
+# -*- Makefile -*-
+
 obj-${build_ACCOUNT}     += libxt_ACCOUNT.so
 obj-${build_CHAOS}       += libxt_CHAOS.so
 obj-${build_DELUDE}      += libxt_DELUDE.so
@@ -19,4 +21,5 @@ obj-${build_ipset}       += ipset/
 obj-${build_ipv4options} += libxt_ipv4options.so
 obj-${build_length2}     += libxt_length2.so
 obj-${build_lscan}       += libxt_lscan.so
+obj-${build_psd}         += libxt_psd.so
 obj-${build_quota2}      += libxt_quota2.so

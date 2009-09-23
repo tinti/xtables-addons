@@ -1,0 +1,29 @@
+# -*- Makefile -*-
+# AUTOMAKE
+
+XA_SRCDIR = ${srcdir}
+XA_TOPSRCDIR = ${top_srcdir}
+XA_ABSTOPSRCDIR = ${abs_top_srcdir}
+export XA_SRCDIR
+export XA_TOPSRCDIR
+export XA_ABSTOPSRCDIR
+
+_mcall = ${MAKE} -f ${top_builddir}/Makefile.iptrules
+
+all-local: user-all-local
+
+install-exec-local: user-install-local
+
+clean-local: user-clean-local
+
+user-all-local:
+	${_mcall} all;
+
+# Have no user-install-data-local ATM
+user-install-local: user-install-exec-local
+
+user-install-exec-local:
+	${_mcall} install;
+
+user-clean-local:
+	${_mcall} clean;
