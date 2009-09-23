@@ -1,6 +1,6 @@
 # -*- Makefile -*-
 
-obj-${build_ACCOUNT}     += libxt_ACCOUNT.so
+obj-${build_ACCOUNT}     += ACCOUNT/
 obj-${build_CHAOS}       += libxt_CHAOS.so
 obj-${build_DELUDE}      += libxt_DELUDE.so
 obj-${build_DHCPMAC}     += libxt_DHCPMAC.so libxt_dhcpmac.so
