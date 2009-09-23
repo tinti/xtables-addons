@@ -22,7 +22,7 @@
 
 #include <libxt_ACCOUNT_cl.h>
 
-char exit_now = 0;
+char exit_now;
 static void sig_term(int signr)
 {
 	signal(SIGINT, SIG_IGN);
