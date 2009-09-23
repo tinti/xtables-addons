@@ -23,7 +23,7 @@ int ipt_ACCOUNT_init(struct ipt_ACCOUNT_context *ctx)
 {
     memset (ctx, 0, sizeof(struct ipt_ACCOUNT_context));
     ctx->handle.handle_nr = -1;
-    
+
     ctx->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (ctx->sockfd < 0) {
         ctx->sockfd = -1;
@@ -31,7 +31,7 @@ int ipt_ACCOUNT_init(struct ipt_ACCOUNT_context *ctx)
                          "Permission denied or ipt_ACCOUNT module not loaded";
         return -1;
     }
-    
+
     // 4096 bytes default buffer should save us from reallocations
     // as it fits 200 concurrent active clients
     if((ctx->data = (void *)malloc(IPT_ACCOUNT_MIN_BUFSIZE)) == NULL) {
@@ -41,7 +41,7 @@ int ipt_ACCOUNT_init(struct ipt_ACCOUNT_context *ctx)
         return -1;
     }
     ctx->data_size = IPT_ACCOUNT_MIN_BUFSIZE;
-    
+
     return 0;
 }
 
@@ -63,7 +63,7 @@ void ipt_ACCOUNT_deinit(struct ipt_ACCOUNT_context *ctx)
     ctx->data = NULL;
 
     ipt_ACCOUNT_free_entries(ctx);
-        
+
     close(ctx->sockfd);
     ctx->sockfd =-1;
 }
@@ -74,9 +74,9 @@ int ipt_ACCOUNT_read_entries(struct ipt_ACCOUNT_context *ctx,
     unsigned int s = sizeof (struct ipt_acc_handle_sockopt);
     unsigned int new_size;
     int rtn;
-    
+
     strncpy(ctx->handle.name, table, ACCOUNT_TABLE_NAME_LEN-1);
-    
+
     // Get table information
     if (!dont_flush)
         rtn = getsockopt(ctx->sockfd, IPPROTO_IP,
@@ -84,35 +84,35 @@ int ipt_ACCOUNT_read_entries(struct ipt_ACCOUNT_context *ctx,
     else
         rtn = getsockopt(ctx->sockfd, IPPROTO_IP, IPT_SO_GET_ACCOUNT_PREPARE_READ,
                          &ctx->handle, &s);
-    
+
     if (rtn < 0) {
         ctx->error_str = "Can't get table information from kernel. "
                          "Does it exist?";
         return -1;
     }
-    
+
     // Check data buffer size
     ctx->pos = 0;
     new_size = ctx->handle.itemcount * sizeof(struct ipt_acc_handle_ip);
     // We want to prevent reallocations all the time
     if (new_size < IPT_ACCOUNT_MIN_BUFSIZE)
         new_size = IPT_ACCOUNT_MIN_BUFSIZE;
-    
+
     // Reallocate if it's too small or twice as big
     if (ctx->data_size < new_size || ctx->data_size > new_size*2) {
         // Free old buffer
         free (ctx->data);
         ctx->data_size = 0;
-        
+
         if ((ctx->data = (void*)malloc(new_size)) == NULL) {
             ctx->error_str = "Out of memory for data buffer";
             ipt_ACCOUNT_free_entries(ctx);
             return -1;
         }
-        
+
         ctx->data_size = new_size;
     }
-    
+
     // Copy data from kernel
     memcpy(ctx->data, &ctx->handle, sizeof(struct ipt_acc_handle_sockopt));
     rtn = getsockopt(ctx->sockfd, IPPROTO_IP, IPT_SO_GET_ACCOUNT_GET_DATA,
@@ -128,23 +128,23 @@ int ipt_ACCOUNT_read_entries(struct ipt_ACCOUNT_context *ctx,
     setsockopt(ctx->sockfd, IPPROTO_IP, IPT_SO_SET_ACCOUNT_HANDLE_FREE,
                &ctx->handle, sizeof (struct ipt_acc_handle_sockopt));
     ctx->handle.handle_nr = -1;
-    
+
     return 0;
 }
 
 struct ipt_acc_handle_ip *ipt_ACCOUNT_get_next_entry(struct ipt_ACCOUNT_context *ctx)
 {
     struct ipt_acc_handle_ip *rtn;
-    
+
     // Empty or no more items left to return?
     if (!ctx->handle.itemcount || ctx->pos >= ctx->handle.itemcount)
         return NULL;
-    
+
     // Get next entry
     rtn = (struct ipt_acc_handle_ip *)(ctx->data + ctx->pos
                                        * sizeof(struct ipt_acc_handle_ip));
     ctx->pos++;
-            
+
     return rtn;
 }
 
@@ -157,10 +157,10 @@ int ipt_ACCOUNT_get_handle_usage(struct ipt_ACCOUNT_context *ctx)
         return -1;
     }
     ctx->handle.handle_nr = -1;
-    
+
     return ctx->handle.itemcount;
  }
-    
+
 int ipt_ACCOUNT_free_all_handles(struct ipt_ACCOUNT_context *ctx)
 {
     if (setsockopt(ctx->sockfd, IPPROTO_IP,
@@ -168,10 +168,10 @@ int ipt_ACCOUNT_free_all_handles(struct ipt_ACCOUNT_context *ctx)
         ctx->error_str = "Can't free all kernel handles";
         return -1;
     }
-    
+
     return 0;
 }
-    
+
 int ipt_ACCOUNT_get_table_names(struct ipt_ACCOUNT_context *ctx)
 {
     int rtn = getsockopt(ctx->sockfd, IPPROTO_IP,
@@ -194,6 +194,6 @@ const char *ipt_ACCOUNT_get_next_name(struct ipt_ACCOUNT_context *ctx)
 
     rtn = ctx->data + ctx->pos;
     ctx->pos += strlen(ctx->data+ctx->pos) + 1;
-        
+
     return rtn;
 }

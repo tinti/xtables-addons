@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         show_usage();
         exit(0);
     }
-        
+
     while ((optchar = getopt (argc, argv, "uhacfsl:")) != -1)
     {
         switch (optchar)
