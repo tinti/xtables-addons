@@ -12,6 +12,7 @@
 #include <config.h>
 #endif
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,14 +23,14 @@
 
 #include <libxt_ACCOUNT_cl.h>
 
-char exit_now;
+bool exit_now;
 static void sig_term(int signr)
 {
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
 
-	exit_now = 1;
+	exit_now = true;
 }
 
 char *addr_to_dotted(unsigned int);
@@ -62,8 +63,9 @@ int main(int argc, char *argv[])
 	struct ipt_ACCOUNT_context ctx;
 	struct ipt_acc_handle_ip *entry;
 	int i;
-	char optchar, doHandleUsage = 0, doHandleFree = 0, doTableNames = 0;
-	char doFlush = 0, doContinue = 0, doCSV = 0;
+	char optchar;
+	bool doHandleUsage = false, doHandleFree = false, doTableNames = false;
+	bool doFlush = false, doContinue = false, doCSV = false;
 
 	char *table_name = NULL;
 	const char *name;
@@ -82,22 +84,22 @@ int main(int argc, char *argv[])
 		switch (optchar)
 		{
 		case 'u':
-			doHandleUsage = 1;
+			doHandleUsage = true;
 			break;
 		case 'h':
-			doHandleFree = 1;
+			doHandleFree = true;
 			break;
 		case 'a':
-			doTableNames = 1;
+			doTableNames = true;
 			break;
 		case 'f':
-			doFlush = 1;
+			doFlush = true;
 			break;
 		case 'c':
-			doContinue = 1;
+			doContinue = true;
 			break;
 		case 's':
-			doCSV = 1;
+			doCSV = true;
 			break;
 		case 'l':
 			table_name = strdup(optarg);
@@ -211,7 +213,7 @@ int main(int argc, char *argv[])
 				sleep(1);
 				i++;
 			} else
-				exit_now = 1;
+				exit_now = true;
 		}
 	}
 
