@@ -34,7 +34,7 @@ int ipt_ACCOUNT_init(struct ipt_ACCOUNT_context *ctx)
 
 	// 4096 bytes default buffer should save us from reallocations
 	// as it fits 200 concurrent active clients
-	if ((ctx->data = (void *)malloc(IPT_ACCOUNT_MIN_BUFSIZE)) == NULL) {
+	if ((ctx->data = malloc(IPT_ACCOUNT_MIN_BUFSIZE)) == NULL) {
 		close(ctx->sockfd);
 		ctx->sockfd = -1;
 		ctx->error_str = "Out of memory for data buffer";
@@ -104,7 +104,7 @@ int ipt_ACCOUNT_read_entries(struct ipt_ACCOUNT_context *ctx,
 		free(ctx->data);
 		ctx->data_size = 0;
 
-		if ((ctx->data = (void*)malloc(new_size)) == NULL) {
+		if ((ctx->data = malloc(new_size)) == NULL) {
 			ctx->error_str = "Out of memory for data buffer";
 			ipt_ACCOUNT_free_entries(ctx);
 			return -1;

@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 			doCSV = 1;
 			break;
 		case 'l':
-			table_name = (char *)strdup(optarg);
+			table_name = strdup(optarg);
 			break;
 		case '?':
 		default:
