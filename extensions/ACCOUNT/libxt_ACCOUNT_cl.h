@@ -20,37 +20,37 @@
 
 struct ipt_ACCOUNT_context
 {
-    int sockfd;
-    struct ipt_acc_handle_sockopt handle;
+	int sockfd;
+	struct ipt_acc_handle_sockopt handle;
 
-    unsigned int data_size;
-    void *data;
-    unsigned int pos;
+	unsigned int data_size;
+	void *data;
+	unsigned int pos;
 
-    char *error_str;
+	char *error_str;
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-    int ipt_ACCOUNT_init(struct ipt_ACCOUNT_context *ctx);
-    void ipt_ACCOUNT_deinit(struct ipt_ACCOUNT_context *ctx);
+int ipt_ACCOUNT_init(struct ipt_ACCOUNT_context *ctx);
+void ipt_ACCOUNT_deinit(struct ipt_ACCOUNT_context *ctx);
 
-    void ipt_ACCOUNT_free_entries(struct ipt_ACCOUNT_context *ctx);
-    int ipt_ACCOUNT_read_entries(struct ipt_ACCOUNT_context *ctx,
-                                 const char *table, char dont_flush);
-    struct ipt_acc_handle_ip *ipt_ACCOUNT_get_next_entry(
-                                 struct ipt_ACCOUNT_context *ctx);
+void ipt_ACCOUNT_free_entries(struct ipt_ACCOUNT_context *ctx);
+int ipt_ACCOUNT_read_entries(struct ipt_ACCOUNT_context *ctx,
+                             const char *table, char dont_flush);
+struct ipt_acc_handle_ip *ipt_ACCOUNT_get_next_entry(
+                             struct ipt_ACCOUNT_context *ctx);
 
-    /* ipt_ACCOUNT_free_entries is for internal use only function as this library
-    is constructed to be used in a loop -> Don't allocate memory all the time.
-    The data buffer is freed on deinit() */
+/* ipt_ACCOUNT_free_entries is for internal use only function as this library
+is constructed to be used in a loop -> Don't allocate memory all the time.
+The data buffer is freed on deinit() */
 
-    int ipt_ACCOUNT_get_handle_usage(struct ipt_ACCOUNT_context *ctx);
-    int ipt_ACCOUNT_free_all_handles(struct ipt_ACCOUNT_context *ctx);
-    int ipt_ACCOUNT_get_table_names(struct ipt_ACCOUNT_context *ctx);
-    const char *ipt_ACCOUNT_get_next_name(struct ipt_ACCOUNT_context *ctx);
+int ipt_ACCOUNT_get_handle_usage(struct ipt_ACCOUNT_context *ctx);
+int ipt_ACCOUNT_free_all_handles(struct ipt_ACCOUNT_context *ctx);
+int ipt_ACCOUNT_get_table_names(struct ipt_ACCOUNT_context *ctx);
+const char *ipt_ACCOUNT_get_next_name(struct ipt_ACCOUNT_context *ctx);
 
 #ifdef __cplusplus
 }
