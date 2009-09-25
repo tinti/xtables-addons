@@ -1,0 +1,13 @@
+config NETFILTER_XT_TARGET_ACCOUNT
+	tristate "ACCOUNT target support"
+	depends on NETFILTER_XTABLES
+	---help---
+	This module implements an ACCOUNT target
+
+	The ACCOUNT target is a high performance accounting system for large
+	local networks. It allows per-IP accounting in whole prefixes of IPv4
+	addresses with size of up to /8 without the need to add individual
+	accouting rule for each IP address.
+
+	For more information go to:
+	http://www.intra2net.com/de/produkte/opensource/ipt_account/
