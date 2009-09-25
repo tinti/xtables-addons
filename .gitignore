@@ -6,7 +6,6 @@
 .libs
 Makefile
 Makefile.in
-GNUmakefile
 
 /downloads
 

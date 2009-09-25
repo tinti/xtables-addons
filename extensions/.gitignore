@@ -8,8 +8,5 @@ Module.symvers
 Modules.symvers
 modules.order
 
-/*.so
-/*.oo
-/matches.man
-/targets.man
-/.manpages.lst
+*.so
+*.oo
