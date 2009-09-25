@@ -102,8 +102,9 @@ static inline int hashfunc(struct in_addr addr)
 static bool
 xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 {
-	struct iphdr *iph;
-	struct tcphdr *tcph;
+	const struct iphdr *iph;
+	const struct tcphdr *tcph;
+	struct tcphdr _tcph;
 	struct in_addr addr;
 	u_int16_t src_port,dest_port;
   	u_int8_t tcp_flags, proto;
@@ -117,7 +118,7 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 	iph = ip_hdr(pskb);
 
 	/* Sanity check */
-	if (ntohs(iph->frag_off) & IP_OFFSET) {
+	if (iph->frag_off & htons(IP_OFFSET)) {
 		pr_debug("sanity check failed\n");
 		return false;
 	}
@@ -134,7 +135,9 @@ xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
 
 	addr.s_addr = iph->saddr;
 
-	tcph = (void *)iph + ip_hdrlen(pskb);
+	tcph = skb_header_pointer(pskb, match->thoff, sizeof(_tcph), &_tcph);
+	if (tcph == NULL)
+		return false;
 
 	/* Yep, it's dirty */
 	src_port = tcph->source;
