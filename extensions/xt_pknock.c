@@ -1097,7 +1097,7 @@ static int __init xt_pknock_mt_init(void)
 	if (request_module(crypto.algo) < 0) {
 		printk(KERN_ERR PKNOCK "request_module('%s') error.\n",
                         crypto.algo);
-		return -1;
+		return -ENXIO;
 	}
 
 	crypto.tfm = crypto_alloc_hash(crypto.algo, 0, CRYPTO_ALG_ASYNC);
@@ -1105,7 +1105,7 @@ static int __init xt_pknock_mt_init(void)
 	if (crypto.tfm == NULL) {
 		printk(KERN_ERR PKNOCK "failed to load transform for %s\n", 
 						crypto.algo);
-		return -1;
+		return -ENXIO;
 	}
 
 	crypto.size = crypto_hash_digestsize(crypto.tfm);
@@ -1117,7 +1117,7 @@ static int __init xt_pknock_mt_init(void)
 
 	if (!(pde = proc_mkdir("xt_pknock", init_net__proc_net))) {
 		printk(KERN_ERR PKNOCK "proc_mkdir() error in _init().\n");
-		return -1;
+		return -ENXIO;
 	}
 	return xt_register_match(&xt_pknock_mt_reg);
 }
