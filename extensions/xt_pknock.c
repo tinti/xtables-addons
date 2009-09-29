@@ -64,8 +64,8 @@ static unsigned int peer_hashsize	= DEFAULT_PEER_HASH_SIZE;
 static unsigned int ipt_pknock_gc_expir_time = GC_EXPIRATION_TIME;
 static int nl_multicast_group		= -1;
 
-static struct list_head *rule_hashtable	= NULL;
-static struct proc_dir_entry *pde = NULL;
+static struct list_head *rule_hashtable;
+static struct proc_dir_entry *pde;
 
 static DEFINE_SPINLOCK(list_lock);
 
@@ -121,7 +121,7 @@ get_epoch_minute(void)
 static struct list_head *
 alloc_hashtable(unsigned int size)
 {
-	struct list_head *hash = NULL;
+	struct list_head *hash;
 	unsigned int i;
 
 	if ((hash = kmalloc(sizeof(*hash) * size, GFP_ATOMIC)) == NULL) {
@@ -209,9 +209,9 @@ pknock_seq_stop(struct seq_file *s, void *v)
 static int
 pknock_seq_show(struct seq_file *s, void *v)
 {
-	const struct list_head *pos = NULL, *n = NULL;
-	const struct peer *peer = NULL;
-	unsigned long expir_time = 0;
+	const struct list_head *pos, *n;
+	const struct peer *peer;
+	unsigned long expir_time;
         uint32_t ip;
 
 	const struct list_head *peer_head = v;
@@ -314,8 +314,8 @@ peer_gc(unsigned long r)
 {
 	unsigned int i;
 	struct ipt_pknock_rule *rule = (struct ipt_pknock_rule *)r;
-	struct peer *peer = NULL;
-	struct list_head *pos = NULL, *n = NULL;
+	struct peer *peer;
+	struct list_head *pos, *n;
 
 	hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
 		peer = list_entry(pos, struct peer, head);
@@ -356,8 +356,8 @@ rulecmp(const struct ipt_pknock *info, const struct ipt_pknock_rule *rule)
 static inline struct ipt_pknock_rule *
 search_rule(const struct ipt_pknock *info)
 {
-	struct ipt_pknock_rule *rule = NULL;
-	struct list_head *pos = NULL, *n = NULL;
+	struct ipt_pknock_rule *rule;
+	struct list_head *pos, *n;
 	unsigned int hash = pknock_hash(info->rule_name, info->rule_name_len,
 					ipt_pknock_hash_rnd, rule_hashsize);
 
@@ -378,8 +378,8 @@ search_rule(const struct ipt_pknock *info)
 static bool
 add_rule(struct ipt_pknock *info)
 {
-	struct ipt_pknock_rule *rule = NULL;
-	struct list_head *pos = NULL, *n = NULL;
+	struct ipt_pknock_rule *rule;
+	struct list_head *pos, *n;
 	unsigned int hash = pknock_hash(info->rule_name, info->rule_name_len,
                                 ipt_pknock_hash_rnd, rule_hashsize);
 
@@ -447,9 +447,9 @@ static void
 remove_rule(struct ipt_pknock *info)
 {
 	struct ipt_pknock_rule *rule = NULL;
-	struct list_head *pos = NULL, *n = NULL;
-	struct peer *peer = NULL;
-	unsigned int i = 0;
+	struct list_head *pos, *n;
+	struct peer *peer;
+	unsigned int i;
 	int found = 0;
 	unsigned int hash = pknock_hash(info->rule_name, info->rule_name_len,
                                 ipt_pknock_hash_rnd, rule_hashsize);
@@ -502,8 +502,8 @@ remove_rule(struct ipt_pknock *info)
 static inline struct peer *
 get_peer(struct ipt_pknock_rule *rule, uint32_t ip)
 {
-	struct peer *peer = NULL;
-	struct list_head *pos = NULL, *n = NULL;
+	struct peer *peer;
+	struct list_head *pos, *n;
 	unsigned int hash;
 
 	ip = ntohl(ip);
@@ -540,7 +540,7 @@ reset_knock_status(struct peer *peer)
 static inline struct peer *
 new_peer(uint32_t ip, uint8_t proto)
 {
-	struct peer *peer = NULL;
+	struct peer *peer;
 
 	if ((peer = kmalloc(sizeof (*peer), GFP_ATOMIC)) == NULL) {
 		printk(KERN_ERR PKNOCK "kmalloc() error in new_peer().\n");
@@ -701,9 +701,9 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 {
 	struct scatterlist sg[2];
 	char result[64]; // 64 bytes * 8 = 512 bits
-	char *hexresult = NULL;
+	char *hexresult;
 	unsigned int hexa_size;
-	int ret = 0;
+	int ret;
 	unsigned int epoch_min;
 
 	if (payload_len == 0)
@@ -902,12 +902,12 @@ static bool pknock_mt(const struct sk_buff *skb,
     const struct xt_match_param *par)
 {
 	const struct ipt_pknock *info = par->matchinfo;
-	struct ipt_pknock_rule *rule = NULL;
-	struct peer *peer = NULL;
+	struct ipt_pknock_rule *rule;
+	struct peer *peer;
 	const struct iphdr *iph = ip_hdr(skb);
 	unsigned int hdr_len = 0;
 	__be16 _ports[2];
-	const __be16 *pptr = NULL;
+	const __be16 *pptr;
 	struct transport_data hdr = {0, 0, 0, NULL};
 	bool ret = false;
 
