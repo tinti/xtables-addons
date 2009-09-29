@@ -78,7 +78,7 @@ struct transport_data {
 	uint8_t	proto;
 	uint16_t	port;	/* destination port */
 	int			payload_len;
-	unsigned char	*payload;
+	const unsigned char	*payload;
 };
 
 #endif /* __KERNEL__ */

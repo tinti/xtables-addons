@@ -71,7 +71,7 @@ static DEFINE_SPINLOCK(list_lock);
 
 #ifdef PK_CRYPTO
 static struct {
-	char				*algo;
+	const char *algo;
 	struct crypto_hash	*tfm;
 	int					size;
 	struct hash_desc	desc;
@@ -161,8 +161,8 @@ status_itoa(enum status status)
 static void *
 pknock_seq_start(struct seq_file *s, loff_t *pos)
 {
-	struct proc_dir_entry *pde = s->private;
-	struct ipt_pknock_rule *rule = pde->data;
+	const struct proc_dir_entry *pde = s->private;
+	const struct ipt_pknock_rule *rule = pde->data;
 
 	spin_lock_bh(&list_lock);
 
@@ -181,8 +181,8 @@ pknock_seq_start(struct seq_file *s, loff_t *pos)
 static void *
 pknock_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
-	struct proc_dir_entry *pde = s->private;
-	struct ipt_pknock_rule *rule = pde->data;
+	const struct proc_dir_entry *pde = s->private;
+	const struct ipt_pknock_rule *rule = pde->data;
 
 	(*pos)++;
 	if (*pos >= peer_hashsize)
@@ -209,15 +209,15 @@ pknock_seq_stop(struct seq_file *s, void *v)
 static int
 pknock_seq_show(struct seq_file *s, void *v)
 {
-	struct list_head *pos = NULL, *n = NULL;
-	struct peer *peer = NULL;
+	const struct list_head *pos = NULL, *n = NULL;
+	const struct peer *peer = NULL;
 	unsigned long expir_time = 0;
         uint32_t ip;
 
-	struct list_head *peer_head = (struct list_head *)v;
+	const struct list_head *peer_head = (struct list_head *)v;
 
-	struct proc_dir_entry *pde = s->private;
-	struct ipt_pknock_rule *rule = pde->data;
+	const struct proc_dir_entry *pde = s->private;
+	const struct ipt_pknock_rule *rule = pde->data;
 
 	list_for_each_safe(pos, n, peer_head) {
 		peer = list_entry(pos, struct peer, head);
@@ -238,7 +238,7 @@ pknock_seq_show(struct seq_file *s, void *v)
 	return 0;
 }
 
-static struct seq_operations pknock_seq_ops = {
+static const struct seq_operations pknock_seq_ops = {
 	.start = pknock_seq_start,
 	.next = pknock_seq_next,
 	.stop = pknock_seq_stop,
@@ -260,7 +260,7 @@ pknock_proc_open(struct inode *inode, struct file *file)
 	return ret;
 }
 
-static struct file_operations pknock_proc_ops = {
+static const struct file_operations pknock_proc_ops = {
 	.owner = THIS_MODULE,
 	.open = pknock_proc_open,
 	.read = seq_read,
@@ -289,7 +289,7 @@ update_rule_timer(struct ipt_pknock_rule *rule)
  * @return: 1 time exceeded, 0 still valid
  */
 static inline bool
-is_time_exceeded(struct peer *peer, int max_time)
+is_time_exceeded(const struct peer *peer, int max_time)
 {
 	return peer && time_after(jiffies/HZ, peer->timestamp + max_time);
 }
@@ -675,7 +675,7 @@ msg_to_userspace_nl(const struct ipt_pknock *info,
  * @size
  */
 static void
-crypt_to_hex(char *out, char *crypt, int size)
+crypt_to_hex(char *out, const char *crypt, int size)
 {
 	int i;
 	for (i=0; i < size; i++) {
@@ -696,8 +696,8 @@ crypt_to_hex(char *out, char *crypt, int size)
  * @return: 1 success, 0 failure
  */
 static int
-has_secret(unsigned char *secret, int secret_len, uint32_t ipsrc,
-        unsigned char *payload, int payload_len)
+has_secret(const unsigned char *secret, int secret_len, uint32_t ipsrc,
+    const unsigned char *payload, int payload_len)
 {
 	struct scatterlist sg[2];
 	char result[64]; // 64 bytes * 8 = 512 bits
@@ -776,7 +776,7 @@ out:
  */
 static bool
 pass_security(struct peer *peer, const struct ipt_pknock *info,
-        unsigned char *payload, int payload_len)
+        const unsigned char *payload, int payload_len)
 {
 	if (is_allowed(peer))
 		return true;
@@ -884,7 +884,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
  */
 static inline bool
 is_close_knock(const struct peer *peer, const struct ipt_pknock *info,
-		unsigned char *payload, int payload_len)
+		const unsigned char *payload, int payload_len)
 {
 	/* Check for CLOSE secret. */
 	if (has_secret((unsigned char *)info->close_secret,
@@ -904,9 +904,10 @@ static bool pknock_mt(const struct sk_buff *skb,
 	const struct ipt_pknock *info = par->matchinfo;
 	struct ipt_pknock_rule *rule = NULL;
 	struct peer *peer = NULL;
-	struct iphdr *iph = ip_hdr(skb);
+	const struct iphdr *iph = ip_hdr(skb);
 	int hdr_len = 0;
-	__be16 _ports[2], *pptr = NULL;
+	__be16 _ports[2];
+	const __be16 *pptr = NULL;
 	struct transport_data hdr = {0, 0, 0, NULL};
 	bool ret = false;
 
