@@ -73,7 +73,7 @@ static DEFINE_SPINLOCK(list_lock);
 static struct {
 	const char *algo;
 	struct crypto_hash	*tfm;
-	int					size;
+	unsigned int size;
 	struct hash_desc	desc;
 } crypto = {
 	.algo	= "hmac(sha256)",
@@ -105,7 +105,7 @@ pknock_hash(const void *key, uint32_t len, uint32_t initval, uint32_t max)
 /**
  * @return: the epoch minute
  */
-static int
+static unsigned int
 get_epoch_minute(void)
 {
 	struct timespec t = CURRENT_TIME;
@@ -119,7 +119,7 @@ get_epoch_minute(void)
  * @return: hashtable
  */
 static struct list_head *
-alloc_hashtable(int size)
+alloc_hashtable(unsigned int size)
 {
 	struct list_head *hash = NULL;
 	unsigned int i;
@@ -289,7 +289,7 @@ update_rule_timer(struct ipt_pknock_rule *rule)
  * @return: 1 time exceeded, 0 still valid
  */
 static inline bool
-is_time_exceeded(const struct peer *peer, int max_time)
+is_time_exceeded(const struct peer *peer, unsigned int max_time)
 {
 	return peer && time_after(jiffies/HZ, peer->timestamp + max_time);
 }
@@ -312,7 +312,7 @@ has_logged_during_this_minute(const struct peer *peer)
 static void
 peer_gc(unsigned long r)
 {
-	int i;
+	unsigned int i;
 	struct ipt_pknock_rule *rule = (struct ipt_pknock_rule *)r;
 	struct peer *peer = NULL;
 	struct list_head *pos = NULL, *n = NULL;
@@ -358,7 +358,7 @@ search_rule(const struct ipt_pknock *info)
 {
 	struct ipt_pknock_rule *rule = NULL;
 	struct list_head *pos = NULL, *n = NULL;
-	int hash = pknock_hash(info->rule_name, info->rule_name_len,
+	unsigned int hash = pknock_hash(info->rule_name, info->rule_name_len,
 					ipt_pknock_hash_rnd, rule_hashsize);
 
 	list_for_each_safe(pos, n, &rule_hashtable[hash]) {
@@ -380,7 +380,7 @@ add_rule(struct ipt_pknock *info)
 {
 	struct ipt_pknock_rule *rule = NULL;
 	struct list_head *pos = NULL, *n = NULL;
-	int hash = pknock_hash(info->rule_name, info->rule_name_len,
+	unsigned int hash = pknock_hash(info->rule_name, info->rule_name_len,
                                 ipt_pknock_hash_rnd, rule_hashsize);
 
 	list_for_each_safe(pos, n, &rule_hashtable[hash]) {
@@ -449,9 +449,9 @@ remove_rule(struct ipt_pknock *info)
 	struct ipt_pknock_rule *rule = NULL;
 	struct list_head *pos = NULL, *n = NULL;
 	struct peer *peer = NULL;
-	int i;
+	unsigned int i = 0;
 	int found = 0;
-	int hash = pknock_hash(info->rule_name, info->rule_name_len,
+	unsigned int hash = pknock_hash(info->rule_name, info->rule_name_len,
                                 ipt_pknock_hash_rnd, rule_hashsize);
 
 	if (list_empty(&rule_hashtable[hash])) return;
@@ -504,7 +504,7 @@ get_peer(struct ipt_pknock_rule *rule, uint32_t ip)
 {
 	struct peer *peer = NULL;
 	struct list_head *pos = NULL, *n = NULL;
-	int hash;
+	unsigned int hash;
 
 	ip = ntohl(ip);
 
@@ -566,7 +566,7 @@ new_peer(uint32_t ip, uint8_t proto)
 static inline void
 add_peer(struct peer *peer, struct ipt_pknock_rule *rule)
 {
-	int hash = pknock_hash(&peer->ip, sizeof(peer->ip),
+	unsigned int hash = pknock_hash(&peer->ip, sizeof(peer->ip),
                                 ipt_pknock_hash_rnd, peer_hashsize);
 	list_add(&peer->head, &rule->peer_head[hash]);
 }
@@ -675,9 +675,9 @@ msg_to_userspace_nl(const struct ipt_pknock *info,
  * @size
  */
 static void
-crypt_to_hex(char *out, const char *crypt, int size)
+crypt_to_hex(char *out, const char *crypt, unsigned int size)
 {
-	int i;
+	unsigned int i;
 	for (i=0; i < size; i++) {
 		unsigned char c = crypt[i];
 		*out++ = '0' + ((c&0xf0)>>4) + (c>=0xa0)*('a'-'9'-1);
@@ -696,15 +696,15 @@ crypt_to_hex(char *out, const char *crypt, int size)
  * @return: 1 success, 0 failure
  */
 static int
-has_secret(const unsigned char *secret, int secret_len, uint32_t ipsrc,
-    const unsigned char *payload, int payload_len)
+has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
+    const unsigned char *payload, unsigned int payload_len)
 {
 	struct scatterlist sg[2];
 	char result[64]; // 64 bytes * 8 = 512 bits
 	char *hexresult = NULL;
-	int hexa_size;
+	unsigned int hexa_size;
 	int ret = 0;
-	int epoch_min;
+	unsigned int epoch_min;
 
 	if (payload_len == 0)
 		return 0;
@@ -776,7 +776,7 @@ out:
  */
 static bool
 pass_security(struct peer *peer, const struct ipt_pknock *info,
-        const unsigned char *payload, int payload_len)
+        const unsigned char *payload, unsigned int payload_len)
 {
 	if (is_allowed(peer))
 		return true;
@@ -884,7 +884,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
  */
 static inline bool
 is_close_knock(const struct peer *peer, const struct ipt_pknock *info,
-		const unsigned char *payload, int payload_len)
+		const unsigned char *payload, unsigned int payload_len)
 {
 	/* Check for CLOSE secret. */
 	if (has_secret(info->close_secret,
@@ -905,7 +905,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 	struct ipt_pknock_rule *rule = NULL;
 	struct peer *peer = NULL;
 	const struct iphdr *iph = ip_hdr(skb);
-	int hdr_len = 0;
+	unsigned int hdr_len = 0;
 	__be16 _ports[2];
 	const __be16 *pptr = NULL;
 	struct transport_data hdr = {0, 0, 0, NULL};
