@@ -254,7 +254,7 @@ static int
 pknock_proc_open(struct inode *inode, struct file *file)
 {
 	int ret = seq_open(file, &pknock_seq_ops);
-	if (!ret) {
+	if (ret == 0) {
 		struct seq_file *sf = file->private_data;
 		sf->private = PDE(inode);
 	}
@@ -292,7 +292,8 @@ update_rule_timer(struct ipt_pknock_rule *rule)
 static inline bool
 is_time_exceeded(const struct peer *peer, unsigned int max_time)
 {
-	return peer && time_after(jiffies/HZ, peer->timestamp + max_time);
+	return peer != NULL && time_after(jiffies / HZ,
+	       peer->timestamp + max_time);
 }
 
 /**
@@ -302,7 +303,7 @@ is_time_exceeded(const struct peer *peer, unsigned int max_time)
 static inline bool
 has_logged_during_this_minute(const struct peer *peer)
 {
-	return peer && (peer->login_min == get_epoch_minute());
+	return peer != NULL && peer->login_min == get_epoch_minute();
 }
 
 /**
@@ -425,7 +426,7 @@ add_rule(struct ipt_pknock *info)
 	rule->timer.data	= (unsigned long)rule;
 
 	rule->status_proc = create_proc_entry(info->rule_name, 0, pde);
-	if (!rule->status_proc) {
+	if (rule->status_proc == NULL) {
 		printk(KERN_ERR PKNOCK "create_proc_entry() error in add_rule()"
                         " function.\n");
                 kfree(rule);
@@ -471,7 +472,7 @@ remove_rule(struct ipt_pknock *info)
 		pr_debug("(N) rule not found: %s.\n", info->rule_name);
 		return;
 	}
-	if (rule && rule->ref_count == 0) {
+	if (rule != NULL && rule->ref_count == 0) {
 		hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
 			peer = list_entry(pos, struct peer, head);
 
@@ -482,7 +483,7 @@ remove_rule(struct ipt_pknock *info)
 			}
 		}
 
-		if (rule->status_proc)
+		if (rule->status_proc != NULL)
 			remove_proc_entry(info->rule_name, pde);
 		pr_debug("(D) rule deleted: %s.\n", rule->rule_name);
 		if (timer_pending(&rule->timer))
@@ -582,7 +583,8 @@ static inline void
 remove_peer(struct peer *peer)
 {
 	list_del(&peer->head);
-	if (peer) kfree(peer);
+	if (peer != NULL)
+		kfree(peer);
 }
 
 /**
@@ -608,7 +610,7 @@ static inline bool
 is_wrong_knock(const struct peer *peer, const struct ipt_pknock *info,
 		uint16_t port)
 {
-	return peer && (info->port[peer->id_port_knocked-1] != port);
+	return peer != NULL && info->port[peer->id_port_knocked-1] != port;
 }
 
 /**
@@ -619,7 +621,7 @@ is_wrong_knock(const struct peer *peer, const struct ipt_pknock *info,
 static inline bool
 is_last_knock(const struct peer *peer, const struct ipt_pknock *info)
 {
-	return peer && (peer->id_port_knocked-1 == info->ports_count);
+	return peer != NULL && peer->id_port_knocked - 1 == info->ports_count;
 }
 
 /**
@@ -629,7 +631,7 @@ is_last_knock(const struct peer *peer, const struct ipt_pknock *info)
 static inline bool
 is_allowed(const struct peer *peer)
 {
-	return peer && (peer->status == ST_ALLOWED);
+	return peer != NULL && peer->status == ST_ALLOWED;
 }
 
 /**
@@ -647,7 +649,7 @@ msg_to_userspace_nl(const struct ipt_pknock *info,
 	struct ipt_pknock_nl_msg msg;
 
 	m = kmalloc(sizeof(*m) + sizeof(msg), GFP_ATOMIC);
-	if (!m) {
+	if (m == NULL) {
 		printk(KERN_ERR PKNOCK "kmalloc() error in "
                         "msg_to_userspace_nl().\n");
 		return false;
@@ -737,7 +739,7 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	sg_set_buf(&sg[1], &epoch_min, sizeof(epoch_min));
 
 	ret = crypto_hash_setkey(crypto.tfm, secret, secret_len);
-	if (ret) {
+	if (ret != 0) {
 		printk("crypto_hash_setkey() failed ret=%d\n", ret);
 		ret = 0;
 		goto out;
@@ -749,7 +751,7 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	 * 4 bytes int epoch_min (32 bits)
 	 */
 	ret = crypto_hash_digest(&crypto.desc, sg, 8, result);
-	if (ret) {
+	if (ret != 0) {
 		printk("crypto_hash_digest() failed ret=%d\n", ret);
 		ret = 0;
 		goto out;
@@ -1008,7 +1010,7 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 	struct ipt_pknock *info = par->matchinfo;
 
 	/* Singleton. */
-	if (!rule_hashtable) {
+	if (rule_hashtable == NULL) {
 		rule_hashtable = alloc_hashtable(rule_hashsize);
 		if (rule_hashtable == NULL)
 			RETURN_ERR("alloc_hashtable() error in checkentry()\n");

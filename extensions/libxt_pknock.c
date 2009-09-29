@@ -61,16 +61,19 @@ parse_ports(const char *portstring, uint16_t *ports, const char *proto)
 	unsigned int i;
 
 	buffer = strdup(portstring);
-	if (!buffer) xtables_error(OTHER_PROBLEM, "strdup failed");
+	if (buffer == NULL)
+		xtables_error(OTHER_PROBLEM, "strdup failed");
 
-	for (cp=buffer, i=0; cp && i<IPT_PKNOCK_MAX_PORTS; cp=next, i++)
+	for (cp=buffer, i=0; cp != NULL && i<IPT_PKNOCK_MAX_PORTS; cp=next, i++)
 	{
 		next=strchr(cp, ',');
-		if (next) *next++='\0';
+		if (next != NULL)
+			*next++ = '\0';
 		ports[i] = xtables_parse_port(cp, proto);
 	}
 	
-	if (cp) xtables_error(PARAMETER_PROBLEM, "too many ports specified");
+	if (cp != NULL)
+		xtables_error(PARAMETER_PROBLEM, "too many ports specified");
 
 	free(buffer);
 	return i;
@@ -99,7 +102,7 @@ check_proto(uint16_t pnum, uint8_t invflags)
 
 	if ((proto = proto_to_name(pnum)) != NULL)
 		return proto;
-	else if (!pnum)
+	else if (pnum == 0)
 		xtables_error(PARAMETER_PROBLEM, PKNOCK "needs `-p tcp' or `-p udp'");
 	else
 		xtables_error(PARAMETER_PROBLEM, PKNOCK "only works with TCP and UDP.");
