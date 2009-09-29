@@ -720,14 +720,14 @@ has_secret(unsigned char *secret, int secret_len, uint32_t ipsrc,
 	if (payload_len != hexa_size + 1)
 		return 0;
 
-	hexresult = kmalloc(sizeof(char) * hexa_size, GFP_ATOMIC);
+	hexresult = kmalloc(hexa_size, GFP_ATOMIC);
 	if (hexresult == NULL) {
 		printk(KERN_ERR PKNOCK "kmalloc() error in has_secret().\n");
 		return 0;
 	}
 
 	memset(result, 0, 64);
-	memset(hexresult, 0, (sizeof(char) * hexa_size));
+	memset(hexresult, 0, hexa_size);
 
 	epoch_min = get_epoch_minute();
 
