@@ -109,7 +109,7 @@ static int
 get_epoch_minute(void)
 {
 	struct timespec t = CURRENT_TIME;
-	return (int)(t.tv_sec/60);
+	return t.tv_sec / 60;
 }
 
 /**
@@ -214,7 +214,7 @@ pknock_seq_show(struct seq_file *s, void *v)
 	unsigned long expir_time = 0;
         uint32_t ip;
 
-	const struct list_head *peer_head = (struct list_head *)v;
+	const struct list_head *peer_head = v;
 
 	const struct proc_dir_entry *pde = s->private;
 	const struct ipt_pknock_rule *rule = pde->data;
@@ -658,7 +658,7 @@ msg_to_userspace_nl(const struct ipt_pknock *info,
 	msg.peer_ip = peer->ip;
 	scnprintf(msg.rule_name, info->rule_name_len + 1, info->rule_name);
 
-	memcpy(m + 1, (char *)&msg, m->len);
+	memcpy(m + 1, &msg, m->len);
 
 	cn_netlink_send(m, multicast_group, GFP_ATOMIC);
 
@@ -787,8 +787,8 @@ pass_security(struct peer *peer, const struct ipt_pknock *info,
 		return false;
 	}
 	/* Check for OPEN secret */
-	if (!has_secret((unsigned char *)info->open_secret,
-					(int)info->open_secret_len, htonl(peer->ip),
+	if (!has_secret(info->open_secret,
+					info->open_secret_len, htonl(peer->ip),
 					payload, payload_len))
 	{
 		return false;
@@ -887,8 +887,8 @@ is_close_knock(const struct peer *peer, const struct ipt_pknock *info,
 		const unsigned char *payload, int payload_len)
 {
 	/* Check for CLOSE secret. */
-	if (has_secret((unsigned char *)info->close_secret,
-				(int)info->close_secret_len, htonl(peer->ip),
+	if (has_secret(info->close_secret,
+				info->close_secret_len, htonl(peer->ip),
 				payload, payload_len))
 	{
 		pk_debug("RESET", peer);
