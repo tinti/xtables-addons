@@ -49,13 +49,9 @@ enum {
 	for ((i) = 0; (i) < (size); (i)++)					\
 		list_for_each_safe((pos), (n), (&head[(i)]))
 
-#if DEBUG
-	#define DEBUGP(msg, peer) printk(KERN_INFO PKNOCK	\
+#define pk_debug(msg, peer) pr_debug( \
 			"(S) peer: %u.%u.%u.%u - %s.\n",			\
 			NIPQUAD((peer)->ip), msg)
-#else
-	#define DEBUGP(msg, peer) do {} while (false);
-#endif
 
 static uint32_t ipt_pknock_hash_rnd;
 
@@ -321,7 +317,7 @@ peer_gc(unsigned long r)
 		if (!has_logged_during_this_minute(peer) && 
 						is_time_exceeded(peer, rule->max_time))
 		{
-			DEBUGP("DESTROYED", peer);
+			pk_debug("DESTROYED", peer);
 			list_del(pos);
 			kfree(peer);
 		}
@@ -472,7 +468,7 @@ remove_rule(struct ipt_pknock *info)
 			peer = list_entry(pos, struct peer, head);
 
 			if (peer != NULL) {
-				DEBUGP("DELETED", peer);
+				pk_debug("DELETED", peer);
 				list_del(pos);
 				kfree(peer);
 			}
@@ -780,7 +776,7 @@ pass_security(struct peer *peer, const struct ipt_pknock *info,
 
 	/* The peer can't log more than once during the same minute. */
 	if (has_logged_during_this_minute(peer)) {
-		DEBUGP("BLOCKED", peer);
+		pk_debug("BLOCKED", peer);
 		return false;
 	}
 	/* Check for OPEN secret */
@@ -810,7 +806,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
 	unsigned long time;
 
 	if (is_wrong_knock(peer, info, hdr->port)) {
-		DEBUGP("DIDN'T MATCH", peer);
+		pk_debug("DIDN'T MATCH", peer);
 		/* Peer must start the sequence from scratch. */
 		if (info->option & IPT_PKNOCK_STRICT)
 			reset_knock_status(peer);
@@ -836,7 +832,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
 	if (is_last_knock(peer, info)) {
 		peer->status = ST_ALLOWED;
 
-		DEBUGP("ALLOWED", peer);
+		pk_debug("ALLOWED", peer);
 
 		if (nl_multicast_group > 0)
 			msg_to_userspace_nl(info, peer, nl_multicast_group);
@@ -850,8 +846,8 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
 		time = jiffies/HZ;
 
 		if (is_time_exceeded(peer, info->max_time)) {
-			DEBUGP("TIME EXCEEDED", peer);
-			DEBUGP("DESTROYED", peer);
+			pk_debug("TIME EXCEEDED", peer);
+			pk_debug("DESTROYED", peer);
 			pr_debug("max_time: %ld - time: %ld\n",
 					peer->timestamp + info->max_time,
 					time);
@@ -860,7 +856,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
 		}
 		peer->timestamp = time;
 	}
-	DEBUGP("MATCHING", peer);
+	pk_debug("MATCHING", peer);
 	peer->status = ST_MATCHING;
 	return false;
 }
@@ -884,7 +880,7 @@ is_close_knock(const struct peer *peer, const struct ipt_pknock *info,
 				(int)info->close_secret_len, htonl(peer->ip),
 				payload, payload_len))
 	{
-		DEBUGP("RESET", peer);
+		pk_debug("RESET", peer);
 		return true;
 	}
 	return false;
@@ -976,7 +972,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 
 out:
 	if (ret != 0)
-		DEBUGP("PASS OK", peer);
+		pk_debug("PASS OK", peer);
 	spin_unlock_bh(&list_lock);
 	return ret;
 }
