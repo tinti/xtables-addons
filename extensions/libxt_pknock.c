@@ -334,6 +334,7 @@ static void pknock_save(const void *ip, const struct xt_entry_match *match)
 static struct xtables_match pknock_match = {
 	.name		= "pknock",
 	.version	= XTABLES_VERSION,
+	.revision      = 1,
 	.family		= AF_INET,
 	.size		= XT_ALIGN(sizeof (struct ipt_pknock)),
 	.userspacesize	= XT_ALIGN(sizeof (struct ipt_pknock)),

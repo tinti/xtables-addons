@@ -1076,6 +1076,7 @@ static void pknock_mt_destroy(const struct xt_mtdtor_param *par)
 
 static struct xt_match xt_pknock_mt_reg __read_mostly = {
 	.name		= "pknock",
+	.revision   = 1,
 	.family		= NFPROTO_IPV4,
 	.matchsize	= sizeof (struct ipt_pknock),
 	.match      = pknock_mt,
