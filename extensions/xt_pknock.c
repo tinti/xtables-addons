@@ -52,10 +52,8 @@ enum {
 	#define DEBUGP(msg, peer) printk(KERN_INFO PKNOCK	\
 			"(S) peer: %u.%u.%u.%u - %s.\n",			\
 			NIPQUAD((peer)->ip), msg)
-	#define duprintf(format, args...) printk(format, ## args);
 #else
 	#define DEBUGP(msg, peer)
-	#define duprintf(format, args...)
 #endif
 
 static uint32_t ipt_pknock_hash_rnd;
@@ -924,7 +922,6 @@ static bool pknock_mt(const struct sk_buff *skb,
 		/* We've been asked to examine this packet, and we
 		 * can't. Hence, no choice but to drop.
 		 */
-		duprintf("Dropping evil offset=0 tinygram.\n");
 		*par->hotdrop = true;
 		return false;
 	}
