@@ -737,7 +737,8 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	ret = crypto_hash_setkey(crypto.tfm, secret, secret_len);
 	if (ret) {
 		printk("crypto_hash_setkey() failed ret=%d\n", ret);
-		return ret;
+		ret = 0;
+		goto out;
 	}
 
 	/*
@@ -748,20 +749,19 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	ret = crypto_hash_digest(&crypto.desc, sg, 8, result);
 	if (ret) {
 		printk("crypto_hash_digest() failed ret=%d\n", ret);
-		return ret;
+		ret = 0;
+		goto out;
 	}
 
 	crypt_to_hex(hexresult, result, crypto.size);
 
 	if (memcmp(hexresult, payload, hexa_size) != 0) {
 		pr_debug("secret match failed\n");
-		goto out;
+		ret = 0;
 	}
 
-	ret = 1;
-
-out:
-	if (hexresult != NULL) kfree(hexresult);
+ out:
+	kfree(hexresult);
 	return ret;
 }
 
