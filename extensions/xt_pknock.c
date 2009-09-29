@@ -124,7 +124,8 @@ alloc_hashtable(unsigned int size)
 	struct list_head *hash;
 	unsigned int i;
 
-	if ((hash = kmalloc(sizeof(*hash) * size, GFP_ATOMIC)) == NULL) {
+	hash = kmalloc(sizeof(*hash) * size, GFP_ATOMIC);
+	if (hash == NULL) {
 		printk(KERN_ERR PKNOCK 
 						"kmalloc() error in alloc_hashtable() function.\n");
 		return NULL;
@@ -399,7 +400,8 @@ add_rule(struct ipt_pknock *info)
 		}
 	}
 
-	if ((rule = kmalloc(sizeof (*rule), GFP_ATOMIC)) == NULL) {
+	rule = kmalloc(sizeof(*rule), GFP_ATOMIC);
+	if (rule == NULL) {
 		printk(KERN_ERR PKNOCK "kmalloc() error in add_rule().\n");
 		return false;
 	}
@@ -412,8 +414,8 @@ add_rule(struct ipt_pknock *info)
 
 	rule->ref_count	= 1;
 	rule->max_time	= info->max_time;
-
-	if (!(rule->peer_head = alloc_hashtable(peer_hashsize))) {
+	rule->peer_head = alloc_hashtable(peer_hashsize);
+	if (rule->peer_head == NULL) {
 		printk(KERN_ERR PKNOCK "alloc_hashtable() error in add_rule().\n");
 		return false;
 	}
@@ -540,9 +542,9 @@ reset_knock_status(struct peer *peer)
 static inline struct peer *
 new_peer(uint32_t ip, uint8_t proto)
 {
-	struct peer *peer;
+	struct peer *peer = kmalloc(sizeof(*peer), GFP_ATOMIC);
 
-	if ((peer = kmalloc(sizeof (*peer), GFP_ATOMIC)) == NULL) {
+	if (peer == NULL) {
 		printk(KERN_ERR PKNOCK "kmalloc() error in new_peer().\n");
 		return NULL;
 	}
@@ -921,8 +923,9 @@ static bool pknock_mt(const struct sk_buff *skb,
 	}
 
 	hdr.port = ntohs(pptr[1]);
+	hdr.proto = iph->protocol;
 
-	switch ((hdr.proto = iph->protocol)) {
+	switch (hdr.proto) {
 	case IPPROTO_TCP:
 		break;
 
@@ -944,7 +947,8 @@ static bool pknock_mt(const struct sk_buff *skb,
 	spin_lock_bh(&list_lock);
 
 	/* Searches a rule from the list depending on info structure options. */
-	if ((rule = search_rule(info)) == NULL) {
+	rule = search_rule(info);
+	if (rule == NULL) {
 		printk(KERN_INFO PKNOCK "The rule %s doesn't exist.\n", 
 						info->rule_name);
 		goto out;
@@ -1005,7 +1009,8 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 
 	/* Singleton. */
 	if (!rule_hashtable) {
-		if (!(rule_hashtable = alloc_hashtable(rule_hashsize)))
+		rule_hashtable = alloc_hashtable(rule_hashsize);
+		if (rule_hashtable == NULL)
 			RETURN_ERR("alloc_hashtable() error in checkentry()\n");
 
 		get_random_bytes(&ipt_pknock_hash_rnd, sizeof (ipt_pknock_hash_rnd));
@@ -1116,7 +1121,8 @@ static int __init xt_pknock_mt_init(void)
 	pr_info("No crypto support for < 2.6.19\n");
 #endif
 
-	if (!(pde = proc_mkdir("xt_pknock", init_net__proc_net))) {
+	pde = proc_mkdir("xt_pknock", init_net__proc_net);
+	if (pde == NULL) {
 		printk(KERN_ERR PKNOCK "proc_mkdir() error in _init().\n");
 		return -ENXIO;
 	}
