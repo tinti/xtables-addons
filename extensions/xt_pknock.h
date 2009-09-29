@@ -29,15 +29,15 @@
 
 struct ipt_pknock {
 	char		rule_name[IPT_PKNOCK_MAX_BUF_LEN + 1];
-	int			rule_name_len;
+	uint32_t			rule_name_len;
 	char		open_secret[IPT_PKNOCK_MAX_PASSWD_LEN + 1];
-	int			open_secret_len;
+	uint32_t			open_secret_len;
 	char		close_secret[IPT_PKNOCK_MAX_PASSWD_LEN + 1];
-	int			close_secret_len;
+	uint32_t			close_secret_len;
 	uint8_t	option;		/* --time, --knock-port, ... */
 	uint8_t	ports_count;	/* number of ports */
 	uint16_t	port[IPT_PKNOCK_MAX_PORTS]; /* port[,port,port,...] */
-	unsigned long	max_time;	/* max matching time between ports */
+	uint32_t	max_time;	/* max matching time between ports */
 };
 
 struct ipt_pknock_nl_msg {

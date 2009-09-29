@@ -296,7 +296,7 @@ static void pknock_print(const void *ip,
 		printf(" ");
 	}
 	if (info->option & IPT_PKNOCK_TIME)
-		printf("time %ld ", info->max_time);
+		printf("time %ld ", (long)info->max_time);
 	if (info->option & IPT_PKNOCK_NAME)
 		printf("name %s ", info->rule_name);
 	if (info->option & IPT_PKNOCK_OPENSECRET)
@@ -318,7 +318,7 @@ static void pknock_save(const void *ip, const struct xt_entry_match *match)
 		printf(" ");
 	}
 	if (info->option & IPT_PKNOCK_TIME)
-		printf("--time %ld ", info->max_time);
+		printf("--time %ld ", (long)info->max_time);
 	if (info->option & IPT_PKNOCK_NAME)
 		printf("--name %s ", info->rule_name);
 	if (info->option & IPT_PKNOCK_OPENSECRET)
