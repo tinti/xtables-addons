@@ -70,7 +70,12 @@ static struct proc_dir_entry *pde = NULL;
 
 static DEFINE_SPINLOCK(list_lock);
 
-static struct ipt_pknock_crypto crypto = {
+static struct {
+	char				*algo;
+	struct crypto_hash	*tfm;
+	int					size;
+	struct hash_desc	desc;
+} crypto = {
 	.algo	= "hmac(sha256)",
 	.tfm	= NULL,
 	.size	= 0
