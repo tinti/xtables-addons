@@ -451,9 +451,7 @@ remove_rule(struct ipt_pknock *info)
 	struct list_head *pos = NULL, *n = NULL;
 	struct peer *peer = NULL;
 	int i;
-#if DEBUG
 	int found = 0;
-#endif
 	int hash = pknock_hash(info->rule_name, info->rule_name_len,
                                 ipt_pknock_hash_rnd, rule_hashsize);
 
@@ -463,19 +461,17 @@ remove_rule(struct ipt_pknock *info)
 		rule = list_entry(pos, struct ipt_pknock_rule, head);
 
 		if (rulecmp(info, rule) == 0) {
-#if DEBUG
 			found = 1;
-#endif
 			rule->ref_count--;
 			break;
 		}
 	}
-#if DEBUG
 	if (!found) {
+#if DEBUG
 		printk(KERN_INFO PKNOCK "(N) rule not found: %s.\n", info->rule_name);
+#endif
 		return;
 	}
-#endif
 	if (rule && rule->ref_count == 0) {
 		hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
 			peer = list_entry(pos, struct peer, head);
