@@ -34,10 +34,10 @@ struct ipt_pknock {
 	int			open_secret_len;
 	char		close_secret[IPT_PKNOCK_MAX_PASSWD_LEN + 1];
 	int			close_secret_len;
+	uint8_t	option;		/* --time, --knock-port, ... */
 	uint8_t	ports_count;	/* number of ports */
 	uint16_t	port[IPT_PKNOCK_MAX_PORTS]; /* port[,port,port,...] */
 	unsigned long	max_time;	/* max matching time between ports */
-	uint8_t	option;		/* --time, --knock-port, ... */
 };
 
 struct ipt_pknock_nl_msg {
