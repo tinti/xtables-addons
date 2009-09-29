@@ -339,14 +339,14 @@ peer_gc(unsigned long r)
  * @rule
  * @return: 0 equals, 1 otherwise
  */
-static inline int
+static inline bool
 rulecmp(const struct ipt_pknock *info, const struct ipt_pknock_rule *rule)
 {
 	if (info->rule_name_len != rule->rule_name_len)
-		return 1;
+		return true;
 	if (strncmp(info->rule_name, rule->rule_name, info->rule_name_len) != 0)
-		return 1;
-	return 0;
+		return true;
+	return false;
 }
 
 /**
@@ -365,7 +365,7 @@ search_rule(const struct ipt_pknock *info)
 
 	list_for_each_safe(pos, n, &rule_hashtable[hash]) {
 			rule = list_entry(pos, struct ipt_pknock_rule, head);
-			if (rulecmp(info, rule) == 0) 
+			if (rulecmp(info, rule))
 					return rule;
 	}
 	return NULL;
@@ -388,7 +388,7 @@ add_rule(struct ipt_pknock *info)
 	list_for_each_safe(pos, n, &rule_hashtable[hash]) {
 		rule = list_entry(pos, struct ipt_pknock_rule, head);
 
-		if (rulecmp(info, rule) == 0) {
+		if (rulecmp(info, rule)) {
 			rule->ref_count++;
 			if (info->option & IPT_PKNOCK_CHECKIP) {
 				pr_debug("add_rule() (AC)"
@@ -462,7 +462,7 @@ remove_rule(struct ipt_pknock *info)
 	list_for_each_safe(pos, n, &rule_hashtable[hash]) {
 		rule = list_entry(pos, struct ipt_pknock_rule, head);
 
-		if (rulecmp(info, rule) == 0) {
+		if (rulecmp(info, rule)) {
 			found = 1;
 			rule->ref_count--;
 			break;
@@ -597,7 +597,7 @@ static inline bool
 is_first_knock(const struct peer *peer, const struct ipt_pknock *info,
                 uint16_t port)
 {
-	return (peer == NULL && info->port[0] == port) ? 1 : 0;
+	return peer == NULL && info->port[0] == port;
 }
 
 /**
@@ -699,7 +699,7 @@ crypt_to_hex(char *out, const char *crypt, unsigned int size)
  * @payload_len
  * @return: 1 success, 0 failure
  */
-static int
+static bool
 has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
     const unsigned char *payload, unsigned int payload_len)
 {
@@ -708,10 +708,11 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	char *hexresult;
 	unsigned int hexa_size;
 	int ret;
+	bool fret = false;
 	unsigned int epoch_min;
 
 	if (payload_len == 0)
-		return 0;
+		return false;
 
 	/*
 	 * hexa:  4bits
@@ -722,12 +723,12 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 
 	/* + 1 cause we MUST add NULL in the payload */
 	if (payload_len != hexa_size + 1)
-		return 0;
+		return false;
 
 	hexresult = kmalloc(hexa_size, GFP_ATOMIC);
 	if (hexresult == NULL) {
 		printk(KERN_ERR PKNOCK "kmalloc() error in has_secret().\n");
-		return 0;
+		return false;
 	}
 
 	memset(result, 0, 64);
@@ -741,7 +742,6 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	ret = crypto_hash_setkey(crypto.tfm, secret, secret_len);
 	if (ret != 0) {
 		printk("crypto_hash_setkey() failed ret=%d\n", ret);
-		ret = 0;
 		goto out;
 	}
 
@@ -753,7 +753,6 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	ret = crypto_hash_digest(&crypto.desc, sg, 8, result);
 	if (ret != 0) {
 		printk("crypto_hash_digest() failed ret=%d\n", ret);
-		ret = 0;
 		goto out;
 	}
 
@@ -761,12 +760,13 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 
 	if (memcmp(hexresult, payload, hexa_size) != 0) {
 		pr_debug("secret match failed\n");
-		ret = 0;
+	} else {
+		fret = true;
 	}
 
  out:
 	kfree(hexresult);
-	return ret;
+	return fret;
 }
 
 /**
@@ -1003,7 +1003,7 @@ out:
 	return ret;
 }
 
-#define RETURN_ERR(err) do { printk(KERN_ERR PKNOCK err); return false; } while (0)
+#define RETURN_ERR(err) do { printk(KERN_ERR PKNOCK err); return false; } while (false)
 
 static bool pknock_mt_check(const struct xt_mtchk_param *par)
 {
