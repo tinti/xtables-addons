@@ -96,7 +96,7 @@ module_param(nl_multicast_group, int, S_IRUGO);
  * @max
  * @return: a 32 bits index
  */
-static uint32_t
+static inline uint32_t
 pknock_hash(const void *key, uint32_t len, uint32_t initval, uint32_t max)
 {
 	return jhash(key, len, initval) % max;
@@ -105,8 +105,7 @@ pknock_hash(const void *key, uint32_t len, uint32_t initval, uint32_t max)
 /**
  * @return: the epoch minute
  */
-static unsigned int
-get_epoch_minute(void)
+static inline unsigned int get_epoch_minute(void)
 {
 	struct timespec t = CURRENT_TIME;
 	return t.tv_sec / 60;
@@ -274,8 +273,7 @@ static const struct file_operations pknock_proc_ops = {
  *
  * @rule
  */
-static inline void
-update_rule_timer(struct ipt_pknock_rule *rule)
+static void update_rule_timer(struct ipt_pknock_rule *rule)
 {
 	if (timer_pending(&rule->timer))
 		del_timer(&rule->timer);
@@ -355,8 +353,7 @@ rulecmp(const struct ipt_pknock *info, const struct ipt_pknock_rule *rule)
  * @info
  * @return: rule or NULL
  */
-static inline struct ipt_pknock_rule *
-search_rule(const struct ipt_pknock *info)
+static struct ipt_pknock_rule *search_rule(const struct ipt_pknock *info)
 {
 	struct ipt_pknock_rule *rule;
 	struct list_head *pos, *n;
@@ -502,8 +499,7 @@ remove_rule(struct ipt_pknock *info)
  * @ip
  * @return: peer or NULL
  */
-static inline struct peer *
-get_peer(struct ipt_pknock_rule *rule, uint32_t ip)
+static struct peer *get_peer(struct ipt_pknock_rule *rule, uint32_t ip)
 {
 	struct peer *peer;
 	struct list_head *pos, *n;
@@ -525,8 +521,7 @@ get_peer(struct ipt_pknock_rule *rule, uint32_t ip)
  *
  * @peer
  */
-static inline void
-reset_knock_status(struct peer *peer)
+static void reset_knock_status(struct peer *peer)
 {
 	peer->id_port_knocked = 1;
 	peer->status = ST_INIT;
@@ -540,8 +535,7 @@ reset_knock_status(struct peer *peer)
  * @proto
  * @return: peer or NULL
  */
-static inline struct peer *
-new_peer(uint32_t ip, uint8_t proto)
+static struct peer *new_peer(uint32_t ip, uint8_t proto)
 {
 	struct peer *peer = kmalloc(sizeof(*peer), GFP_ATOMIC);
 
@@ -566,8 +560,7 @@ new_peer(uint32_t ip, uint8_t proto)
  * @peer
  * @rule
  */
-static inline void
-add_peer(struct peer *peer, struct ipt_pknock_rule *rule)
+static void add_peer(struct peer *peer, struct ipt_pknock_rule *rule)
 {
 	unsigned int hash = pknock_hash(&peer->ip, sizeof(peer->ip),
                                 ipt_pknock_hash_rnd, peer_hashsize);
@@ -579,8 +572,7 @@ add_peer(struct peer *peer, struct ipt_pknock_rule *rule)
  *
  * @peer
  */
-static inline void
-remove_peer(struct peer *peer)
+static void remove_peer(struct peer *peer)
 {
 	list_del(&peer->head);
 	if (peer != NULL)
@@ -886,7 +878,7 @@ update_peer(struct peer *peer, const struct ipt_pknock *info,
  * @payload_len
  * @return: 1 if close knock, 0 otherwise
  */
-static inline bool
+static bool
 is_close_knock(const struct peer *peer, const struct ipt_pknock *info,
 		const unsigned char *payload, unsigned int payload_len)
 {
