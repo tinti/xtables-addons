@@ -796,11 +796,10 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 
 	crypt_to_hex(hexresult, result, crypto.size);
 
-	if (memcmp(hexresult, payload, hexa_size) != 0) {
+	if (memcmp(hexresult, payload, hexa_size) != 0)
 		pr_debug("secret match failed\n");
-	} else {
+	else
 		fret = true;
-	}
 
  out:
 	kfree(hexresult);
@@ -832,9 +831,8 @@ pass_security(struct peer *peer, const struct xt_pknock_mtinfo *info,
 	if (!has_secret(info->open_secret,
 					info->open_secret_len, htonl(peer->ip),
 					payload, payload_len))
-	{
 		return false;
-	}
+
 	return true;
 }
 #endif /* PK_CRYPTO */
@@ -870,9 +868,8 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		if (hdr->proto != IPPROTO_UDP)
 			return false;
 
-		if (!pass_security(peer, info, hdr->payload, hdr->payload_len)) {
+		if (!pass_security(peer, info, hdr->payload, hdr->payload_len))
 			return false;
-		}
 	}
 #endif
 
@@ -1068,35 +1065,26 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 #endif
 
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
-		if (info->option & XT_PKNOCK_CHECKIP) {
+		if (info->option & XT_PKNOCK_CHECKIP)
 			RETURN_ERR("Can't specify --knockports with --checkip.\n");
-		}
 #ifdef PK_CRYPTO
 		if ((info->option & XT_PKNOCK_OPENSECRET) &&
 				!(info->option & XT_PKNOCK_CLOSESECRET)) 
-		{
 			RETURN_ERR("--opensecret must go with --closesecret.\n");
-		}
 		if ((info->option & XT_PKNOCK_CLOSESECRET) &&
 				!(info->option & XT_PKNOCK_OPENSECRET)) 
-		{
 			RETURN_ERR("--closesecret must go with --opensecret.\n");
-		}
 #endif
 	}
 
 	if (info->option & XT_PKNOCK_CHECKIP) {
 		if (info->option & XT_PKNOCK_KNOCKPORT)
-		{
 			RETURN_ERR("Can't specify --checkip with --knockports.\n");
-		}
 #ifdef PK_CRYPTO
 		if ((info->option & XT_PKNOCK_OPENSECRET) ||
 				(info->option & XT_PKNOCK_CLOSESECRET))
-		{
 			RETURN_ERR("Can't specify --opensecret and --closesecret"
 							" with --checkip.\n");
-		}
 #endif
 		if (info->option & XT_PKNOCK_TIME)
 			RETURN_ERR("Can't specify --time with --checkip.\n");
@@ -1107,9 +1095,7 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 		if (info->open_secret_len == info->close_secret_len) {
 			if (memcmp(info->open_secret, info->close_secret,
 						info->open_secret_len) == 0)
-			{
 				RETURN_ERR("opensecret & closesecret cannot be equal.\n");
-			}
 		}
 	}
 #endif

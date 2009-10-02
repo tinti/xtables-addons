@@ -245,40 +245,31 @@ static void pknock_check(unsigned int flags)
 			"--name option is required.\n");
 
 	if (flags & XT_PKNOCK_KNOCKPORT) {
-		if (flags & XT_PKNOCK_CHECKIP) {
+		if (flags & XT_PKNOCK_CHECKIP)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --knockports with --checkip.\n");
-		}
 		if ((flags & XT_PKNOCK_OPENSECRET)
 			&& !(flags & XT_PKNOCK_CLOSESECRET))
-		{
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"--opensecret must go with --closesecret.\n");
-		}
 		if ((flags & XT_PKNOCK_CLOSESECRET)
 			&& !(flags & XT_PKNOCK_OPENSECRET))
-		{
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"--closesecret must go with --opensecret.\n");
-		}
 	}
 
 	if (flags & XT_PKNOCK_CHECKIP) {
-		if (flags & XT_PKNOCK_KNOCKPORT) {
+		if (flags & XT_PKNOCK_KNOCKPORT)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --checkip with --knockports.\n");
-		}
 		if ((flags & XT_PKNOCK_OPENSECRET)
 			|| (flags & XT_PKNOCK_CLOSESECRET))
-		{
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --opensecret and"
 				" --closesecret with --checkip.\n");
-		}
-		if (flags & XT_PKNOCK_TIME) {
+		if (flags & XT_PKNOCK_TIME)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --time with --checkip.\n");
-		}
 	}
 }
 
