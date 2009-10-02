@@ -71,7 +71,7 @@ parse_ports(const char *portstring, uint16_t *ports, const char *proto)
 			*next++ = '\0';
 		ports[i] = xtables_parse_port(cp, proto);
 	}
-	
+
 	if (cp != NULL)
 		xtables_error(PARAMETER_PROBLEM, "too many ports specified");
 
@@ -109,7 +109,7 @@ check_proto(uint16_t pnum, uint8_t invflags)
 }
 
 /* Function which parses command options; returns true if it ate an option */
-static int 
+static int
 __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		struct xt_entry_match **match, uint16_t pnum,
 		uint16_t invflags)
@@ -230,7 +230,7 @@ static int pknock_parse(int c, char **argv, int invert, unsigned int *flags,
                 		const void *e, struct xt_entry_match **match)
 {
 	const struct ipt_entry *entry = e;
-	return __pknock_parse(c, argv, invert, flags, match, 
+	return __pknock_parse(c, argv, invert, flags, match,
 			entry->ip.proto, entry->ip.invflags);
 }
 
@@ -274,7 +274,7 @@ static void pknock_check(unsigned int flags)
 }
 
 /* Prints out the matchinfo. */
-static void pknock_print(const void *ip, 
+static void pknock_print(const void *ip,
 						const struct xt_entry_match *match, int numeric)
 {
 	const struct xt_pknock_mtinfo *info = (void *)match->data;
@@ -338,7 +338,7 @@ static struct xtables_match pknock_match = {
 	.extra_opts	= pknock_opts
 };
 
-void _init(void) 
+void _init(void)
 {
 	xtables_register_match(&pknock_match);
 }

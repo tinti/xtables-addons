@@ -171,7 +171,7 @@ alloc_hashtable(unsigned int size)
 
 	hash = kmalloc(sizeof(*hash) * size, GFP_ATOMIC);
 	if (hash == NULL) {
-		printk(KERN_ERR PKNOCK 
+		printk(KERN_ERR PKNOCK
 						"kmalloc() error in alloc_hashtable() function.\n");
 		return NULL;
 	}
@@ -366,7 +366,7 @@ peer_gc(unsigned long r)
 	hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
 		peer = list_entry(pos, struct peer, head);
 
-		if (!has_logged_during_this_minute(peer) && 
+		if (!has_logged_during_this_minute(peer) &&
 						is_time_exceeded(peer, rule->max_time))
 		{
 			pk_debug("DESTROYED", peer);
@@ -976,7 +976,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 #endif
 
 	default:
-		printk(KERN_INFO PKNOCK 
+		printk(KERN_INFO PKNOCK
 						"IP payload protocol is neither tcp nor udp.\n");
 		return false;
 	}
@@ -986,7 +986,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 	/* Searches a rule from the list depending on info structure options. */
 	rule = search_rule(info);
 	if (rule == NULL) {
-		printk(KERN_INFO PKNOCK "The rule %s doesn't exist.\n", 
+		printk(KERN_INFO PKNOCK "The rule %s doesn't exist.\n",
 						info->rule_name);
 		goto out;
 	}
@@ -998,17 +998,17 @@ static bool pknock_mt(const struct sk_buff *skb,
 		ret = is_allowed(peer);
 		goto out;
 	}
-	
+
 	if (iph->protocol == IPPROTO_UDP) {
 		hdr.payload = (void *)iph + hdr_len;
 		hdr.payload_len = skb->len - hdr_len;
 	}
-	
+
 	/* Sets, updates, removes or checks the peer matching status. */
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		if ((ret = is_allowed(peer))) {
 #ifdef PK_CRYPTO
-			if (info->option & XT_PKNOCK_CLOSESECRET && 
+			if (info->option & XT_PKNOCK_CLOSESECRET &&
 							iph->protocol == IPPROTO_UDP)
 			{
 				if (is_close_knock(peer, info, hdr.payload, hdr.payload_len))
@@ -1069,10 +1069,10 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 			RETURN_ERR("Can't specify --knockports with --checkip.\n");
 #ifdef PK_CRYPTO
 		if ((info->option & XT_PKNOCK_OPENSECRET) &&
-				!(info->option & XT_PKNOCK_CLOSESECRET)) 
+				!(info->option & XT_PKNOCK_CLOSESECRET))
 			RETURN_ERR("--opensecret must go with --closesecret.\n");
 		if ((info->option & XT_PKNOCK_CLOSESECRET) &&
-				!(info->option & XT_PKNOCK_OPENSECRET)) 
+				!(info->option & XT_PKNOCK_OPENSECRET))
 			RETURN_ERR("--closesecret must go with --opensecret.\n");
 #endif
 	}
@@ -1135,7 +1135,7 @@ static int __init xt_pknock_mt_init(void)
 	crypto.tfm = crypto_alloc_hash(crypto.algo, 0, CRYPTO_ALG_ASYNC);
 
 	if (crypto.tfm == NULL) {
-		printk(KERN_ERR PKNOCK "failed to load transform for %s\n", 
+		printk(KERN_ERR PKNOCK "failed to load transform for %s\n",
 						crypto.algo);
 		return -ENXIO;
 	}
