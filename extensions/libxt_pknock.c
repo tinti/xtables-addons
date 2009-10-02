@@ -115,7 +115,7 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		uint16_t invflags)
 {
 	const char *proto;
-	struct ipt_pknock *info = (struct ipt_pknock *) (*match)->data;
+	struct xt_pknock_mtinfo *info = (void *)(*match)->data;
 
 	switch (c) {
 	case 'k': /* --knockports */
@@ -286,10 +286,8 @@ static void pknock_check(unsigned int flags)
 static void pknock_print(const void *ip, 
 						const struct xt_entry_match *match, int numeric)
 {
-	const struct ipt_pknock *info;
+	const struct xt_pknock_mtinfo *info = (void *)match->data;
 	int i;
-
-	info = (const struct ipt_pknock *)match->data;
 
 	printf("pknock ");
 	if (info->option & IPT_PKNOCK_KNOCKPORT) {
@@ -312,7 +310,7 @@ static void pknock_print(const void *ip,
 static void pknock_save(const void *ip, const struct xt_entry_match *match)
 {
 	int i;
-	const struct ipt_pknock *info = (const struct ipt_pknock *)match->data;
+	const struct xt_pknock_mtinfo *info = (void *)match->data;
 
 	if (info->option & IPT_PKNOCK_KNOCKPORT) {
 		printf("--knockports ");
@@ -339,8 +337,8 @@ static struct xtables_match pknock_match = {
 	.version	= XTABLES_VERSION,
 	.revision      = 1,
 	.family		= AF_INET,
-	.size		= XT_ALIGN(sizeof (struct ipt_pknock)),
-	.userspacesize	= XT_ALIGN(sizeof (struct ipt_pknock)),
+	.size          = XT_ALIGN(sizeof(struct xt_pknock_mtinfo)),
+	.userspacesize = XT_ALIGN(sizeof(struct xt_pknock_mtinfo)),
 	.help		= pknock_help,
 	.parse		= pknock_parse,
 	.final_check	= pknock_check,

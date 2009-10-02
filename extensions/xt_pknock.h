@@ -27,7 +27,7 @@
 
 #define DEBUG 1
 
-struct ipt_pknock {
+struct xt_pknock_mtinfo {
 	char		rule_name[IPT_PKNOCK_MAX_BUF_LEN + 1];
 	uint32_t			rule_name_len;
 	char		open_secret[IPT_PKNOCK_MAX_PASSWD_LEN + 1];
@@ -40,7 +40,7 @@ struct ipt_pknock {
 	uint32_t	max_time;	/* max matching time between ports */
 };
 
-struct ipt_pknock_nl_msg {
+struct xt_pknock_nl_msg {
 	char		rule_name[IPT_PKNOCK_MAX_BUF_LEN + 1];
 	uint32_t	peer_ip;
 };
@@ -63,7 +63,7 @@ struct peer {
 
 #include <linux/proc_fs.h>
 
-struct ipt_pknock_rule {
+struct xt_pknock_rule {
 	struct list_head	head;
 	char				rule_name[IPT_PKNOCK_MAX_BUF_LEN + 1];
 	int					rule_name_len;
