@@ -64,7 +64,7 @@ parse_ports(const char *portstring, uint16_t *ports, const char *proto)
 	if (buffer == NULL)
 		xtables_error(OTHER_PROBLEM, "strdup failed");
 
-	for (cp=buffer, i=0; cp != NULL && i<IPT_PKNOCK_MAX_PORTS; cp=next, i++)
+	for (cp=buffer, i=0; cp != NULL && i<XT_PKNOCK_MAX_PORTS; cp=next, i++)
 	{
 		next=strchr(cp, ',');
 		if (next != NULL)
@@ -119,7 +119,7 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	switch (c) {
 	case 'k': /* --knockports */
-		if (*flags & IPT_PKNOCK_KNOCKPORT)
+		if (*flags & XT_PKNOCK_KNOCKPORT)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --knockports twice.\n");
 
@@ -127,93 +127,93 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		proto = check_proto(pnum, invflags);
 
 		info->ports_count = parse_ports(optarg, info->port, proto);
-		info->option |= IPT_PKNOCK_KNOCKPORT;
-		*flags |= IPT_PKNOCK_KNOCKPORT;
+		info->option |= XT_PKNOCK_KNOCKPORT;
+		*flags |= XT_PKNOCK_KNOCKPORT;
 #if DEBUG
 		printf("ports_count: %d\n", info->ports_count);
 #endif
 		break;
 
 	case 't': /* --time */
-		if (*flags & IPT_PKNOCK_TIME)
+		if (*flags & XT_PKNOCK_TIME)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --time twice.\n");
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
 		info->max_time = atoi(optarg);
-		info->option |= IPT_PKNOCK_TIME;
-		*flags |= IPT_PKNOCK_TIME;
+		info->option |= XT_PKNOCK_TIME;
+		*flags |= XT_PKNOCK_TIME;
 		break;
 
 	case 'n': /* --name */
-		if (*flags & IPT_PKNOCK_NAME)
+		if (*flags & XT_PKNOCK_NAME)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --name twice.\n");
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
-		memset(info->rule_name, 0, IPT_PKNOCK_MAX_BUF_LEN + 1);
-		strncpy(info->rule_name, optarg, IPT_PKNOCK_MAX_BUF_LEN);
+		memset(info->rule_name, 0, XT_PKNOCK_MAX_BUF_LEN + 1);
+		strncpy(info->rule_name, optarg, XT_PKNOCK_MAX_BUF_LEN);
 
 		info->rule_name_len = strlen(info->rule_name);
-		info->option |= IPT_PKNOCK_NAME;
-		*flags |= IPT_PKNOCK_NAME;
+		info->option |= XT_PKNOCK_NAME;
+		*flags |= XT_PKNOCK_NAME;
 #if DEBUG
 		printf("info->rule_name: %s\n", info->rule_name);
 #endif
 		break;
 
 	case 'a': /* --opensecret */
-		if (*flags & IPT_PKNOCK_OPENSECRET)
+		if (*flags & XT_PKNOCK_OPENSECRET)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --opensecret twice.\n");
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
-		memset(info->open_secret, 0, IPT_PKNOCK_MAX_PASSWD_LEN + 1);
-		strncpy(info->open_secret, optarg, IPT_PKNOCK_MAX_PASSWD_LEN);
+		memset(info->open_secret, 0, XT_PKNOCK_MAX_PASSWD_LEN + 1);
+		strncpy(info->open_secret, optarg, XT_PKNOCK_MAX_PASSWD_LEN);
 
 		info->open_secret_len = strlen(info->open_secret);
-		info->option |= IPT_PKNOCK_OPENSECRET;
-		*flags |= IPT_PKNOCK_OPENSECRET;
+		info->option |= XT_PKNOCK_OPENSECRET;
+		*flags |= XT_PKNOCK_OPENSECRET;
 		break;
 
 	case 'z': /* --closesecret */
-		if (*flags & IPT_PKNOCK_CLOSESECRET)
+		if (*flags & XT_PKNOCK_CLOSESECRET)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --closesecret twice.\n");
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
-		memset(info->close_secret, 0, IPT_PKNOCK_MAX_PASSWD_LEN + 1);
-		strncpy(info->close_secret, optarg, IPT_PKNOCK_MAX_PASSWD_LEN);
+		memset(info->close_secret, 0, XT_PKNOCK_MAX_PASSWD_LEN + 1);
+		strncpy(info->close_secret, optarg, XT_PKNOCK_MAX_PASSWD_LEN);
 
 		info->close_secret_len = strlen(info->close_secret);
-		info->option |= IPT_PKNOCK_CLOSESECRET;
-		*flags |= IPT_PKNOCK_CLOSESECRET;
+		info->option |= XT_PKNOCK_CLOSESECRET;
+		*flags |= XT_PKNOCK_CLOSESECRET;
 		break;
 
 	case 'c': /* --checkip */
-		if (*flags & IPT_PKNOCK_CHECKIP)
+		if (*flags & XT_PKNOCK_CHECKIP)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --checkip twice.\n");
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
-		info->option |= IPT_PKNOCK_CHECKIP;
-		*flags |= IPT_PKNOCK_CHECKIP;
+		info->option |= XT_PKNOCK_CHECKIP;
+		*flags |= XT_PKNOCK_CHECKIP;
 		break;
 
 	case 'x': /* --strict */
-		if (*flags & IPT_PKNOCK_STRICT)
+		if (*flags & XT_PKNOCK_STRICT)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --strict twice.\n");
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
-		info->option |= IPT_PKNOCK_STRICT;
-		*flags |= IPT_PKNOCK_STRICT;
+		info->option |= XT_PKNOCK_STRICT;
+		*flags |= XT_PKNOCK_STRICT;
 		break;
 
 	default:
@@ -240,42 +240,42 @@ static void pknock_check(unsigned int flags)
 	if (!flags)
 		xtables_error(PARAMETER_PROBLEM, PKNOCK "expection an option.\n");
 
-	if (!(flags & IPT_PKNOCK_NAME))
+	if (!(flags & XT_PKNOCK_NAME))
 		xtables_error(PARAMETER_PROBLEM, PKNOCK
 			"--name option is required.\n");
 
-	if (flags & IPT_PKNOCK_KNOCKPORT) {
-		if (flags & IPT_PKNOCK_CHECKIP) {
+	if (flags & XT_PKNOCK_KNOCKPORT) {
+		if (flags & XT_PKNOCK_CHECKIP) {
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --knockports with --checkip.\n");
 		}
-		if ((flags & IPT_PKNOCK_OPENSECRET)
-			&& !(flags & IPT_PKNOCK_CLOSESECRET))
+		if ((flags & XT_PKNOCK_OPENSECRET)
+			&& !(flags & XT_PKNOCK_CLOSESECRET))
 		{
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"--opensecret must go with --closesecret.\n");
 		}
-		if ((flags & IPT_PKNOCK_CLOSESECRET)
-			&& !(flags & IPT_PKNOCK_OPENSECRET))
+		if ((flags & XT_PKNOCK_CLOSESECRET)
+			&& !(flags & XT_PKNOCK_OPENSECRET))
 		{
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"--closesecret must go with --opensecret.\n");
 		}
 	}
 
-	if (flags & IPT_PKNOCK_CHECKIP) {
-		if (flags & IPT_PKNOCK_KNOCKPORT) {
+	if (flags & XT_PKNOCK_CHECKIP) {
+		if (flags & XT_PKNOCK_KNOCKPORT) {
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --checkip with --knockports.\n");
 		}
-		if ((flags & IPT_PKNOCK_OPENSECRET)
-			|| (flags & IPT_PKNOCK_CLOSESECRET))
+		if ((flags & XT_PKNOCK_OPENSECRET)
+			|| (flags & XT_PKNOCK_CLOSESECRET))
 		{
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --opensecret and"
 				" --closesecret with --checkip.\n");
 		}
-		if (flags & IPT_PKNOCK_TIME) {
+		if (flags & XT_PKNOCK_TIME) {
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --time with --checkip.\n");
 		}
@@ -290,19 +290,19 @@ static void pknock_print(const void *ip,
 	int i;
 
 	printf("pknock ");
-	if (info->option & IPT_PKNOCK_KNOCKPORT) {
+	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		printf("knockports ");
 		for (i=0; i<info->ports_count; i++)
 			printf("%s%d", i ? "," : "", info->port[i]);
 		printf(" ");
 	}
-	if (info->option & IPT_PKNOCK_TIME)
+	if (info->option & XT_PKNOCK_TIME)
 		printf("time %ld ", (long)info->max_time);
-	if (info->option & IPT_PKNOCK_NAME)
+	if (info->option & XT_PKNOCK_NAME)
 		printf("name %s ", info->rule_name);
-	if (info->option & IPT_PKNOCK_OPENSECRET)
+	if (info->option & XT_PKNOCK_OPENSECRET)
 		printf("opensecret ");
-	if (info->option & IPT_PKNOCK_CLOSESECRET)
+	if (info->option & XT_PKNOCK_CLOSESECRET)
 		printf("closesecret ");
 }
 
@@ -312,23 +312,23 @@ static void pknock_save(const void *ip, const struct xt_entry_match *match)
 	int i;
 	const struct xt_pknock_mtinfo *info = (void *)match->data;
 
-	if (info->option & IPT_PKNOCK_KNOCKPORT) {
+	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		printf("--knockports ");
 		for (i=0; i<info->ports_count; i++)
 			printf("%s%d", i ? "," : "", info->port[i]);
 		printf(" ");
 	}
-	if (info->option & IPT_PKNOCK_TIME)
+	if (info->option & XT_PKNOCK_TIME)
 		printf("--time %ld ", (long)info->max_time);
-	if (info->option & IPT_PKNOCK_NAME)
+	if (info->option & XT_PKNOCK_NAME)
 		printf("--name %s ", info->rule_name);
-	if (info->option & IPT_PKNOCK_OPENSECRET)
+	if (info->option & XT_PKNOCK_OPENSECRET)
 		printf("--opensecret ");
-	if (info->option & IPT_PKNOCK_CLOSESECRET)
+	if (info->option & XT_PKNOCK_CLOSESECRET)
 		printf("--closesecret ");
-	if (info->option & IPT_PKNOCK_STRICT)
+	if (info->option & XT_PKNOCK_STRICT)
 		printf("--strict ");
-	if (info->option & IPT_PKNOCK_CHECKIP)
+	if (info->option & XT_PKNOCK_CHECKIP)
 		printf("--checkip ");
 }
 

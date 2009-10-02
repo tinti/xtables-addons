@@ -65,7 +65,7 @@ struct peer {
  */
 struct xt_pknock_rule {
 	struct list_head head;
-	char rule_name[IPT_PKNOCK_MAX_BUF_LEN + 1];
+	char rule_name[XT_PKNOCK_MAX_BUF_LEN+1];
 	int rule_name_len;
 	unsigned int ref_count;
 	struct timer_list timer;
@@ -433,7 +433,7 @@ add_rule(struct xt_pknock_mtinfo *info)
 
 		if (rulecmp(info, rule)) {
 			rule->ref_count++;
-			if (info->option & IPT_PKNOCK_CHECKIP) {
+			if (info->option & XT_PKNOCK_CHECKIP) {
 				pr_debug("add_rule() (AC)"
 					" rule found: %s - "
 					"ref_count: %d\n",
@@ -452,7 +452,7 @@ add_rule(struct xt_pknock_mtinfo *info)
 
 	INIT_LIST_HEAD(&rule->head);
 
-	memset(rule->rule_name, 0, IPT_PKNOCK_MAX_BUF_LEN + 1);
+	memset(rule->rule_name, 0, XT_PKNOCK_MAX_BUF_LEN + 1);
 	strncpy(rule->rule_name, info->rule_name, info->rule_name_len);
 	rule->rule_name_len = info->rule_name_len;
 
@@ -858,7 +858,7 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 	if (is_wrong_knock(peer, info, hdr->port)) {
 		pk_debug("DIDN'T MATCH", peer);
 		/* Peer must start the sequence from scratch. */
-		if (info->option & IPT_PKNOCK_STRICT)
+		if (info->option & XT_PKNOCK_STRICT)
 			reset_knock_status(peer);
 
 		return false;
@@ -866,7 +866,7 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 
 #ifdef PK_CRYPTO
 	/* If security is needed. */
-	if (info->option & IPT_PKNOCK_OPENSECRET ) {
+	if (info->option & XT_PKNOCK_OPENSECRET ) {
 		if (hdr->proto != IPPROTO_UDP)
 			return false;
 
@@ -894,7 +894,7 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 	}
 
 	/* Controls the max matching time between ports. */
-	if (info->option & IPT_PKNOCK_TIME) {
+	if (info->option & XT_PKNOCK_TIME) {
 		time = jiffies/HZ;
 
 		if (is_time_exceeded(peer, info->max_time)) {
@@ -997,7 +997,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 	/* Gives the peer matching status added to rule depending on ip src. */
 	peer = get_peer(rule, iph->saddr);
 
-	if (info->option & IPT_PKNOCK_CHECKIP) {
+	if (info->option & XT_PKNOCK_CHECKIP) {
 		ret = is_allowed(peer);
 		goto out;
 	}
@@ -1008,10 +1008,10 @@ static bool pknock_mt(const struct sk_buff *skb,
 	}
 	
 	/* Sets, updates, removes or checks the peer matching status. */
-	if (info->option & IPT_PKNOCK_KNOCKPORT) {
+	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		if ((ret = is_allowed(peer))) {
 #ifdef PK_CRYPTO
-			if (info->option & IPT_PKNOCK_CLOSESECRET && 
+			if (info->option & XT_PKNOCK_CLOSESECRET && 
 							iph->protocol == IPPROTO_UDP)
 			{
 				if (is_close_knock(peer, info, hdr.payload, hdr.payload_len))
@@ -1059,51 +1059,51 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 	if (!add_rule(info))
 		RETURN_ERR("add_rule() error in checkentry() function.\n");
 
-	if (!(info->option & IPT_PKNOCK_NAME))
+	if (!(info->option & XT_PKNOCK_NAME))
 		RETURN_ERR("You must specify --name option.\n");
 
 #ifdef PK_CRYPTO
-	if ((info->option & IPT_PKNOCK_OPENSECRET) && (info->ports_count != 1))
+	if ((info->option & XT_PKNOCK_OPENSECRET) && (info->ports_count != 1))
 		RETURN_ERR("--opensecret must have just one knock port\n");
 #endif
 
-	if (info->option & IPT_PKNOCK_KNOCKPORT) {
-		if (info->option & IPT_PKNOCK_CHECKIP) {
+	if (info->option & XT_PKNOCK_KNOCKPORT) {
+		if (info->option & XT_PKNOCK_CHECKIP) {
 			RETURN_ERR("Can't specify --knockports with --checkip.\n");
 		}
 #ifdef PK_CRYPTO
-		if ((info->option & IPT_PKNOCK_OPENSECRET) &&
-				!(info->option & IPT_PKNOCK_CLOSESECRET)) 
+		if ((info->option & XT_PKNOCK_OPENSECRET) &&
+				!(info->option & XT_PKNOCK_CLOSESECRET)) 
 		{
 			RETURN_ERR("--opensecret must go with --closesecret.\n");
 		}
-		if ((info->option & IPT_PKNOCK_CLOSESECRET) &&
-				!(info->option & IPT_PKNOCK_OPENSECRET)) 
+		if ((info->option & XT_PKNOCK_CLOSESECRET) &&
+				!(info->option & XT_PKNOCK_OPENSECRET)) 
 		{
 			RETURN_ERR("--closesecret must go with --opensecret.\n");
 		}
 #endif
 	}
 
-	if (info->option & IPT_PKNOCK_CHECKIP) {
-		if (info->option & IPT_PKNOCK_KNOCKPORT)
+	if (info->option & XT_PKNOCK_CHECKIP) {
+		if (info->option & XT_PKNOCK_KNOCKPORT)
 		{
 			RETURN_ERR("Can't specify --checkip with --knockports.\n");
 		}
 #ifdef PK_CRYPTO
-		if ((info->option & IPT_PKNOCK_OPENSECRET) ||
-				(info->option & IPT_PKNOCK_CLOSESECRET))
+		if ((info->option & XT_PKNOCK_OPENSECRET) ||
+				(info->option & XT_PKNOCK_CLOSESECRET))
 		{
 			RETURN_ERR("Can't specify --opensecret and --closesecret"
 							" with --checkip.\n");
 		}
 #endif
-		if (info->option & IPT_PKNOCK_TIME)
+		if (info->option & XT_PKNOCK_TIME)
 			RETURN_ERR("Can't specify --time with --checkip.\n");
 	}
 
 #ifdef PK_CRYPTO
-	if (info->option & IPT_PKNOCK_OPENSECRET) {
+	if (info->option & XT_PKNOCK_OPENSECRET) {
 		if (info->open_secret_len == info->close_secret_len) {
 			if (memcmp(info->open_secret, info->close_secret,
 						info->open_secret_len) == 0)
