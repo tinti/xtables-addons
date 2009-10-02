@@ -22,7 +22,9 @@
 #include <linux/jhash.h>
 #include <linux/random.h>
 #include <linux/crypto.h>
+#include <linux/proc_fs.h>
 #include <linux/scatterlist.h>
+#include <linux/spinlock.h>
 #include <linux/jiffies.h>
 #include <linux/timer.h>
 #include <linux/seq_file.h>
@@ -37,6 +39,50 @@
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 #	define PK_CRYPTO 1
 #endif
+
+enum status {
+	ST_INIT = 1,
+	ST_MATCHING,
+	ST_ALLOWED,
+};
+
+/**
+ * @login_min: the login epoch minute
+ */
+struct peer {
+	struct list_head head;
+	uint32_t ip;
+	uint8_t proto;
+	uint32_t id_port_knocked;
+	enum status status;
+	unsigned long timestamp;
+	int login_min;
+};
+
+/**
+ * @timer:	garbage collector timer
+ * @max_time:	max matching time between ports
+ */
+struct xt_pknock_rule {
+	struct list_head head;
+	char rule_name[IPT_PKNOCK_MAX_BUF_LEN + 1];
+	int rule_name_len;
+	unsigned int ref_count;
+	struct timer_list timer;
+	struct list_head *peer_head;
+	struct proc_dir_entry *status_proc;
+	unsigned long max_time;
+};
+
+/**
+ * @port:	destination port
+ */
+struct transport_data {
+	uint8_t proto;
+	uint16_t port;
+	int payload_len;
+	const unsigned char *payload;
+};
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("J. Federico Hernandez Scarso, Luis A. Floreani");

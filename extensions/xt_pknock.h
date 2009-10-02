@@ -45,41 +45,4 @@ struct xt_pknock_nl_msg {
 	uint32_t	peer_ip;
 };
 
-enum status {ST_INIT=1, ST_MATCHING, ST_ALLOWED};
-
-#ifdef __KERNEL__
-#include <linux/list.h>
-#include <linux/spinlock.h>
-
-struct peer {
-	struct list_head head;
-	uint32_t		ip;
-	uint8_t		proto;
-	uint32_t		id_port_knocked;
-	enum status		status;
-	unsigned long	timestamp;
-	int				login_min;	/* the login epoch minute */
-};
-
-#include <linux/proc_fs.h>
-
-struct xt_pknock_rule {
-	struct list_head	head;
-	char				rule_name[IPT_PKNOCK_MAX_BUF_LEN + 1];
-	int					rule_name_len;
-	unsigned int		ref_count;
-	struct timer_list	timer;		/* garbage collector timer */
-	struct list_head	*peer_head;
-	struct proc_dir_entry	*status_proc;
-	unsigned long		max_time; /* max matching time between ports */
-};
-
-struct transport_data {
-	uint8_t	proto;
-	uint16_t	port;	/* destination port */
-	int			payload_len;
-	const unsigned char	*payload;
-};
-
-#endif /* __KERNEL__ */
 #endif /* _XT_PKNOCK_H */
