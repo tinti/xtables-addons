@@ -96,7 +96,7 @@ enum {
 };
 
 #define hashtable_for_each_safe(pos, n, head, size, i)	\
-	for ((i) = 0; (i) < (size); (i)++)					\
+	for ((i) = 0; (i) < (size); ++(i)) \
 		list_for_each_safe((pos), (n), (&head[(i)]))
 
 #define pk_debug(msg, peer) pr_debug( \
@@ -176,7 +176,7 @@ alloc_hashtable(unsigned int size)
 		return NULL;
 	}
 
-	for (i = 0; i < size; i++)
+	for (i = 0; i < size; ++i)
 		INIT_LIST_HEAD(&hash[i]);
 
 	return hash;
@@ -230,7 +230,7 @@ pknock_seq_next(struct seq_file *s, void *v, loff_t *pos)
 	const struct proc_dir_entry *pde = s->private;
 	const struct xt_pknock_rule *rule = pde->data;
 
-	(*pos)++;
+	++*pos;
 	if (*pos >= peer_hashsize)
 		return NULL;
 
@@ -432,7 +432,7 @@ add_rule(struct xt_pknock_mtinfo *info)
 		rule = list_entry(pos, struct xt_pknock_rule, head);
 
 		if (rulecmp(info, rule)) {
-			rule->ref_count++;
+			++rule->ref_count;
 			if (info->option & XT_PKNOCK_CHECKIP) {
 				pr_debug("add_rule() (AC)"
 					" rule found: %s - "
@@ -720,7 +720,7 @@ static void
 crypt_to_hex(char *out, const char *crypt, unsigned int size)
 {
 	unsigned int i;
-	for (i=0; i < size; i++) {
+	for (i = 0; i < size; ++i) {
 		unsigned char c = crypt[i];
 		*out++ = '0' + ((c&0xf0)>>4) + (c>=0xa0)*('a'-'9'-1);
 		*out++ = '0' + (c&0x0f) + ((c&0x0f)>=0x0a)*('a'-'9'-1);
@@ -879,7 +879,7 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 	/* Just update the timer when there is a state change. */
 	update_rule_timer(rule);
 
-	peer->id_port_knocked++;
+	++peer->id_port_knocked;
 
 	if (is_last_knock(peer, info)) {
 		peer->status = ST_ALLOWED;

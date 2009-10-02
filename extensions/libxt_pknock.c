@@ -64,7 +64,7 @@ parse_ports(const char *portstring, uint16_t *ports, const char *proto)
 	if (buffer == NULL)
 		xtables_error(OTHER_PROBLEM, "strdup failed");
 
-	for (cp=buffer, i=0; cp != NULL && i<XT_PKNOCK_MAX_PORTS; cp=next, i++)
+	for (cp = buffer, i = 0; cp != NULL && i < XT_PKNOCK_MAX_PORTS; cp = next, ++i)
 	{
 		next=strchr(cp, ',');
 		if (next != NULL)
@@ -292,7 +292,7 @@ static void pknock_print(const void *ip,
 	printf("pknock ");
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		printf("knockports ");
-		for (i=0; i<info->ports_count; i++)
+		for (i = 0; i < info->ports_count; ++i)
 			printf("%s%d", i ? "," : "", info->port[i]);
 		printf(" ");
 	}
@@ -314,7 +314,7 @@ static void pknock_save(const void *ip, const struct xt_entry_match *match)
 
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		printf("--knockports ");
-		for (i=0; i<info->ports_count; i++)
+		for (i = 0; i < info->ports_count; ++i)
 			printf("%s%d", i ? "," : "", info->port[i]);
 		printf(" ");
 	}
