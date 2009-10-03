@@ -23,7 +23,6 @@
 static const struct option pknock_opts[] = {
 	/* .name, .has_arg, .flag, .val */
 	{ "knockports",	1,	0, 'k' },
-	{ "t",			1,	0, 't' },
 	{ "time",		1,	0, 't' },
 	{ "name",		1,	0, 'n' },
 	{ "opensecret",	1,	0, 'a' },
@@ -41,7 +40,6 @@ static void pknock_help(void)
 		" --knockports port[,port,port,...]	"
 			"Matches destination port(s).\n"
 		" --time seconds\n"
-		" --t ...				"
 			"Time between port match.\n"
 		" --secure				"
 			"hmac must be in the packets.\n"
