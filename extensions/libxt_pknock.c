@@ -150,8 +150,8 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
-		memset(info->rule_name, 0, XT_PKNOCK_MAX_BUF_LEN + 1);
-		strncpy(info->rule_name, optarg, XT_PKNOCK_MAX_BUF_LEN);
+		memset(info->rule_name, 0, sizeof(info->rule_name));
+		strncpy(info->rule_name, optarg, sizeof(info->rule_name) - 1);
 
 		info->rule_name_len = strlen(info->rule_name);
 		info->option |= XT_PKNOCK_NAME;
@@ -168,8 +168,8 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
-		memset(info->open_secret, 0, XT_PKNOCK_MAX_PASSWD_LEN + 1);
-		strncpy(info->open_secret, optarg, XT_PKNOCK_MAX_PASSWD_LEN);
+		memset(info->open_secret, 0, sizeof(info->open_secret));
+		strncpy(info->open_secret, optarg, sizeof(info->open_secret) - 1);
 
 		info->open_secret_len = strlen(info->open_secret);
 		info->option |= XT_PKNOCK_OPENSECRET;
@@ -183,8 +183,8 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 
 		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 
-		memset(info->close_secret, 0, XT_PKNOCK_MAX_PASSWD_LEN + 1);
-		strncpy(info->close_secret, optarg, XT_PKNOCK_MAX_PASSWD_LEN);
+		memset(info->close_secret, 0, sizeof(info->close_secret));
+		strncpy(info->close_secret, optarg, sizeof(info->close_secret) - 1);
 
 		info->close_secret_len = strlen(info->close_secret);
 		info->option |= XT_PKNOCK_CLOSESECRET;

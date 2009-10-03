@@ -452,7 +452,7 @@ add_rule(struct xt_pknock_mtinfo *info)
 
 	INIT_LIST_HEAD(&rule->head);
 
-	memset(rule->rule_name, 0, XT_PKNOCK_MAX_BUF_LEN + 1);
+	memset(rule->rule_name, 0, sizeof(rule->rule_name));
 	strncpy(rule->rule_name, info->rule_name, info->rule_name_len);
 	rule->rule_name_len = info->rule_name_len;
 
@@ -769,7 +769,7 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 		return false;
 	}
 
-	memset(result, 0, 64);
+	memset(result, 0, sizeof(result));
 	memset(hexresult, 0, hexa_size);
 
 	epoch_min = get_epoch_minute();
@@ -788,7 +788,8 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	 * 4 bytes IP (32 bits) +
 	 * 4 bytes int epoch_min (32 bits)
 	 */
-	ret = crypto_hash_digest(&crypto.desc, sg, 8, result);
+	ret = crypto_hash_digest(&crypto.desc, sg,
+	      sizeof(ipsrc) + sizeof(epoch_min), result);
 	if (ret != 0) {
 		printk("crypto_hash_digest() failed ret=%d\n", ret);
 		goto out;
