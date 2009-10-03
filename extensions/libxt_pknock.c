@@ -5,8 +5,6 @@
  * (C) 2006-2009 J. Federico Hernandez <fede.hernandez@gmail.com>
  * (C) 2006 Luis Floreani <luis.floreani@gmail.com>
  *
- * $Id$
- *
  * This program is released under the terms of GNU GPL version 2.
  */
 #include <getopt.h>
@@ -17,7 +15,6 @@
 #include <xtables.h>
 #include <linux/netfilter.h>
 #include <linux/netfilter_ipv4/ip_tables.h>
-//#include <linux/netfilter_ipv4/ipt_pknock.h>
 #include "xt_pknock.h"
 
 static const struct option pknock_mt_opts[] = {
@@ -105,7 +102,6 @@ check_proto(uint16_t pnum, uint8_t invflags)
 		xtables_error(PARAMETER_PROBLEM, PKNOCK "only works with TCP and UDP.");
 }
 
-/* Function which parses command options; returns true if it ate an option */
 static int
 __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		struct xt_entry_match **match, uint16_t pnum,

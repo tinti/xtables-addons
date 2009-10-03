@@ -4,8 +4,6 @@
  * (C) 2006-2009 J. Federico Hernandez Scarso <fede.hernandez@gmail.com>
  * (C) 2006 Luis A. Floreani <luis.floreani@gmail.com>
  *
- * $Id$
- *
  * This program is released under the terms of GNU GPL version 2.
  */
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
@@ -31,8 +29,6 @@
 #include <linux/connector.h>
 
 #include <linux/netfilter/x_tables.h>
-#include <linux/netfilter_ipv4/ip_tables.h>
-//#include <linux/netfilter_ipv4/ipt_pknock.h>
 #include "xt_pknock.h"
 #include "compat_xtables.h"
 
@@ -169,12 +165,8 @@ alloc_hashtable(unsigned int size)
 	unsigned int i;
 
 	hash = kmalloc(sizeof(*hash) * size, GFP_ATOMIC);
-	if (hash == NULL) {
-		printk(KERN_ERR PKNOCK
-						"kmalloc() error in alloc_hashtable() function.\n");
+	if (hash == NULL)
 		return NULL;
-	}
-
 	for (i = 0; i < size; ++i)
 		INIT_LIST_HEAD(&hash[i]);
 
@@ -442,10 +434,8 @@ add_rule(struct xt_pknock_mtinfo *info)
 	}
 
 	rule = kmalloc(sizeof(*rule), GFP_ATOMIC);
-	if (rule == NULL) {
-		printk(KERN_ERR PKNOCK "kmalloc() error in add_rule().\n");
+	if (rule == NULL)
 		return false;
-	}
 
 	INIT_LIST_HEAD(&rule->head);
 
@@ -456,10 +446,8 @@ add_rule(struct xt_pknock_mtinfo *info)
 	rule->ref_count	= 1;
 	rule->max_time	= info->max_time;
 	rule->peer_head = alloc_hashtable(peer_hashsize);
-	if (rule->peer_head == NULL) {
-		printk(KERN_ERR PKNOCK "alloc_hashtable() error in add_rule().\n");
+	if (rule->peer_head == NULL)
 		return false;
-	}
 
 	init_timer(&rule->timer);
 	rule->timer.function	= peer_gc;
@@ -467,8 +455,6 @@ add_rule(struct xt_pknock_mtinfo *info)
 
 	rule->status_proc = create_proc_entry(info->rule_name, 0, pde);
 	if (rule->status_proc == NULL) {
-		printk(KERN_ERR PKNOCK "create_proc_entry() error in add_rule()"
-                        " function.\n");
                 kfree(rule);
                 return false;
 	}
@@ -580,10 +566,8 @@ static struct peer *new_peer(__be32 ip, uint8_t proto)
 {
 	struct peer *peer = kmalloc(sizeof(*peer), GFP_ATOMIC);
 
-	if (peer == NULL) {
-		printk(KERN_ERR PKNOCK "kmalloc() error in new_peer().\n");
+	if (peer == NULL)
 		return NULL;
-	}
 
 	INIT_LIST_HEAD(&peer->head);
 	peer->ip	= ip;
@@ -682,11 +666,8 @@ msg_to_userspace_nl(const struct xt_pknock_mtinfo *info,
 	struct xt_pknock_nl_msg msg;
 
 	m = kmalloc(sizeof(*m) + sizeof(msg), GFP_ATOMIC);
-	if (m == NULL) {
-		printk(KERN_ERR PKNOCK "kmalloc() error in "
-                        "msg_to_userspace_nl().\n");
+	if (m == NULL)
 		return false;
-	}
 
 	memset(m, 0, sizeof(*m) + sizeof(msg));
 	m->seq = 0;
@@ -759,10 +740,8 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 		return false;
 
 	hexresult = kmalloc(hexa_size, GFP_ATOMIC);
-	if (hexresult == NULL) {
-		printk(KERN_ERR PKNOCK "kmalloc() error in has_secret().\n");
+	if (hexresult == NULL)
 		return false;
-	}
 
 	memset(result, 0, sizeof(result));
 	memset(hexresult, 0, hexa_size);
@@ -975,8 +954,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 #endif
 
 	default:
-		printk(KERN_INFO PKNOCK
-						"IP payload protocol is neither tcp nor udp.\n");
+		pr_debug("IP payload protocol is neither tcp nor udp.\n");
 		return false;
 	}
 
@@ -1122,8 +1100,6 @@ static struct xt_match xt_pknock_mt_reg __read_mostly = {
 
 static int __init xt_pknock_mt_init(void)
 {
-	printk(KERN_INFO PKNOCK "register.\n");
-
 #ifdef PK_CRYPTO
 	if (request_module(crypto.algo) < 0) {
 		printk(KERN_ERR PKNOCK "request_module('%s') error.\n",
@@ -1156,7 +1132,6 @@ static int __init xt_pknock_mt_init(void)
 
 static void __exit xt_pknock_mt_exit(void)
 {
-	printk(KERN_INFO PKNOCK "unregister.\n");
 	remove_proc_entry("xt_pknock", init_net__proc_net);
 	xt_unregister_match(&xt_pknock_mt_reg);
 	kfree(rule_hashtable);
