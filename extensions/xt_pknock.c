@@ -153,8 +153,7 @@ pknock_hash(const void *key, uint32_t len, uint32_t initval, uint32_t max)
  */
 static inline unsigned int get_epoch_minute(void)
 {
-	struct timespec t = CURRENT_TIME;
-	return t.tv_sec / 60;
+	return get_seconds() / 60;
 }
 
 /**
