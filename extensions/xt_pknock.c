@@ -100,7 +100,7 @@ enum {
 		list_for_each_safe((pos), (n), (&head[(i)]))
 
 #define pk_debug(msg, peer) pr_debug( \
-			"(S) peer: %u.%u.%u.%u - %s.\n",			\
+			"(S) peer: " NIPQUAD_FMT " - %s.\n", \
 			NIPQUAD((peer)->ip), msg)
 
 static uint32_t ipt_pknock_hash_rnd;
@@ -269,7 +269,7 @@ pknock_seq_show(struct seq_file *s, void *v)
 						peer->timestamp + rule->max_time)
 				? ((peer->timestamp + rule->max_time)-(jiffies/HZ)) : 0;
 
-		seq_printf(s, "src=%u.%u.%u.%u ", NIPQUAD(peer->ip));
+		seq_printf(s, "src=" NIPQUAD_FMT " ", NIPQUAD(peer->ip));
 		seq_printf(s, "proto=%s ", (peer->proto == IPPROTO_TCP) ?
                                                 "TCP" : "UDP");
 		seq_printf(s, "status=%s ", status_itoa(peer->status));
