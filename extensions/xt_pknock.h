@@ -45,7 +45,7 @@ struct xt_pknock_mtinfo {
 
 struct xt_pknock_nl_msg {
 	char rule_name[XT_PKNOCK_MAX_BUF_LEN+1];
-	uint32_t	peer_ip;
+	__be32 peer_ip;
 };
 
 #endif /* _XT_PKNOCK_H */

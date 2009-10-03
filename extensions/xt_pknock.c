@@ -51,7 +51,7 @@ enum status {
  */
 struct peer {
 	struct list_head head;
-	uint32_t ip;
+	__be32 ip;
 	uint8_t proto;
 	uint32_t id_port_knocked;
 	enum status status;
@@ -542,7 +542,7 @@ remove_rule(struct xt_pknock_mtinfo *info)
  * @ip
  * @return: peer or NULL
  */
-static struct peer *get_peer(struct xt_pknock_rule *rule, uint32_t ip)
+static struct peer *get_peer(struct xt_pknock_rule *rule, __be32 ip)
 {
 	struct peer *peer;
 	struct list_head *pos, *n;
@@ -576,7 +576,7 @@ static void reset_knock_status(struct peer *peer)
  * @proto
  * @return: peer or NULL
  */
-static struct peer *new_peer(uint32_t ip, uint8_t proto)
+static struct peer *new_peer(__be32 ip, uint8_t proto)
 {
 	struct peer *peer = kmalloc(sizeof(*peer), GFP_ATOMIC);
 
