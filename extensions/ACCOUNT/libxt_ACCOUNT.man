@@ -56,8 +56,8 @@ the \fBiptaccount\fP(8) tool, which features following options:
 .PP
 Here is an example of use:
 .PP
-iptables \-A FORWARD \-j ACCOUNT \-\-addr 0.0.0.0/0 \-\-tname all_outgoing
-iptables \-A FORWARD \-j ACCOUNT \-\-addr 192.168.1.0/24 \-\-tname sales
+iptables \-A FORWARD \-j ACCOUNT \-\-addr 0.0.0.0/0 \-\-tname all_outgoing;
+iptables \-A FORWARD \-j ACCOUNT \-\-addr 192.168.1.0/24 \-\-tname sales;
 .PP
 This creates two tables called "all_outgoing" and "sales" which can be
 queried using the userspace library/iptaccount tool.

@@ -11,16 +11,16 @@ tarpit.
 
 To tarpit connections to TCP port 80 destined for the current machine:
 .IP
--A INPUT -p tcp -m tcp --dport 80 -j TARPIT
-.P
+\-A INPUT \-p tcp \-m tcp \-\-dport 80 \-j TARPIT
+.PP
 To significantly slow down Code Red/Nimda-style scans of unused address space,
 forward unused ip addresses to a Linux box not acting as a router (e.g. "ip
 route 10.0.0.0 255.0.0.0 ip.of.linux.box" on a Cisco), enable IP forwarding on
 the Linux box, and add:
 .IP
--A FORWARD -p tcp -j TARPIT
+\-A FORWARD \-p tcp \-j TARPIT
 .IP
--A FORWARD -j DROP
+\-A FORWARD \-j DROP
 .PP
 NOTE:
 If you use the conntrack module while you are using TARPIT, you should also use
@@ -28,6 +28,6 @@ the NOTRACK target, or the kernel will unnecessarily allocate resources for
 each TARPITted connection. To TARPIT incoming connections to the standard IRC
 port while using conntrack, you could:
 .IP
--t raw -A PREROUTING -p tcp --dport 6667 -j NOTRACK
+\-t raw \-A PREROUTING \-p tcp \-\-dport 6667 \-j NOTRACK
 .IP
--A INPUT -p tcp --dport 6667 -j TARPIT
+\-A INPUT \-p tcp \-\-dport 6667 \-j TARPIT

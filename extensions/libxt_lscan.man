@@ -6,19 +6,19 @@ out, but this information can be used in conjunction with other rules to block
 the remote host's future connections. So this match module will match on the
 (probably) last packet the remote side will send to your machine.
 .TP
-\fB--stealth\fR
+\fB\-\-stealth\fR
 Match if the packet did not belong to any known TCP connection
 (Stealth/FIN/XMAS/NULL scan).
 .TP
-\fB--synscan\fR
+\fB\-\-synscan\fR
 Match if the connection was a TCP half-open discovery (SYN scan), i.e. the
 connection was torn down after the 2nd packet in the 3-way handshake.
 .TP
-\fB--cnscan\fR
+\fB\-\-cnscan\fR
 Match if the connection was a TCP full open discovery (connect scan), i.e. the
 connection was torn down after completion of the 3-way handshake.
 .TP
-\fB--grscan\fR
+\fB\-\-grscan\fR
 Match if data in the connection only flew in the direction of the remote side,
 e.g. if the connection was terminated after a locally running daemon sent its
 identification. (E.g. openssh, smtp, ftpd.) This may falsely trigger on

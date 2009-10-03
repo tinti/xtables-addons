@@ -1,9 +1,9 @@
 Match a packet by its source or destination country.
 .TP
-[\fB!\fP] \fB--src-cc\fP, \fB--source-country\fP \fIcountry\fP[\fB,\fP\fIcountry\fP\fB...\fP]
+[\fB!\fP] \fB\-\-src\-cc\fP, \fB\-\-source\-country\fP \fIcountry\fP[\fB,\fP\fIcountry\fP\fB...\fP]
 Match packet coming from (one of) the specified country(ies)
 .TP
-[\fB!\fP] \fB--dst-cc\fP, \fB--destination-country\fP \fIcountry\fP[\fB,\fP\fIcountry\fP\fB...\fP]
+[\fB!\fP] \fB\-\-dst\-cc\fP, \fB\-\-destination\-country\fP \fIcountry\fP[\fB,\fP\fIcountry\fP\fB...\fP]
 Match packet going to (one of) the specified country(ies)
 .TP
 NOTE:

@@ -30,7 +30,7 @@ Check the MULTICAST flag.
 [\fB!\fP] \fB\-\-dynamic\fP
 Check the DYNAMIC flag.
 .TP
-[\fB!\fP] \fB\-\-lower-up\fP
+[\fB!\fP] \fB\-\-lower\-up\fP
 Check the LOWER_UP flag.
 .TP
 [\fB!\fP] \fB\-\-dormant\fP

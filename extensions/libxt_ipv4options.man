@@ -13,25 +13,25 @@ where only at least one symbol spec must be true.
 .PP
 Known symbol names (and their number):
 .PP
-1 - \fBnop\fP
+1 \(em \fBnop\fP
 .PP
-2 - \fBsecurity\fP - RFC 1108
+2 \(em \fBsecurity\fP \(em RFC 1108
 .PP
-3 - \fBlsrr\fP - Loose Source Routing, RFC 791
+3 \(em \fBlsrr\fP \(em Loose Source Routing, RFC 791
 .PP
-4 - \fBtimestamp\fP - RFC 781, 791
+4 \(em \fBtimestamp\fP \(em RFC 781, 791
 .PP
-7 - \fBrecord\-route\fP - RFC 791
+7 \(em \fBrecord\-route\fP \em RFC 791
 .PP
-9 - \fBssrr\fP - Strict Source Routing, RFC 791
+9 \(em \fBssrr\fP \(em Strict Source Routing, RFC 791
 .PP
-11 - \fBmtu\-probe\fP - RFC 1063
+11 \(em \fBmtu\-probe\fP \(em RFC 1063
 .PP
-12 - \fBmtu\-reply\fP - RFC 1063
+12 \(em \fBmtu\-reply\fP \(em RFC 1063
 .PP
-18 - \fBtraceroute\fP - RFC 1393
+18 \(em \fBtraceroute\fP \(em RFC 1393
 .PP
-20 - \fBrouter-alert\fP - RFC 2113
+20 \(em \fBrouter-alert\fP \(em RFC 2113
 .PP
 Examples:
 .PP
