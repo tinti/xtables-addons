@@ -1,6 +1,7 @@
 
 
 - build: compile fixes for 2.6.31-rt
+- build: support for Linux 2.6.32
 
 
 Xtables-addons 1.18 (September 09 2009)
