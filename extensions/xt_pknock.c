@@ -1034,9 +1034,6 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 		get_random_bytes(&ipt_pknock_hash_rnd, sizeof (ipt_pknock_hash_rnd));
 	}
 
-	if (!add_rule(info))
-		RETURN_ERR("add_rule() error in checkentry() function.\n");
-
 	if (!(info->option & XT_PKNOCK_NAME))
 		RETURN_ERR("You must specify --name option.\n");
 
@@ -1080,6 +1077,9 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 		}
 	}
 #endif
+
+	if (!add_rule(info))
+		RETURN_ERR("add_rule() error in checkentry() function.\n");
 
 	return true;
 }
