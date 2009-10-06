@@ -1,7 +1,10 @@
 
-
+HEAD
+====
 - build: compile fixes for 2.6.31-rt
 - build: support for Linux 2.6.32
+- psd: avoid potential crash when dealing with non-linear skbs
+- merge xt_ACCOUNT userspace utilities
 
 
 Xtables-addons 1.18 (September 09 2009)
