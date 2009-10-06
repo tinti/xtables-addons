@@ -14,10 +14,7 @@ AC_ARG_WITH([kbuild],
 	AS_HELP_STRING([--with-kbuild=PATH],
 	[Path to kernel build directory [[/lib/modules/CURRENT/build]]]),
 	[kbuilddir="$withval"])
-AC_ARG_WITH([ksource],
-	AS_HELP_STRING([--with-ksource=PATH],
-	[Path to kernel source directory [[/lib/modules/CURRENT/source]]]),
-	[ksourcedir="$withval"])
+AC_ARG_WITH([ksource],,[ksourcedir="$withval"])
 AC_ARG_WITH([xtables],
 	AS_HELP_STRING([--with-xtables=PATH],
 	[Path to the Xtables includes [[none]]]),
