@@ -115,8 +115,6 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & XT_PKNOCK_KNOCKPORT)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --knockports twice.\n");
-
-		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
 		proto = check_proto(pnum, invflags);
 
 		info->ports_count = parse_ports(optarg, info->port, proto);
@@ -131,9 +129,6 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & XT_PKNOCK_TIME)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --time twice.\n");
-
-		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
-
 		info->max_time = atoi(optarg);
 		info->option |= XT_PKNOCK_TIME;
 		*flags |= XT_PKNOCK_TIME;
@@ -143,9 +138,6 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & XT_PKNOCK_NAME)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --name twice.\n");
-
-		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
-
 		memset(info->rule_name, 0, sizeof(info->rule_name));
 		strncpy(info->rule_name, optarg, sizeof(info->rule_name) - 1);
 
@@ -161,9 +153,6 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & XT_PKNOCK_OPENSECRET)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --opensecret twice.\n");
-
-		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
-
 		memset(info->open_secret, 0, sizeof(info->open_secret));
 		strncpy(info->open_secret, optarg, sizeof(info->open_secret) - 1);
 
@@ -176,9 +165,6 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & XT_PKNOCK_CLOSESECRET)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --closesecret twice.\n");
-
-		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
-
 		memset(info->close_secret, 0, sizeof(info->close_secret));
 		strncpy(info->close_secret, optarg, sizeof(info->close_secret) - 1);
 
@@ -191,9 +177,6 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & XT_PKNOCK_CHECKIP)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --checkip twice.\n");
-
-		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
-
 		info->option |= XT_PKNOCK_CHECKIP;
 		*flags |= XT_PKNOCK_CHECKIP;
 		break;
@@ -202,9 +185,6 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & XT_PKNOCK_STRICT)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --strict twice.\n");
-
-		xtables_check_inverse(argv[optind-1], &invert, &optind, 0);
-
 		info->option |= XT_PKNOCK_STRICT;
 		*flags |= XT_PKNOCK_STRICT;
 		break;
