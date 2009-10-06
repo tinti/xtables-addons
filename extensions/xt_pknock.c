@@ -451,17 +451,15 @@ add_rule(struct xt_pknock_mtinfo *info)
 	rule->max_time	= info->max_time;
 	rule->peer_head = alloc_hashtable(peer_hashsize);
 	if (rule->peer_head == NULL)
-		return false;
+		goto out;
 
 	init_timer(&rule->timer);
 	rule->timer.function	= peer_gc;
 	rule->timer.data	= (unsigned long)rule;
 
 	rule->status_proc = create_proc_entry(info->rule_name, 0, pde);
-	if (rule->status_proc == NULL) {
-                kfree(rule);
-                return false;
-	}
+	if (rule->status_proc == NULL)
+		goto out;
 
 	rule->status_proc->proc_fops = &pknock_proc_ops;
 	rule->status_proc->data = rule;
@@ -469,6 +467,10 @@ add_rule(struct xt_pknock_mtinfo *info)
 	list_add(&rule->head, &rule_hashtable[hash]);
 	pr_debug("(A) rule_name: %s - created.\n", rule->rule_name);
 	return true;
+ out:
+	kfree(rule->peer_head);
+	kfree(rule);
+	return false;
 }
 
 /**
