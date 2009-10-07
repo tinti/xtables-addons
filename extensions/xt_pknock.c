@@ -504,27 +504,28 @@ remove_rule(struct xt_pknock_mtinfo *info)
 		pr_debug("(N) rule not found: %s.\n", info->rule_name);
 		return;
 	}
-	if (rule != NULL && rule->ref_count == 0) {
-		hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
-			peer = list_entry(pos, struct peer, head);
+	if (rule == NULL || rule->ref_count != 0)
+		return;
 
-			if (peer != NULL) {
-				pk_debug("DELETED", peer);
-				list_del(pos);
-				kfree(peer);
-			}
+	hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
+		peer = list_entry(pos, struct peer, head);
+
+		if (peer != NULL) {
+			pk_debug("DELETED", peer);
+			list_del(pos);
+			kfree(peer);
 		}
-
-		if (rule->status_proc != NULL)
-			remove_proc_entry(info->rule_name, pde);
-		pr_debug("(D) rule deleted: %s.\n", rule->rule_name);
-		if (timer_pending(&rule->timer))
-			del_timer(&rule->timer);
-
-		list_del(&rule->head);
-		kfree(rule->peer_head);
-		kfree(rule);
 	}
+
+	if (rule->status_proc != NULL)
+		remove_proc_entry(info->rule_name, pde);
+	pr_debug("(D) rule deleted: %s.\n", rule->rule_name);
+	if (timer_pending(&rule->timer))
+		del_timer(&rule->timer);
+
+	list_del(&rule->head);
+	kfree(rule->peer_head);
+	kfree(rule);
 }
 
 /**
