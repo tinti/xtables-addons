@@ -509,12 +509,9 @@ remove_rule(struct xt_pknock_mtinfo *info)
 
 	hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
 		peer = list_entry(pos, struct peer, head);
-
-		if (peer != NULL) {
-			pk_debug("DELETED", peer);
-			list_del(pos);
-			kfree(peer);
-		}
+		pk_debug("DELETED", peer);
+		list_del(pos);
+		kfree(peer);
 	}
 
 	if (rule->status_proc != NULL)
