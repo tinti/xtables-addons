@@ -844,7 +844,13 @@ ipp2p_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 		if (tcph->rst) return 0;  /* if RST bit is set bail out */
 
 		haystack += tcph->doff * 4; /* get TCP-Header-Size */
-		hlen -= tcph->doff * 4;
+		if (tcph->doff * 4 > hlen) {
+			if (info->debug)
+				pr_info("TCP header indicated packet larger than it is\n");
+			hlen = 0;
+		} else {
+			hlen -= tcph->doff * 4;
+		}
 		while (matchlist[i].command) {
 			if ((info->cmd & matchlist[i].command) == matchlist[i].command &&
 			    hlen > matchlist[i].packet_len)

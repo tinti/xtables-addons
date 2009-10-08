@@ -3,6 +3,7 @@ HEAD
 ====
 - build: compile fixes for 2.6.31-rt
 - build: support for Linux 2.6.32
+- ipp2p: try to address underflows
 - psd: avoid potential crash when dealing with non-linear skbs
 - merge xt_ACCOUNT userspace utilities
 
