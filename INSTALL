@@ -19,6 +19,8 @@ Supported configurations for this release
 	  - CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK
 	  - CONFIG_NF_CONNTRACK_MARK or CONFIG_IP_NF_CONNTRACK_MARK
 	    enabled =y or as module (=m)
+	  - CONFIG_CONNECTOR y/m if you wish to receive userspace
+	    notifications from pknock through netlink/connector
 
 Extra notes:
 

@@ -666,6 +666,7 @@ static bool
 msg_to_userspace_nl(const struct xt_pknock_mtinfo *info,
                 const struct peer *peer, int multicast_group)
 {
+#if defined(CONFIG_CONNECTOR) || defined(CONFIG_CONNECTOR_MODULE)
 	struct cn_msg *m;
 	struct xt_pknock_nl_msg msg;
 
@@ -685,6 +686,7 @@ msg_to_userspace_nl(const struct xt_pknock_mtinfo *info,
 	cn_netlink_send(m, multicast_group, GFP_ATOMIC);
 
 	kfree(m);
+#endif
 	return true;
 }
 
@@ -1104,6 +1106,12 @@ static struct xt_match xt_pknock_mt_reg __read_mostly = {
 
 static int __init xt_pknock_mt_init(void)
 {
+#if !defined(CONFIG_CONNECTOR) && !defined(CONFIG_CONNECTOR_MODULE)
+	if (nl_multicast_group != -1)
+		pr_info("CONFIG_CONNECTOR not present; "
+		        "netlink messages disabled\n");
+#endif
+
 	if (gc_expir_time < DEFAULT_GC_EXPIRATION_TIME)
 		gc_expir_time = DEFAULT_GC_EXPIRATION_TIME;
 #ifdef PK_CRYPTO
