@@ -841,7 +841,7 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		pk_debug("DIDN'T MATCH", peer);
 		/* Peer must start the sequence from scratch. */
 		if (info->option & XT_PKNOCK_STRICT)
-			reset_knock_status(peer);
+			remove_peer(peer);
 
 		return false;
 	}
