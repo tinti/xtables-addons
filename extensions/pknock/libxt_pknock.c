@@ -36,8 +36,6 @@ static void pknock_mt_help(void)
 			"Matches destination port(s).\n"
 		" --time seconds\n"
 			"Time between port match.\n"
-		" --secure				"
-			"hmac must be in the packets.\n"
 		" --strict				"
 			"Knocks sequence must be exact.\n"
 		" --name rule_name			"
