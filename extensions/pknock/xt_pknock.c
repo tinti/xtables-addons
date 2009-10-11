@@ -376,15 +376,20 @@ peer_gc(unsigned long r)
 	struct peer *peer;
 	struct list_head *pos, *n;
 
+	pr_debug("(S) running %s\n", __func__);
 	hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
 		peer = list_entry(pos, struct peer, head);
 
-		if ((!has_logged_during_this_minute(peer) &&
+		/*
+		 * Remove any peer whose (inter-knock) max_time
+		 * or autoclose_time passed.
+		 */
+		if ((peer->status != ST_ALLOWED &&
 		    is_interknock_time_exceeded(peer, rule->max_time)) ||
 		    (peer->status == ST_ALLOWED &&
 		    autoclose_time_passed(peer, rule->autoclose_time)))
 		{
-			pk_debug("DESTROYED", peer);
+			pk_debug("GC-DELETED", peer);
 			list_del(pos);
 			kfree(peer);
 		}
