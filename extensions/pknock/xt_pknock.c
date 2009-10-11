@@ -453,6 +453,12 @@ add_rule(struct xt_pknock_mtinfo *info)
 
 		if (rulecmp(info, rule)) {
 			++rule->ref_count;
+
+			if (info->option & XT_PKNOCK_OPENSECRET) {
+				rule->max_time       = info->max_time;
+				rule->autoclose_time = info->autoclose_time;
+			}
+
 			if (info->option & XT_PKNOCK_CHECKIP) {
 				pr_debug("add_rule() (AC)"
 					" rule found: %s - "
