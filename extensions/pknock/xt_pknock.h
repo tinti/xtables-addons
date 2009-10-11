@@ -21,6 +21,7 @@ enum {
 	XT_PKNOCK_CHECKIP     = 1 << 4,
 	XT_PKNOCK_OPENSECRET  = 1 << 5,
 	XT_PKNOCK_CLOSESECRET = 1 << 6,
+	XT_PKNOCK_AUTOCLOSE   = 1 << 7,
 
 	/* Can never change these, as they are make up the user protocol. */
 	XT_PKNOCK_MAX_PORTS      = 15,
@@ -41,6 +42,7 @@ struct xt_pknock_mtinfo {
 	uint8_t	ports_count;	/* number of ports */
 	uint16_t	port[XT_PKNOCK_MAX_PORTS]; /* port[,port,port,...] */
 	uint32_t	max_time;	/* max matching time between ports */
+	uint32_t autoclose_time;
 };
 
 struct xt_pknock_nl_msg {

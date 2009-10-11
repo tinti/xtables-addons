@@ -68,6 +68,7 @@ struct xt_pknock_rule {
 	struct list_head *peer_head;
 	struct proc_dir_entry *status_proc;
 	unsigned long max_time;
+	unsigned long autoclose_time;
 };
 
 /**
@@ -244,6 +245,7 @@ pknock_seq_show(struct seq_file *s, void *v)
 {
 	const struct list_head *pos, *n;
 	const struct peer *peer;
+	unsigned long time;
 	unsigned long expir_time;
 
 	const struct list_head *peer_head = v;
@@ -264,6 +266,15 @@ pknock_seq_show(struct seq_file *s, void *v)
 		seq_printf(s, "expir_time=%ld ", expir_time);
 		seq_printf(s, "accepted_knock_count=%lu ",
 			(unsigned long)peer->accepted_knock_count);
+		if (rule->autoclose_time != 0) {
+			time = 0;
+			if (time_before(get_seconds(), peer->login_sec +
+			    rule->autoclose_time * 60))
+				time = peer->login_sec +
+				       rule->autoclose_time * 60 -
+				       get_seconds();
+			seq_printf(s, "autoclose_time=%lu [secs] ", time);
+		}
 		seq_printf(s, "\n");
 	}
 
@@ -316,6 +327,19 @@ static void update_rule_timer(struct xt_pknock_rule *rule)
 
 /**
  * @peer
+ * @autoclose_time
+ *
+ * Returns true if autoclose due, or false if still valid.
+ */
+static inline bool
+autoclose_time_passed(const struct peer *peer, unsigned int autoclose_time)
+{
+	return peer != NULL && autoclose_time != 0 && time_after(get_seconds(),
+	       peer->login_sec + autoclose_time * 60);
+}
+
+/**
+ * @peer
  * @max_time
  * @return: 1 time exceeded, 0 still valid
  */
@@ -352,8 +376,10 @@ peer_gc(unsigned long r)
 	hashtable_for_each_safe(pos, n, rule->peer_head, peer_hashsize, i) {
 		peer = list_entry(pos, struct peer, head);
 
-		if (!has_logged_during_this_minute(peer) &&
-						is_time_exceeded(peer, rule->max_time))
+		if ((!has_logged_during_this_minute(peer) &&
+		    is_time_exceeded(peer, rule->max_time)) ||
+		    (peer->status == ST_ALLOWED &&
+		    autoclose_time_passed(peer, rule->autoclose_time)))
 		{
 			pk_debug("DESTROYED", peer);
 			list_del(pos);
@@ -440,9 +466,10 @@ add_rule(struct xt_pknock_mtinfo *info)
 	strncpy(rule->rule_name, info->rule_name, info->rule_name_len);
 	rule->rule_name_len = info->rule_name_len;
 
-	rule->ref_count	= 1;
-	rule->max_time	= info->max_time;
-	rule->peer_head = alloc_hashtable(peer_hashsize);
+	rule->ref_count      = 1;
+	rule->max_time       = info->max_time;
+	rule->autoclose_time = info->autoclose_time;
+	rule->peer_head      = alloc_hashtable(peer_hashsize);
 	if (rule->peer_head == NULL)
 		goto out;
 
@@ -994,7 +1021,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 				}
 			}
 #endif
-				goto out;
+			goto out;
 		}
 
 		if (is_first_knock(peer, info, hdr.port)) {
@@ -1008,7 +1035,16 @@ static bool pknock_mt(const struct sk_buff *skb,
 	}
 
 out:
-	if (ret != 0)
+	/* Handle cur.peer matching and deletion after autoclose_time passed */
+	if (ret && autoclose_time_passed(peer, rule->autoclose_time)) {
+		pk_debug("AUTOCLOSE TIME PASSED => BLOCKED", peer);
+		ret = false;
+		if (iph->protocol == IPPROTO_TCP ||
+		    !has_logged_during_this_minute(peer))
+			remove_peer(peer);
+	}
+
+	if (ret)
 		pk_debug("PASS OK", peer);
 	spin_unlock_bh(&list_lock);
 	return ret;
@@ -1061,6 +1097,8 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 #endif
 		if (info->option & XT_PKNOCK_TIME)
 			RETURN_ERR("Can't specify --time with --checkip.\n");
+		if (info->option & XT_PKNOCK_AUTOCLOSE)
+			RETURN_ERR("Can't specify --autoclose with --checkip.\n");
 	}
 
 #ifdef PK_CRYPTO

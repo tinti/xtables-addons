@@ -21,8 +21,9 @@ static const struct option pknock_mt_opts[] = {
 	/* .name, .has_arg, .flag, .val */
 	{.name = "knockports",  .has_arg = true,  .val = 'k'},
 	{.name = "time",        .has_arg = true,  .val = 't'},
+	{.name = "autoclose",   .has_arg = true,  .val = 'a'},
 	{.name = "name",        .has_arg = true,  .val = 'n'},
-	{.name = "opensecret",  .has_arg = true,  .val = 'a'},
+	{.name = "opensecret",  .has_arg = true,  .val = 'o'},
 	{.name = "closesecret", .has_arg = true,  .val = 'z'},
 	{.name = "strict",      .has_arg = false, .val = 'x'},
 	{.name = "checkip",     .has_arg = false, .val = 'c'},
@@ -36,6 +37,9 @@ static void pknock_mt_help(void)
 			"Matches destination port(s).\n"
 		" --time seconds\n"
 			"Max allowed time between knocks.\n"
+		" --autoclose minutes\n"
+			"Time after which to automatically close opened\n"
+			"\t\t\t\t\tport(s).\n"
 		" --strict				"
 			"Knocks sequence must be exact.\n"
 		" --name rule_name			"
@@ -106,6 +110,7 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 {
 	const char *proto;
 	struct xt_pknock_mtinfo *info = (void *)(*match)->data;
+	unsigned int tmp;
 
 	switch (c) {
 	case 'k': /* --knockports */
@@ -131,6 +136,18 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 		*flags |= XT_PKNOCK_TIME;
 		break;
 
+        case 'a': /* --autoclose */
+		if (*flags & XT_PKNOCK_AUTOCLOSE)
+			xtables_error(PARAMETER_PROBLEM, PKNOCK
+				"cannot use --autoclose twice.\n");
+		if (!xtables_strtoui(optarg, NULL, &tmp, 0, ~0U))
+			xtables_param_act(XTF_BAD_VALUE, PKNOCK,
+				"--autoclose", optarg);
+                info->autoclose_time = tmp;
+                info->option |= XT_PKNOCK_AUTOCLOSE;
+                *flags |= XT_PKNOCK_AUTOCLOSE;
+                break;
+
 	case 'n': /* --name */
 		if (*flags & XT_PKNOCK_NAME)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
@@ -146,7 +163,7 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 #endif
 		break;
 
-	case 'a': /* --opensecret */
+	case 'o': /* --opensecret */
 		if (*flags & XT_PKNOCK_OPENSECRET)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --opensecret twice.\n");
@@ -236,6 +253,9 @@ static void pknock_mt_check(unsigned int flags)
 		if (flags & XT_PKNOCK_TIME)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --time with --checkip.\n");
+		if (flags & XT_PKNOCK_AUTOCLOSE)
+			xtables_error(PARAMETER_PROBLEM, PKNOCK
+				"cannot specify --autoclose with --checkip.\n");
 	}
 }
 
@@ -254,6 +274,8 @@ static void pknock_mt_print(const void *ip,
 	}
 	if (info->option & XT_PKNOCK_TIME)
 		printf("time %ld ", (long)info->max_time);
+	if (info->option & XT_PKNOCK_AUTOCLOSE)
+		printf("autoclose %lu ", (unsigned long)info->autoclose_time);
 	if (info->option & XT_PKNOCK_NAME)
 		printf("name %s ", info->rule_name);
 	if (info->option & XT_PKNOCK_OPENSECRET)
@@ -279,6 +301,9 @@ static void pknock_mt_save(const void *ip, const struct xt_entry_match *match)
 	}
 	if (info->option & XT_PKNOCK_TIME)
 		printf("--time %ld ", (long)info->max_time);
+	if (info->option & XT_PKNOCK_AUTOCLOSE)
+		printf("--autoclose %lu ",
+		       (unsigned long)info->autoclose_time);
 	if (info->option & XT_PKNOCK_NAME)
 		printf("--name %s ", info->rule_name);
 	if (info->option & XT_PKNOCK_OPENSECRET)
