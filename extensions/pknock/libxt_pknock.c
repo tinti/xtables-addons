@@ -19,14 +19,14 @@
 
 static const struct option pknock_mt_opts[] = {
 	/* .name, .has_arg, .flag, .val */
-	{ "knockports",	1,	0, 'k' },
-	{ "time",		1,	0, 't' },
-	{ "name",		1,	0, 'n' },
-	{ "opensecret",	1,	0, 'a' },
-	{ "closesecret",1,	0, 'z' },
-	{ "strict",		0,	0, 'x' },
-	{ "checkip",	0,	0, 'c' },
-	{ .name = NULL }
+	{.name = "knockports",  .has_arg = true,  .val = 'k'},
+	{.name = "time",        .has_arg = true,  .val = 't'},
+	{.name = "name",        .has_arg = true,  .val = 'n'},
+	{.name = "opensecret",  .has_arg = true,  .val = 'a'},
+	{.name = "closesecret", .has_arg = true,  .val = 'z'},
+	{.name = "strict",      .has_arg = false, .val = 'x'},
+	{.name = "checkip",     .has_arg = false, .val = 'c'},
+	{NULL},
 };
 
 static void pknock_mt_help(void)
