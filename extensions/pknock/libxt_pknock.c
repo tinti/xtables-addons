@@ -26,7 +26,6 @@ static const struct option pknock_mt_opts[] = {
 	{ "closesecret",1,	0, 'z' },
 	{ "strict",		0,	0, 'x' },
 	{ "checkip",	0,	0, 'c' },
-	{ "chkip",		0,	0, 'c' },
 	{ .name = NULL }
 };
 
@@ -45,7 +44,7 @@ static void pknock_mt_help(void)
 			"Rule name.\n"
 		" --checkip				"
 			"Matches if the source ip is in the list.\n"
-		" --chkip\n");
+		);
 }
 
 static unsigned int
