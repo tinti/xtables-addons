@@ -319,7 +319,7 @@ static const struct file_operations pknock_proc_ops = {
  *
  * @rule
  */
-static void update_rule_timer(struct xt_pknock_rule *rule)
+static void update_rule_gc_timer(struct xt_pknock_rule *rule)
 {
 	if (timer_pending(&rule->timer))
 		del_timer(&rule->timer);
@@ -347,7 +347,7 @@ autoclose_time_passed(const struct peer *peer, unsigned int autoclose_time)
  * @return: 1 time exceeded, 0 still valid
  */
 static inline bool
-is_time_exceeded(const struct peer *peer, unsigned int max_time)
+is_interknock_time_exceeded(const struct peer *peer, unsigned int max_time)
 {
 	return peer != NULL && time_after(jiffies / HZ,
 	       peer->timestamp + max_time);
@@ -364,7 +364,7 @@ has_logged_during_this_minute(const struct peer *peer)
 }
 
 /**
- * Garbage collector. It removes the old entries after timer has expired.
+ * Garbage collector. It removes the old entries after tis timers have expired.
  *
  * @r: rule
  */
@@ -380,7 +380,7 @@ peer_gc(unsigned long r)
 		peer = list_entry(pos, struct peer, head);
 
 		if ((!has_logged_during_this_minute(peer) &&
-		    is_time_exceeded(peer, rule->max_time)) ||
+		    is_interknock_time_exceeded(peer, rule->max_time)) ||
 		    (peer->status == ST_ALLOWED &&
 		    autoclose_time_passed(peer, rule->autoclose_time)))
 		{
@@ -831,7 +831,7 @@ pass_security(struct peer *peer, const struct xt_pknock_mtinfo *info,
 
 	/* The peer can't log more than once during the same minute. */
 	if (has_logged_during_this_minute(peer)) {
-		pk_debug("BLOCKED", peer);
+		pk_debug("DENIED (anti-spoof protection)", peer);
 		return false;
 	}
 	/* Check for OPEN secret */
@@ -845,13 +845,15 @@ pass_security(struct peer *peer, const struct xt_pknock_mtinfo *info,
 #endif /* PK_CRYPTO */
 
 /**
- * It updates the peer matching status.
+ * Validates the peer and updates the peer status for an initiating or
+ * in-sequence knock packet.
  *
  * @peer
  * @info
  * @rule
  * @hdr
- * @return: 1 if allowed, 0 otherwise
+ *
+ * Returns true if allowed, false otherwise.
  */
 static bool
 update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
@@ -878,8 +880,8 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 			return false;
 	}
 
-	/* Just update the timer when there is a state change. */
-	update_rule_timer(rule);
+	/* Update the gc timer when there is a state change. */
+	update_rule_gc_timer(rule);
 
 	++peer->accepted_knock_count;
 
@@ -895,13 +897,13 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		return true;
 	}
 
-	/* Controls the max matching time between ports. */
+	/* Immediate control over the maximum time between knocks. */
 	if (info->option & XT_PKNOCK_TIME) {
 		time = jiffies/HZ;
 
-		if (is_time_exceeded(peer, info->max_time)) {
-			pk_debug("TIME EXCEEDED", peer);
-			pk_debug("DESTROYED", peer);
+		if (is_interknock_time_exceeded(peer, info->max_time)) {
+			pk_debug("ST_MATCHING knock received after interknock "
+				"time passed => destroyed", peer);
 			pr_debug("max_time: %ld - time: %ld\n",
 					peer->timestamp + info->max_time,
 					time);
@@ -935,7 +937,7 @@ is_close_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 				info->close_secret_len, peer->ip,
 				payload, payload_len))
 	{
-		pk_debug("RESET", peer);
+		pk_debug("BLOCKED", peer);
 		return true;
 	}
 	return false;
