@@ -49,7 +49,7 @@ struct peer {
 	struct list_head head;
 	__be32 ip;
 	uint8_t proto;
-	uint32_t id_port_knocked;
+	uint32_t accepted_knock_count;
 	enum status status;
 	unsigned long timestamp;
 	int login_min;
@@ -270,7 +270,8 @@ pknock_seq_show(struct seq_file *s, void *v)
                                                 "TCP" : "UDP");
 		seq_printf(s, "status=%s ", status_itoa(peer->status));
 		seq_printf(s, "expir_time=%ld ", expir_time);
-		seq_printf(s, "next_port_id=%d ", peer->id_port_knocked-1);
+		seq_printf(s, "accepted_knock_count=%lu ",
+			(unsigned long)peer->accepted_knock_count);
 		seq_printf(s, "\n");
 	}
 
@@ -554,7 +555,7 @@ static struct peer *get_peer(struct xt_pknock_rule *rule, __be32 ip)
  */
 static void reset_knock_status(struct peer *peer)
 {
-	peer->id_port_knocked = 1;
+	peer->accepted_knock_count = 0;
 	peer->status = ST_INIT;
 }
 
@@ -631,7 +632,7 @@ static inline bool
 is_wrong_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 		uint16_t port)
 {
-	return peer != NULL && info->port[peer->id_port_knocked-1] != port;
+	return peer != NULL && info->port[peer->accepted_knock_count] != port;
 }
 
 /**
@@ -642,7 +643,7 @@ is_wrong_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 static inline bool
 is_last_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info)
 {
-	return peer != NULL && peer->id_port_knocked - 1 == info->ports_count;
+	return peer != NULL && peer->accepted_knock_count == info->ports_count;
 }
 
 /**
@@ -860,7 +861,7 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 	/* Just update the timer when there is a state change. */
 	update_rule_timer(rule);
 
-	++peer->id_port_knocked;
+	++peer->accepted_knock_count;
 
 	if (is_last_knock(peer, info)) {
 		peer->status = ST_ALLOWED;
