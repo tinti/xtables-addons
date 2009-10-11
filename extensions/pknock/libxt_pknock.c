@@ -35,7 +35,7 @@ static void pknock_mt_help(void)
 		" --knockports port[,port,port,...]	"
 			"Matches destination port(s).\n"
 		" --time seconds\n"
-			"Time between port match.\n"
+			"Max allowed time between knocks.\n"
 		" --strict				"
 			"Knocks sequence must be exact.\n"
 		" --name rule_name			"
