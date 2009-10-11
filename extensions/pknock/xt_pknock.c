@@ -866,7 +866,6 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		return false;
 	}
 
-#ifdef PK_CRYPTO
 	/* If security is needed. */
 	if (info->option & XT_PKNOCK_OPENSECRET ) {
 		if (hdr->proto != IPPROTO_UDP)
@@ -875,7 +874,6 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		if (!pass_security(peer, info, hdr->payload, hdr->payload_len))
 			return false;
 	}
-#endif
 
 	/* Just update the timer when there is a state change. */
 	update_rule_timer(rule);
@@ -1010,7 +1008,6 @@ static bool pknock_mt(const struct sk_buff *skb,
 	/* Sets, updates, removes or checks the peer matching status. */
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		if ((ret = is_allowed(peer))) {
-#ifdef PK_CRYPTO
 			if (info->option & XT_PKNOCK_CLOSESECRET &&
 							iph->protocol == IPPROTO_UDP)
 			{
@@ -1020,7 +1017,6 @@ static bool pknock_mt(const struct sk_buff *skb,
 					ret = false;
 				}
 			}
-#endif
 			goto out;
 		}
 
@@ -1068,40 +1064,37 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 	if (!(info->option & XT_PKNOCK_NAME))
 		RETURN_ERR("You must specify --name option.\n");
 
-#ifdef PK_CRYPTO
+#ifndef PK_CRYPTO
+	if (info->option & (XT_PKNOCK_OPENSECRET | XT_PKNOCK_CLOSESECRET))
+		RETURN_ERR("No crypto support available; "
+			"cannot use opensecret/closescret\n");
+#endif
 	if ((info->option & XT_PKNOCK_OPENSECRET) && (info->ports_count != 1))
 		RETURN_ERR("--opensecret must have just one knock port\n");
-#endif
-
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		if (info->option & XT_PKNOCK_CHECKIP)
 			RETURN_ERR("Can't specify --knockports with --checkip.\n");
-#ifdef PK_CRYPTO
 		if ((info->option & XT_PKNOCK_OPENSECRET) &&
 				!(info->option & XT_PKNOCK_CLOSESECRET))
 			RETURN_ERR("--opensecret must go with --closesecret.\n");
 		if ((info->option & XT_PKNOCK_CLOSESECRET) &&
 				!(info->option & XT_PKNOCK_OPENSECRET))
 			RETURN_ERR("--closesecret must go with --opensecret.\n");
-#endif
 	}
 
 	if (info->option & XT_PKNOCK_CHECKIP) {
 		if (info->option & XT_PKNOCK_KNOCKPORT)
 			RETURN_ERR("Can't specify --checkip with --knockports.\n");
-#ifdef PK_CRYPTO
 		if ((info->option & XT_PKNOCK_OPENSECRET) ||
 				(info->option & XT_PKNOCK_CLOSESECRET))
 			RETURN_ERR("Can't specify --opensecret and --closesecret"
 							" with --checkip.\n");
-#endif
 		if (info->option & XT_PKNOCK_TIME)
 			RETURN_ERR("Can't specify --time with --checkip.\n");
 		if (info->option & XT_PKNOCK_AUTOCLOSE)
 			RETURN_ERR("Can't specify --autoclose with --checkip.\n");
 	}
 
-#ifdef PK_CRYPTO
 	if (info->option & XT_PKNOCK_OPENSECRET) {
 		if (info->open_secret_len == info->close_secret_len) {
 			if (memcmp(info->open_secret, info->close_secret,
@@ -1109,7 +1102,6 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 				RETURN_ERR("opensecret & closesecret cannot be equal.\n");
 		}
 	}
-#endif
 
 	if (!add_rule(info))
 		RETURN_ERR("add_rule() error in checkentry() function.\n");
