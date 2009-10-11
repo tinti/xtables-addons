@@ -43,6 +43,7 @@ enum status {
 };
 
 /**
+ * @timestamp:	seconds, but not since epoch (uses jiffies/HZ)
  * @login_sec: seconds at login since the epoch
  */
 struct peer {
@@ -246,8 +247,6 @@ pknock_seq_show(struct seq_file *s, void *v)
 	const struct list_head *pos, *n;
 	const struct peer *peer;
 	unsigned long time;
-	unsigned long expir_time;
-
 	const struct list_head *peer_head = v;
 
 	const struct proc_dir_entry *pde = s->private;
@@ -255,18 +254,22 @@ pknock_seq_show(struct seq_file *s, void *v)
 
 	list_for_each_safe(pos, n, peer_head) {
 		peer = list_entry(pos, struct peer, head);
-		expir_time = time_before(jiffies/HZ,
-						peer->timestamp + rule->max_time)
-				? ((peer->timestamp + rule->max_time)-(jiffies/HZ)) : 0;
 
 		seq_printf(s, "src=" NIPQUAD_FMT " ", NIPQUAD(peer->ip));
 		seq_printf(s, "proto=%s ", (peer->proto == IPPROTO_TCP) ?
                                                 "TCP" : "UDP");
 		seq_printf(s, "status=%s ", status_itoa(peer->status));
-		seq_printf(s, "expir_time=%ld ", expir_time);
 		seq_printf(s, "accepted_knock_count=%lu ",
 			(unsigned long)peer->accepted_knock_count);
-		if (rule->autoclose_time != 0) {
+		if (peer->status == ST_MATCHING) {
+			time = 0;
+			if (time_before(jiffies / HZ, peer->timestamp +
+			    rule->max_time))
+				time = peer->timestamp + rule->max_time -
+				       jiffies / HZ;
+			seq_printf(s, "expir_time=%lu [secs] ", time);
+		}
+		if (peer->status == ST_ALLOWED && rule->autoclose_time != 0) {
 			time = 0;
 			if (time_before(get_seconds(), peer->login_sec +
 			    rule->autoclose_time * 60))
