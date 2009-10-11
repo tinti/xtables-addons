@@ -132,6 +132,9 @@ __pknock_parse(int c, char **argv, int invert, unsigned int *flags,
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot use --time twice.\n");
 		info->max_time = atoi(optarg);
+		if (info->max_time == 0)
+			xtables_error(PARAMETER_PROBLEM, PKNOCK
+				"--time number must be > 0.\n");
 		info->option |= XT_PKNOCK_TIME;
 		*flags |= XT_PKNOCK_TIME;
 		break;
@@ -256,6 +259,9 @@ static void pknock_mt_check(unsigned int flags)
 		if (flags & XT_PKNOCK_AUTOCLOSE)
 			xtables_error(PARAMETER_PROBLEM, PKNOCK
 				"cannot specify --autoclose with --checkip.\n");
+	} else if (!(flags & (XT_PKNOCK_OPENSECRET | XT_PKNOCK_TIME))) {
+		xtables_error(PARAMETER_PROBLEM, PKNOCK
+			"you must specify --time.\n");
 	}
 }
 

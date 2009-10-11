@@ -1093,6 +1093,8 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 			RETURN_ERR("Can't specify --time with --checkip.\n");
 		if (info->option & XT_PKNOCK_AUTOCLOSE)
 			RETURN_ERR("Can't specify --autoclose with --checkip.\n");
+	} else if (!(info->option & (XT_PKNOCK_OPENSECRET | XT_PKNOCK_TIME))) {
+		RETURN_ERR("you must specify --time.\n");
 	}
 
 	if (info->option & XT_PKNOCK_OPENSECRET) {
