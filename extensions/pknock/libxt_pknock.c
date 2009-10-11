@@ -206,9 +206,6 @@ static int pknock_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 
 static void pknock_mt_check(unsigned int flags)
 {
-	if (!flags)
-		xtables_error(PARAMETER_PROBLEM, PKNOCK "expection an option.\n");
-
 	if (!(flags & XT_PKNOCK_NAME))
 		xtables_error(PARAMETER_PROBLEM, PKNOCK
 			"--name option is required.\n");
