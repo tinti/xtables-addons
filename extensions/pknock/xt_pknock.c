@@ -43,7 +43,7 @@ enum status {
 };
 
 /**
- * @login_min: the login epoch minute
+ * @login_sec: seconds at login since the epoch
  */
 struct peer {
 	struct list_head head;
@@ -52,7 +52,7 @@ struct peer {
 	uint32_t accepted_knock_count;
 	enum status status;
 	unsigned long timestamp;
-	int login_min;
+	unsigned long login_sec;
 };
 
 /**
@@ -146,14 +146,6 @@ static inline uint32_t
 pknock_hash(const void *key, uint32_t len, uint32_t initval, uint32_t max)
 {
 	return jhash(key, len, initval) % max;
-}
-
-/**
- * @return: the epoch minute
- */
-static inline unsigned int get_epoch_minute(void)
-{
-	return get_seconds() / 60;
 }
 
 /**
@@ -341,7 +333,7 @@ is_time_exceeded(const struct peer *peer, unsigned int max_time)
 static inline bool
 has_logged_during_this_minute(const struct peer *peer)
 {
-	return peer != NULL && peer->login_min == get_epoch_minute();
+	return peer != NULL && peer->login_sec / 60 == get_seconds() / 60;
 }
 
 /**
@@ -578,7 +570,7 @@ static struct peer *new_peer(__be32 ip, uint8_t proto)
 	peer->ip	= ip;
 	peer->proto	= proto;
 	peer->timestamp = jiffies/HZ;
-	peer->login_min = 0;
+	peer->login_sec = 0;
 	reset_knock_status(peer);
 
 	return peer;
@@ -753,7 +745,7 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	memset(result, 0, sizeof(result));
 	memset(hexresult, 0, hexa_size);
 
-	epoch_min = get_epoch_minute();
+	epoch_min = get_seconds() / 60;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	sg_init_table(sg, ARRAY_SIZE(sg));
@@ -867,11 +859,11 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		peer->status = ST_ALLOWED;
 
 		pk_debug("ALLOWED", peer);
+		peer->login_sec = get_seconds();
 
 		if (nl_multicast_group > 0)
 			msg_to_userspace_nl(info, peer, nl_multicast_group);
 
-		peer->login_min = get_epoch_minute();
 		return true;
 	}
 
