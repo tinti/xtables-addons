@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <arpa/inet.h>
 #include <linux/netlink.h>
 #include <linux/connector.h>
 
@@ -28,7 +28,8 @@ int main() {
 
 	int i, buf_size;
 
-	char *ip;
+	const char *ip;
+	char ipbuf[48];
 
 	sock_fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
 
@@ -78,7 +79,7 @@ int main() {
 
 	nlmsg = (struct xt_pknock_nl_msg *) (buf + sizeof(struct cn_msg) + sizeof(struct nlmsghdr));
 
-	ip = (char *)inet_ntoa((struct in_addr *) htonl(nlmsg->peer_ip));
+		ip = inet_ntop(AF_INET, &nlmsg->peer_ip, ipbuf, sizeof(ipbuf));
 		printf("rule_name: %s - ip %s\n", nlmsg->rule_name, ip);
 
 	}
