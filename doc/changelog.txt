@@ -19,6 +19,7 @@ HEAD
   - pknock: check interknock time only for !ST_ALLOWED peers
   - pknock: preserve time/autoclose values for rules added in
     reverse/arbitrary order
+  - pknock: add a manpage
 
 
 Xtables-addons 1.18 (September 09 2009)
