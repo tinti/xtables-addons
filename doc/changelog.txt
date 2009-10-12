@@ -6,6 +6,19 @@ HEAD
 - ipp2p: try to address underflows
 - psd: avoid potential crash when dealing with non-linear skbs
 - merge xt_ACCOUNT userspace utilities
+- added reworked xt_pknock module
+  Changes from pknock v0.5:
+  - pknock: "strict" and "checkip" flags were not displayed in `iptables -L`
+  - pknock: the GC expire time's lower bound is now the default gc time
+    (65000 msec) to avoid rendering anti-spoof protection in SPA mode useless
+  - pknock: avoid crash on memory allocation failure and fix memleak
+  - pknock: avoid fillup of peer table during DDoS
+  - pknock: automatic closing of ports
+  - pknock: make non-zero time mandatory for TCP mode
+  - pknock: display only pknock mode and state relevant information in procfs
+  - pknock: check interknock time only for !ST_ALLOWED peers
+  - pknock: preserve time/autoclose values for rules added in
+    reverse/arbitrary order
 
 
 Xtables-addons 1.18 (September 09 2009)

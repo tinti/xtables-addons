@@ -1,0 +1,13 @@
+config NETFILTER_XT_MATCH_PKNOCK
+	tristate "Port knocking match support"
+	depends on NETFILTER_XTABLES && CONNECTOR
+	---help---
+	pknock match implements so-called Port Knocking, a stealthy system
+	for network authentication: client sends packets to selected, closed
+	ports on target machine in a specific sequence. The target machine
+	(which has pknock match rule set up) then decides whether to
+	unblock or block (again) its protected port with listening
+	service. This can be, for instance, used to avoid brute force attacks
+	on ssh or ftp services.
+
+	For more informations go to: http://portknocko.berlios.de/
