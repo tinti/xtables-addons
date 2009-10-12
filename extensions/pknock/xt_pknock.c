@@ -49,11 +49,11 @@ enum status {
 struct peer {
 	struct list_head head;
 	__be32 ip;
-	uint8_t proto;
 	uint32_t accepted_knock_count;
-	enum status status;
 	unsigned long timestamp;
 	unsigned long login_sec;
+	enum status status;
+	uint8_t proto;
 };
 
 /**
