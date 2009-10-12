@@ -12,15 +12,16 @@
 
 #define GROUP 1
 
-struct sockaddr_nl src_addr, dest_addr;
-struct msghdr msg;
-int sock_fd;
+static struct sockaddr_nl src_addr, dest_addr;
+static struct msghdr msg;
+static int sock_fd;
 
-unsigned char *buf = NULL;
+static unsigned char *buf;
 
-struct xt_pknock_nl_msg *nlmsg;
+static struct xt_pknock_nl_msg *nlmsg;
 
-int main() {
+int main(void)
+{
 	socklen_t addrlen;
 	int status;
 	int group = GROUP;
@@ -57,7 +58,7 @@ int main() {
 	dest_addr.nl_groups = group;
 
 	buf_size = sizeof(struct xt_pknock_nl_msg) + sizeof(struct cn_msg) + sizeof(struct nlmsghdr);
-	buf = (unsigned char *) malloc(buf_size);
+	buf = malloc(buf_size);
 
 	if (!buf) {
 		perror("malloc()");
