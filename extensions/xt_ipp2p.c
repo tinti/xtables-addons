@@ -23,28 +23,26 @@ MODULE_LICENSE("GPL");
 static unsigned int
 udp_search_edk(const unsigned char *t, const unsigned int packet_len)
 {
-	t += 8;
-
 	switch (t[0]) {
 	case 0xe3:
 		/* edonkey */
 		switch (t[1]) {
 		/* client -> server status request */
 		case 0x96:
-			if (packet_len == 14)
+			if (packet_len == 6)
 				return IPP2P_EDK * 100 + 50;
 			break;
 
 		/* server -> client status request */
 		case 0x97:
-			if (packet_len == 42)
+			if (packet_len == 34)
 				return IPP2P_EDK * 100 + 51;
 			break;
 
 		/* server description request */
 		/* e3 2a ff f0 .. | size == 6 */
 		case 0xa2:
-			if (packet_len == 14 &&
+			if (packet_len == 6 &&
 			    get_u16(t, 2) == __constant_htons(0xfff0))
 				return IPP2P_EDK * 100 + 52;
 			break;
@@ -58,12 +56,12 @@ udp_search_edk(const unsigned char *t, const unsigned int packet_len)
 		*/
 
 		case 0x9a:
-			if (packet_len == 26)
+			if (packet_len == 18)
 				return IPP2P_EDK * 100 + 54;
 			break;
 
 		case 0x92:
-			if (packet_len == 18)
+			if (packet_len == 10)
 				return IPP2P_EDK * 100 + 55;
 			break;
 		}
@@ -71,63 +69,63 @@ udp_search_edk(const unsigned char *t, const unsigned int packet_len)
 
 	case 0xe4:
 		switch (t[1]) {
-		/* e4 20 .. | size == 43 */
+		/* e4 20 .. | size == 35 */
 		case 0x20:
-			if (packet_len == 43 && t[2] != 0x00 && t[34] != 0x00)
+			if (packet_len == 35 && t[2] != 0x00 && t[34] != 0x00)
 				return IPP2P_EDK * 100 + 60;
 			break;
 
-		/* e4 00 .. 00 | size == 35 ? */
+		/* e4 00 .. 00 | size == 27 ? */
 		case 0x00:
-			if (packet_len == 35 && t[26] == 0x00)
+			if (packet_len == 27 && t[26] == 0x00)
 				return IPP2P_EDK * 100 + 61;
 			break;
 
-		/* e4 10 .. 00 | size == 35 ? */
+		/* e4 10 .. 00 | size == 27 ? */
 		case 0x10:
-			if (packet_len == 35 && t[26] == 0x00)
+			if (packet_len == 27 && t[26] == 0x00)
 				return IPP2P_EDK * 100 + 62;
 			break;
 
-		/* e4 18 .. 00 | size == 35 ? */
+		/* e4 18 .. 00 | size == 27 ? */
 		case 0x18:
-			if (packet_len == 35 && t[26] == 0x00)
+			if (packet_len == 27 && t[26] == 0x00)
 				return IPP2P_EDK * 100 + 63;
 			break;
 
-		/* e4 52 .. | size = 44 */
+		/* e4 52 .. | size = 36 */
 		case 0x52:
-			if (packet_len == 44)
+			if (packet_len == 36)
 				return IPP2P_EDK * 100 + 64;
 			break;
 
 		/* e4 58 .. | size == 6 */
 		case 0x58:
-			if (packet_len == 14)
+			if (packet_len == 6)
 				return IPP2P_EDK * 100 + 65;
 			break;
 
 		/* e4 59 .. | size == 2 */
 		case 0x59:
-			if (packet_len == 10)
+			if (packet_len == 2)
 				return IPP2P_EDK * 100 + 66;
 			break;
 
-		/* e4 28 .. | packet_len == 52,77,102,127... */
+		/* e4 28 .. | packet_len == 49,69,94,119... */
 		case 0x28:
-			if ((packet_len - 52) % 25 == 0)
+			if ((packet_len - 44) % 25 == 0)
 				return IPP2P_EDK * 100 + 67;
 			break;
 
 		/* e4 50 xx xx | size == 4 */
 		case 0x50:
-			if (packet_len == 12)
+			if (packet_len == 4)
 				return IPP2P_EDK * 100 + 68;
 			break;
 
 		/* e4 40 xx xx | size == 48 */
 		case 0x40:
-			if (packet_len == 56)
+			if (packet_len == 48)
 				return IPP2P_EDK * 100 + 69;
 			break;
 		}
@@ -140,8 +138,6 @@ udp_search_edk(const unsigned char *t, const unsigned int packet_len)
 static unsigned int
 udp_search_gnu(const unsigned char *t, const unsigned int packet_len)
 {
-	t += 8;
-
 	if (memcmp(t, "GND", 3) == 0)
 		return IPP2P_GNU * 100 + 51;
 	if (memcmp(t, "GNUTELLA ", 9) == 0)
@@ -166,8 +162,7 @@ udp_search_kazaa(const unsigned char *t, const unsigned int packet_len)
 static unsigned int udp_search_directconnect(const unsigned char *t,
                                              const unsigned int packet_len)
 {
-	if (*(t + 8) == 0x24 && *(t + packet_len - 1) == 0x7c) {
-		t += 8;
+	if (*(t + 0) == 0x24 && *(t + packet_len - 1) == 0x7c) {
 		if (memcmp(t, "SR ", 3) == 0)
 			return IPP2P_DC * 100 + 60;
 		if (memcmp(t, "Ping ", 5) == 0)
@@ -181,77 +176,78 @@ static unsigned int
 udp_search_bit(const unsigned char *haystack, const unsigned int packet_len)
 {
 	switch (packet_len) {
-	case 24:
+	case 16:
 		/* ^ 00 00 04 17 27 10 19 80 */
-		if (ntohl(get_u32(haystack, 8)) == 0x00000417 &&
-		    ntohl(get_u32(haystack, 12)) == 0x27101980)
+		if (ntohl(get_u32(haystack, 0)) == 0x00000417 &&
+		    ntohl(get_u32(haystack, 4)) == 0x27101980)
 			return IPP2P_BIT * 100 + 50;
 		break;
-	case 44:
-		if (get_u32(haystack, 16) == __constant_htonl(0x00000400) &&
-		    get_u32(haystack, 36) == __constant_htonl(0x00000104))
+	case 36:
+		if (get_u32(haystack, 8) == __constant_htonl(0x00000400) &&
+		    get_u32(haystack, 28) == __constant_htonl(0x00000104))
 			return IPP2P_BIT * 100 + 51;
-		if (get_u32(haystack, 16) == __constant_htonl(0x00000400))
+		if (get_u32(haystack, 8) == __constant_htonl(0x00000400))
 			return IPP2P_BIT * 100 + 61;
 		break;
-	case 65:
-		if (get_u32(haystack, 16) == __constant_htonl(0x00000404) &&
-		    get_u32(haystack, 36) == __constant_htonl(0x00000104))
+	case 57:
+		if (get_u32(haystack, 8) == __constant_htonl(0x00000404) &&
+		    get_u32(haystack, 28) == __constant_htonl(0x00000104))
 			return IPP2P_BIT * 100 + 52;
-		if (get_u32(haystack, 16) == __constant_htonl(0x00000404))
+		if (get_u32(haystack, 8) == __constant_htonl(0x00000404))
 			return IPP2P_BIT * 100 + 62;
 		break;
-	case 67:
-		if (get_u32(haystack, 16) == __constant_htonl(0x00000406) && get_u32(haystack, 36) == __constant_htonl(0x00000104))
+	case 59:
+		if (get_u32(haystack, 8) == __constant_htonl(0x00000406) &&
+		    get_u32(haystack, 28) == __constant_htonl(0x00000104))
 			return (IPP2P_BIT * 100 + 53);
-		if (get_u32(haystack, 16) == __constant_htonl(0x00000406))
+		if (get_u32(haystack, 8) == __constant_htonl(0x00000406))
 			return (IPP2P_BIT * 100 + 63);
 		break;
-	case 211:
-		if (get_u32(haystack, 8) == __constant_htonl(0x00000405))
+	case 203:
+		if (get_u32(haystack, 0) == __constant_htonl(0x00000405))
 			return IPP2P_BIT * 100 + 54;
 		break;
-	case 29:
-		if (get_u32(haystack, 8) == __constant_htonl(0x00000401))
+	case 21:
+		if (get_u32(haystack, 0) == __constant_htonl(0x00000401))
 			return IPP2P_BIT * 100 + 55;
 		break;
-	case 52:
-		if (get_u32(haystack, 8)  == __constant_htonl(0x00000827) &&
-		    get_u32(haystack, 12) == __constant_htonl(0x37502950))
+	case 44:
+		if (get_u32(haystack, 0)  == __constant_htonl(0x00000827) &&
+		    get_u32(haystack, 4) == __constant_htonl(0x37502950))
 			return IPP2P_BIT * 100 + 80;
 		break;
 	default:
 		/* this packet does not have a constant size */
-		if (packet_len >= 40 &&
-		    get_u32(haystack, 16) == __constant_htonl(0x00000402) &&
-		    get_u32(haystack, 36) == __constant_htonl(0x00000104))
+		if (packet_len >= 32 &&
+		    get_u32(haystack, 8) == __constant_htonl(0x00000402) &&
+		    get_u32(haystack, 28) == __constant_htonl(0x00000104))
 			return IPP2P_BIT * 100 + 56;
 		break;
 	}
 
 	/* some extra-bitcomet rules: "d1:" [a|r] "d2:id20:" */
-	if (packet_len > 30 && get_u8(haystack, 8) == 'd' &&
-	    get_u8(haystack, 9) == '1' && get_u8(haystack, 10) == ':')
-		if (get_u8(haystack, 11) == 'a' ||
-		    get_u8(haystack, 11) == 'r')
-			if (memcmp(haystack + 12, "d2:id20:", 8) == 0)
+	if (packet_len > 22 && get_u8(haystack, 0) == 'd' &&
+	    get_u8(haystack, 1) == '1' && get_u8(haystack, 2) == ':')
+		if (get_u8(haystack, 3) == 'a' ||
+		    get_u8(haystack, 3) == 'r')
+			if (memcmp(haystack + 4, "d2:id20:", 8) == 0)
 				return IPP2P_BIT * 100 + 57;
 
 #if 0
 	/* bitlord rules */
-	/* packetlen must be bigger than 40 */
+	/* packetlen must be bigger than 32 */
 	/* first 4 bytes are zero */
-	if (packet_len > 40 && get_u32(haystack, 8) == 0x00000000) {
+	if (packet_len > 32 && get_u32(haystack, 0) == 0x00000000) {
 		/* first rule: 00 00 00 00 01 00 00 xx xx xx xx 00 00 00 00*/
-		if (get_u32(haystack, 12) == 0x00000000 &&
-		    get_u32(haystack, 16) == 0x00010000 &&
-		    get_u32(haystack, 24) == 0x00000000)
+		if (get_u32(haystack, 4) == 0x00000000 &&
+		    get_u32(haystack, 8) == 0x00010000 &&
+		    get_u32(haystack, 16) == 0x00000000)
 			return IPP2P_BIT * 100 + 71;
 
 		/* 00 01 00 00 0d 00 00 xx xx xx xx 00 00 00 00*/
-		if (get_u32(haystack, 12) == 0x00000001 &&
-		    get_u32(haystack, 16) == 0x000d0000 &&
-		    get_u32(haystack, 24) == 0x00000000)
+		if (get_u32(haystack, 4) == 0x00000001 &&
+		    get_u32(haystack, 8) == 0x000d0000 &&
+		    get_u32(haystack, 16) == 0x00000000)
 			return IPP2P_BIT * 100 + 71;
 	}
 #endif
@@ -574,7 +570,7 @@ search_all_gnu(const unsigned char *payload, const unsigned int plen)
 		if (memcmp(payload, "GET /get/", 9) == 0 ||
 		    memcmp(payload, "GET /uri-res/", 13) == 0)
 		{
-			uint16_t c = 8;
+			uint16_t c = 0;
 			const uint16_t end = plen - 22;
 
 			while (c < end) {
@@ -865,6 +861,15 @@ ipp2p_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	case IPPROTO_UDP:	/* what to do with an UDP packet */
 	{
 		const struct udphdr *udph = (const void *)ip + ip_hdrlen(skb);
+
+		haystack += sizeof(*udph);
+		if (sizeof(*udph) > hlen) {
+			if (info->debug)
+				pr_info("UDP header indicated packet larger than it is\n");
+			hlen = 0;
+		} else {
+			hlen -= sizeof(*udph);
+		}
 
 		while (udp_list[i].command) {
 			if ((info->cmd & udp_list[i].command) == udp_list[i].command &&
