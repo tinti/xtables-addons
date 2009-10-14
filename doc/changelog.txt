@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- ipp2p: add more boundary checks
 
 
 Xtables-addons 1.19 (October 12 2009)

@@ -23,6 +23,9 @@ MODULE_LICENSE("GPL");
 static unsigned int
 udp_search_edk(const unsigned char *t, const unsigned int packet_len)
 {
+	if (packet_len < 4)
+		return 0;
+
 	switch (t[0]) {
 	case 0xe3:
 		/* edonkey */
@@ -138,9 +141,9 @@ udp_search_edk(const unsigned char *t, const unsigned int packet_len)
 static unsigned int
 udp_search_gnu(const unsigned char *t, const unsigned int packet_len)
 {
-	if (memcmp(t, "GND", 3) == 0)
+	if (packet_len >= 3 && memcmp(t, "GND", 3) == 0)
 		return IPP2P_GNU * 100 + 51;
-	if (memcmp(t, "GNUTELLA ", 9) == 0)
+	if (packet_len >= 9 && memcmp(t, "GNUTELLA ", 9) == 0)
 		return IPP2P_GNU * 100 + 52;
 	return 0;
 }
@@ -149,12 +152,10 @@ udp_search_gnu(const unsigned char *t, const unsigned int packet_len)
 static unsigned int
 udp_search_kazaa(const unsigned char *t, const unsigned int packet_len)
 {
-	if (t[packet_len-1] == 0x00) {
-		t += packet_len - 6;
-		if (memcmp(t, "KaZaA", 5) == 0)
-			return IPP2P_KAZAA * 100 + 50;
-	}
-
+	if (packet_len < 6)
+		return 0;
+	if (memcmp(t + packet_len - 6, "KaZaA\x00", 6) == 0)
+		return IPP2P_KAZAA * 100 + 50;
 	return 0;
 }
 
@@ -162,10 +163,12 @@ udp_search_kazaa(const unsigned char *t, const unsigned int packet_len)
 static unsigned int udp_search_directconnect(const unsigned char *t,
                                              const unsigned int packet_len)
 {
-	if (*(t + 0) == 0x24 && *(t + packet_len - 1) == 0x7c) {
-		if (memcmp(t, "SR ", 3) == 0)
+	if (packet_len < 5)
+		return 0;
+	if (t[0] == 0x24 && t[packet_len-1] == 0x7c) {
+		if (memcmp(&t[1], "SR ", 3) == 0)
 			return IPP2P_DC * 100 + 60;
-		if (memcmp(t, "Ping ", 5) == 0)
+		if (packet_len >= 7 && memcmp(&t[1], "Ping ", 5) == 0)
 			return IPP2P_DC * 100 + 61;
 	}
 	return 0;
@@ -259,6 +262,8 @@ udp_search_bit(const unsigned char *haystack, const unsigned int packet_len)
 static unsigned int
 search_ares(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 3)
+		return 0;
 	/* all ares packets start with  */
 	if (payload[1] == 0 && plen - payload[0] == 3) {
 		switch (payload[2]) {
@@ -309,6 +314,8 @@ search_ares(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_soul(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 8)
+		return 0;
 	/* match: xx xx xx xx | xx = sizeof(payload) - 4 */
 	if (get_u32(payload, 0) == plen - 4) {
 		const uint32_t m = get_u32(payload, 4);
@@ -537,6 +544,8 @@ search_bittorrent(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_kazaa(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 13)
+		return 0;
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a &&
 	    memcmp(payload, "GET /.hash=", 11) == 0)
 		return IPP2P_DATA_KAZAA * 100;
@@ -548,10 +557,12 @@ search_kazaa(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_gnu(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 11)
+		return 0;
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a) {
 		if (memcmp(payload, "GET /get/", 9) == 0)
 			return IPP2P_DATA_GNU * 100 + 1;
-		if (memcmp(payload, "GET /uri-res/", 13) == 0)
+		if (plen >= 13 && memcmp(payload, "GET /uri-res/", 13) == 0)
 			return IPP2P_DATA_GNU * 100 + 2;
 	}
 	return 0;
@@ -561,26 +572,25 @@ search_gnu(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_all_gnu(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 11)
+		return 0;
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a) {
-		if (memcmp(payload, "GNUTELLA CONNECT/", 17) == 0)
+		if (plen >= 17 && memcmp(payload, "GNUTELLA CONNECT/", 17) == 0)
 			return IPP2P_GNU * 100 + 1;
-		if (memcmp(payload, "GNUTELLA/", 9) == 0)
+		if (plen >= 9 && memcmp(payload, "GNUTELLA/", 9) == 0)
 			return IPP2P_GNU * 100 + 2;
 
-		if (memcmp(payload, "GET /get/", 9) == 0 ||
-		    memcmp(payload, "GET /uri-res/", 13) == 0)
+		if (plen >= 22 && (memcmp(payload, "GET /get/", 9) == 0 ||
+		    memcmp(payload, "GET /uri-res/", 13) == 0))
 		{
-			uint16_t c = 0;
-			const uint16_t end = plen - 22;
+			unsigned int c;
 
-			while (c < end) {
+			for (c = 0; c < plen - 22; ++c)
 				if (payload[c] == 0x0a &&
 				    payload[c+1] == 0x0d &&
 				    (memcmp(&payload[c+2], "X-Gnutella-", 11) == 0 ||
 				    memcmp(&payload[c+2], "X-Queue:", 8) == 0))
 					return IPP2P_GNU * 100 + 3;
-				c++;
-			}
 		}
 	}
 	return 0;
@@ -593,16 +603,9 @@ search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 {
 	uint16_t c, end, rem;
 
-	if (plen < 5)
+	if (plen < 7)
 		/* too short for anything we test for - early bailout */
 		return 0;
-
-	if (plen >= 65535) {
-		/* Something seems _really_ fishy */
-		printk(KERN_WARNING KBUILD_MODNAME ": %s: plen (%u) >= 65535\n",
-		       __func__, plen);
-		return 0;
-	}
 
 	if (payload[plen-2] != 0x0d || payload[plen-1] != 0x0a)
 		return 0;
@@ -639,6 +642,8 @@ search_all_kazaa(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_edk(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 6)
+		return 0;
 	if (payload[0] != 0xe3) {
 		return 0;
 	} else {
@@ -653,11 +658,12 @@ search_edk(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_all_edk(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 6)
+		return 0;
 	if (payload[0] != 0xe3) {
 		return 0;
 	} else {
-		//t += head_len;
-		const uint16_t cmd = get_u16(payload, 1);
+		unsigned int cmd = get_u16(payload, 1);
 
 		if (cmd == plen - 5) {
 			switch (payload[5]) {
@@ -677,6 +683,8 @@ search_all_edk(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_dc(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 6)
+		return 0;
 	if (payload[0] != 0x24) {
 		return 0;
 	} else {
@@ -691,6 +699,8 @@ search_dc(const unsigned char *payload, const unsigned int plen)
 static unsigned int
 search_all_dc(const unsigned char *payload, const unsigned int plen)
 {
+	if (plen < 7)
+		return 0;
 	if (payload[0] == 0x24 && payload[plen-1] == 0x7c) {
 		const unsigned char *t = &payload[1];
 
@@ -702,7 +712,7 @@ search_all_dc(const unsigned char *payload, const unsigned int plen)
 		 * Client-Client-Protocol, some are already recognized by
 		 * client-hub (like lock)
 		 */
-		if (memcmp(t, "MyNick ", 7) == 0)
+		if (plen >= 9 && memcmp(t, "MyNick ", 7) == 0)
 			return IPP2P_DC * 100 + 38;
 	}
 	return 0;
