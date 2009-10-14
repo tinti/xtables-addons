@@ -21,9 +21,8 @@ MODULE_LICENSE("GPL");
 
 /* Search for UDP eDonkey/eMule/Kad commands */
 static unsigned int
-udp_search_edk(const unsigned char *haystack, const unsigned int packet_len)
+udp_search_edk(const unsigned char *t, const unsigned int packet_len)
 {
-	const unsigned char *t = haystack;
 	t += 8;
 
 	switch (t[0]) {
@@ -139,9 +138,8 @@ udp_search_edk(const unsigned char *haystack, const unsigned int packet_len)
 
 /* Search for UDP Gnutella commands */
 static unsigned int
-udp_search_gnu(const unsigned char *haystack, const unsigned int packet_len)
+udp_search_gnu(const unsigned char *t, const unsigned int packet_len)
 {
-	const unsigned char *t = haystack;
 	t += 8;
 
 	if (memcmp(t, "GND", 3) == 0)
@@ -153,10 +151,8 @@ udp_search_gnu(const unsigned char *haystack, const unsigned int packet_len)
 
 /* Search for UDP KaZaA commands */
 static unsigned int
-udp_search_kazaa(const unsigned char *haystack, const unsigned int packet_len)
+udp_search_kazaa(const unsigned char *t, const unsigned int packet_len)
 {
-	const unsigned char *t = haystack;
-
 	if (t[packet_len-1] == 0x00) {
 		t += packet_len - 6;
 		if (memcmp(t, "KaZaA", 5) == 0)
@@ -167,11 +163,9 @@ udp_search_kazaa(const unsigned char *haystack, const unsigned int packet_len)
 }
 
 /* Search for UDP DirectConnect commands */
-static unsigned int udp_search_directconnect(const unsigned char *haystack,
+static unsigned int udp_search_directconnect(const unsigned char *t,
                                              const unsigned int packet_len)
 {
-	const unsigned char *t = haystack;
-
 	if (*(t + 8) == 0x24 && *(t + packet_len - 1) == 0x7c) {
 		t += 8;
 		if (memcmp(t, "SR ", 3) == 0)
