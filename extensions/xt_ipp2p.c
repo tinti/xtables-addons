@@ -586,8 +586,8 @@ search_all_gnu(const unsigned char *payload, const unsigned int plen)
 			unsigned int c;
 
 			for (c = 0; c < plen - 22; ++c)
-				if (payload[c] == 0x0a &&
-				    payload[c+1] == 0x0d &&
+				if (payload[c] == 0x0d &&
+				    payload[c+1] == 0x0a &&
 				    (memcmp(&payload[c+2], "X-Gnutella-", 11) == 0 ||
 				    memcmp(&payload[c+2], "X-Queue:", 8) == 0))
 					return IPP2P_GNU * 100 + 3;

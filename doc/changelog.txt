@@ -2,6 +2,7 @@
 HEAD
 ====
 - ipp2p: add more boundary checks
+- ipp2p: fix Gnutelle line ending detection
 
 
 Xtables-addons 1.19 (October 12 2009)
