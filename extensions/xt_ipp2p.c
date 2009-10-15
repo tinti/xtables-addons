@@ -522,7 +522,7 @@ search_bittorrent(const unsigned char *payload, const unsigned int plen)
 	} else {
 	    	/* bitcomet encryptes the first packet, so we have to detect another
 	    	 * one later in the flow */
-	    	/* first try failed, too many missdetections */
+		/* first try failed, too many false positives */
 	    	/*
 		if (size == 5 && get_u32(t, 0) == __constant_htonl(1) &&
 		    t[4] < 3)
@@ -562,7 +562,7 @@ search_gnu(const unsigned char *payload, const unsigned int plen)
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a) {
 		if (memcmp(payload, "GET /get/", 9) == 0)
 			return IPP2P_DATA_GNU * 100 + 1;
-		if (plen >= 13 && memcmp(payload, "GET /uri-res/", 13) == 0)
+		if (plen >= 15 && memcmp(payload, "GET /uri-res/", 13) == 0)
 			return IPP2P_DATA_GNU * 100 + 2;
 	}
 	return 0;
@@ -575,9 +575,9 @@ search_all_gnu(const unsigned char *payload, const unsigned int plen)
 	if (plen < 11)
 		return 0;
 	if (payload[plen-2] == 0x0d && payload[plen-1] == 0x0a) {
-		if (plen >= 17 && memcmp(payload, "GNUTELLA CONNECT/", 17) == 0)
+		if (plen >= 19 && memcmp(payload, "GNUTELLA CONNECT/", 17) == 0)
 			return IPP2P_GNU * 100 + 1;
-		if (plen >= 9 && memcmp(payload, "GNUTELLA/", 9) == 0)
+		if (memcmp(payload, "GNUTELLA/", 9) == 0)
 			return IPP2P_GNU * 100 + 2;
 
 		if (plen >= 22 && (memcmp(payload, "GET /get/", 9) == 0 ||
