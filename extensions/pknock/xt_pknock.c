@@ -162,7 +162,7 @@ alloc_hashtable(unsigned int size)
 	struct list_head *hash;
 	unsigned int i;
 
-	hash = kmalloc(sizeof(*hash) * size, GFP_ATOMIC);
+	hash = kmalloc(sizeof(*hash) * size, GFP_KERNEL);
 	if (hash == NULL)
 		return NULL;
 	for (i = 0; i < size; ++i)
@@ -470,7 +470,7 @@ add_rule(struct xt_pknock_mtinfo *info)
 		}
 	}
 
-	rule = kmalloc(sizeof(*rule), GFP_ATOMIC);
+	rule = kmalloc(sizeof(*rule), GFP_KERNEL);
 	if (rule == NULL)
 		return false;
 
