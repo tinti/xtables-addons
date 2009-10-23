@@ -39,8 +39,9 @@ char *addr_to_dotted(unsigned int addr)
 	static char buf[17];
 	const unsigned char *bytep;
 
+	addr = ntohl(addr);
 	bytep = (const unsigned char *)&addr;
-	snprintf(buf, 16, "%u.%u.%u.%u", bytep[0], bytep[1], bytep[2], bytep[3]);
+	snprintf(buf, 16, "%u.%u.%u.%u", bytep[3], bytep[2], bytep[1], bytep[0]);
 	buf[16] = 0;
 	return buf;
 }

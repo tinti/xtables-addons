@@ -149,6 +149,7 @@ account_tg_save(const void *ip, const struct xt_entry_target *target)
 
 static struct xtables_target account_tg_reg = {
 	.name          = "ACCOUNT",
+	.revision      = 1,
 	.family        = AF_INET,
 	.version       = XTABLES_VERSION,
 	.size          = XT_ALIGN(sizeof(struct ipt_acc_info)),
