@@ -54,8 +54,8 @@
  */
 struct ipt_acc_table {
 	char name[ACCOUNT_TABLE_NAME_LEN];
-	uint32_t ip;
-	uint32_t netmask;
+	__be32 ip;
+	__be32 netmask;
 	unsigned char depth;
 	uint32_t refcount;
 	uint32_t itemcount;
@@ -179,7 +179,7 @@ static void ipt_acc_data_free(void *data, unsigned char depth)
 
 /* Look for existing table / insert new one.
    Return internal ID or -1 on error */
-static int ipt_acc_table_insert(char *name, uint32_t ip, uint32_t netmask)
+static int ipt_acc_table_insert(char *name, __be32 ip, __be32 netmask)
 {
 	unsigned int i;
 
@@ -327,8 +327,8 @@ static void ipt_acc_destroy(const struct xt_tgdtor_param *par)
 }
 
 static void ipt_acc_depth0_insert(struct ipt_acc_mask_24 *mask_24,
-				   uint32_t net_ip, uint32_t netmask,
-				   uint32_t src_ip, uint32_t dst_ip,
+				  __be32 net_ip, __be32 netmask,
+				  __be32 src_ip, __be32 dst_ip,
 				   uint32_t size, uint32_t *itemcount)
 {
 	unsigned char is_src = 0, is_dst = 0, src_slot, dst_slot;
@@ -401,8 +401,8 @@ static void ipt_acc_depth0_insert(struct ipt_acc_mask_24 *mask_24,
 }
 
 static void ipt_acc_depth1_insert(struct ipt_acc_mask_16 *mask_16,
-				uint32_t net_ip, uint32_t netmask,
-				uint32_t src_ip, uint32_t dst_ip,
+				  __be32 net_ip, __be32 netmask,
+				  __be32 src_ip, __be32 dst_ip,
 				uint32_t size, uint32_t *itemcount)
 {
 	/* Do we need to process src IP? */
@@ -439,8 +439,8 @@ static void ipt_acc_depth1_insert(struct ipt_acc_mask_16 *mask_16,
 }
 
 static void ipt_acc_depth2_insert(struct ipt_acc_mask_8 *mask_8,
-				uint32_t net_ip, uint32_t netmask,
-				uint32_t src_ip, uint32_t dst_ip,
+				  __be32 net_ip, __be32 netmask,
+				  __be32 src_ip, __be32 dst_ip,
 				uint32_t size, uint32_t *itemcount)
 {
 	/* Do we need to process src IP? */
@@ -481,8 +481,8 @@ static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_target
 	const struct ipt_acc_info *info =
 		par->targinfo;
 
-	uint32_t src_ip = ip_hdr(*pskb)->saddr;
-	uint32_t dst_ip = ip_hdr(*pskb)->daddr;
+	__be32 src_ip = ip_hdr(*pskb)->saddr;
+	__be32 dst_ip = ip_hdr(*pskb)->daddr;
 	uint32_t size = ntohs(ip_hdr(*pskb)->tot_len);
 
 	spin_lock_bh(&ipt_acc_lock);

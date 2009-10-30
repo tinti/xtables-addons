@@ -21,6 +21,7 @@
 #include <getopt.h>
 #include <signal.h>
 
+#include <linux/types.h>
 #include <libxt_ACCOUNT_cl.h>
 
 bool exit_now;
