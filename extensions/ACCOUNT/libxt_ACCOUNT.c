@@ -2,6 +2,7 @@
    Author: Intra2net AG <opensource@intra2net.com>
 */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <netdb.h>
 #include <string.h>
@@ -13,9 +14,9 @@
 #include "xt_ACCOUNT.h"
 
 static struct option account_tg_opts[] = {
-	{ .name = "addr",        .has_arg = 1, .flag = 0, .val = 'a' },
-	{ .name = "tname",       .has_arg = 1, .flag = 0, .val = 't' },
-	{ .name = 0 }
+	{.name = "addr",  .has_arg = true, .val = 'a'},
+	{.name = "tname", .has_arg = true, .val = 't'},
+	{NULL},
 };
 
 /* Function which prints out usage message. */
@@ -105,7 +106,7 @@ static void account_tg_check(unsigned int flags)
 }
 
 static void account_tg_print_it(const void *ip,
-		const struct xt_entry_target *target, char do_prefix)
+		const struct xt_entry_target *target, bool do_prefix)
 {
 	const struct ipt_acc_info *accountinfo
 		= (const struct ipt_acc_info *)target->data;
@@ -137,18 +138,19 @@ account_tg_print(const void *ip,
 	const struct xt_entry_target *target,
 	int numeric)
 {
-	account_tg_print_it(ip, target, 0);
+	account_tg_print_it(ip, target, false);
 }
 
 /* Saves the union ipt_targinfo in parsable form to stdout. */
 static void
 account_tg_save(const void *ip, const struct xt_entry_target *target)
 {
-	account_tg_print_it(ip, target, 1);
+	account_tg_print_it(ip, target, true);
 }
 
 static struct xtables_target account_tg_reg = {
 	.name          = "ACCOUNT",
+	.revision      = 1,
 	.family        = AF_INET,
 	.version       = XTABLES_VERSION,
 	.size          = XT_ALIGN(sizeof(struct ipt_acc_info)),
