@@ -56,7 +56,7 @@ struct ipt_acc_table {
 	char name[ACCOUNT_TABLE_NAME_LEN];
 	__be32 ip;
 	__be32 netmask;
-	unsigned char depth;
+	uint8_t depth;
 	uint32_t refcount;
 	uint32_t itemcount;
 	void *data;
@@ -71,7 +71,7 @@ struct ipt_acc_table {
  */
 struct ipt_acc_handle {
 	uint32_t ip;
-	unsigned char depth;
+	uint8_t depth;
 	uint32_t itemcount;
 	void *data;
 };
@@ -127,7 +127,7 @@ static void *ipt_acc_zalloc_page(void)
 }
 
 /* Recursive free of all data structures */
-static void ipt_acc_data_free(void *data, unsigned char depth)
+static void ipt_acc_data_free(void *data, uint8_t depth)
 {
 	/* Empty data set */
 	if (!data)
@@ -179,7 +179,7 @@ static void ipt_acc_data_free(void *data, unsigned char depth)
 
 /* Look for existing table / insert new one.
    Return internal ID or -1 on error */
-static int ipt_acc_table_insert(char *name, __be32 ip, __be32 netmask)
+static int ipt_acc_table_insert(const char *name, __be32 ip, __be32 netmask)
 {
 	unsigned int i;
 
@@ -331,8 +331,10 @@ static void ipt_acc_depth0_insert(struct ipt_acc_mask_24 *mask_24,
 				  __be32 src_ip, __be32 dst_ip,
 				   uint32_t size, uint32_t *itemcount)
 {
-	unsigned char is_src = 0, is_dst = 0, src_slot, dst_slot;
-	char is_src_new_ip = 0, is_dst_new_ip = 0; /* Check if this entry is new */
+	uint8_t src_slot, dst_slot;
+	bool is_src = false, is_dst = false;
+	/* Check if this entry is new */
+	bool is_src_new_ip = false, is_dst_new_ip = false;
 
 	pr_debug("ACCOUNT: ipt_acc_depth0_insert: %u.%u.%u.%u/%u.%u.%u.%u "
 		"for net %u.%u.%u.%u/%u.%u.%u.%u, size: %u\n", NIPQUAD(src_ip),
@@ -340,12 +342,12 @@ static void ipt_acc_depth0_insert(struct ipt_acc_mask_24 *mask_24,
 
 	/* Check if src/dst is inside our network. */
 	/* Special: net_ip = 0.0.0.0/0 gets stored as src in slot 0 */
-	if (!netmask)
+	if (netmask == 0)
 		src_ip = 0;
 	if ((net_ip & netmask) == (src_ip & netmask))
-		is_src = 1;
-	if ((net_ip & netmask) == (dst_ip & netmask) && netmask)
-		is_dst = 1;
+		is_src = true;
+	if ((net_ip & netmask) == (dst_ip & netmask) && netmask != 0)
+		is_dst = true;
 
 	if (!is_src && !is_dst) {
 		pr_debug("ACCOUNT: Skipping packet %u.%u.%u.%u/%u.%u.%u.%u "
@@ -364,7 +366,7 @@ static void ipt_acc_depth0_insert(struct ipt_acc_mask_24 *mask_24,
 		pr_debug("ACCOUNT: Calculated SRC 8 bit network slot: %d\n", src_slot);
 		if (!mask_24->ip[src_slot].src_packets
 		    && !mask_24->ip[src_slot].dst_packets)
-			is_src_new_ip = 1;
+			is_src_new_ip = true;
 
 		mask_24->ip[src_slot].src_packets++;
 		mask_24->ip[src_slot].src_bytes += size;
@@ -373,7 +375,7 @@ static void ipt_acc_depth0_insert(struct ipt_acc_mask_24 *mask_24,
 		pr_debug("ACCOUNT: Calculated DST 8 bit network slot: %d\n", dst_slot);
 		if (!mask_24->ip[dst_slot].src_packets
 		    && !mask_24->ip[dst_slot].dst_packets)
-			is_dst_new_ip = 1;
+			is_dst_new_ip = true;
 
 		mask_24->ip[dst_slot].dst_packets++;
 		mask_24->ip[dst_slot].dst_bytes += size;
@@ -385,16 +387,16 @@ static void ipt_acc_depth0_insert(struct ipt_acc_mask_24 *mask_24,
 		if (is_src_new_ip || is_dst_new_ip) {
 			pr_debug("ACCOUNT: src_slot == dst_slot: %d, %d\n",
 				is_src_new_ip, is_dst_new_ip);
-			(*itemcount)++;
+			++*itemcount;
 		}
 	} else {
 		if (is_src_new_ip) {
 			pr_debug("ACCOUNT: New src_ip: %u.%u.%u.%u\n", NIPQUAD(src_ip));
-			(*itemcount)++;
+			++*itemcount;
 		}
 		if (is_dst_new_ip) {
 			pr_debug("ACCOUNT: New dst_ip: %u.%u.%u.%u\n", NIPQUAD(dst_ip));
-			(*itemcount)++;
+			++*itemcount;
 		}
 	}
 	pr_debug("ACCOUNT: Itemcounter after: %d\n", *itemcount);
@@ -407,7 +409,7 @@ static void ipt_acc_depth1_insert(struct ipt_acc_mask_16 *mask_16,
 {
 	/* Do we need to process src IP? */
 	if ((net_ip & netmask) == (src_ip & netmask)) {
-		unsigned char slot = (ntohl(src_ip) & 0xFF00) >> 8;
+		uint8_t slot = (ntohl(src_ip) & 0xFF00) >> 8;
 		pr_debug("ACCOUNT: Calculated SRC 16 bit network slot: %d\n", slot);
 
 		/* Do we need to create a new mask_24 bucket? */
@@ -423,7 +425,7 @@ static void ipt_acc_depth1_insert(struct ipt_acc_mask_16 *mask_16,
 
 	/* Do we need to process dst IP? */
 	if ((net_ip & netmask) == (dst_ip & netmask)) {
-		unsigned char slot = (ntohl(dst_ip) & 0xFF00) >> 8;
+		uint8_t slot = (ntohl(dst_ip) & 0xFF00) >> 8;
 		pr_debug("ACCOUNT: Calculated DST 16 bit network slot: %d\n", slot);
 
 		/* Do we need to create a new mask_24 bucket? */
@@ -445,7 +447,7 @@ static void ipt_acc_depth2_insert(struct ipt_acc_mask_8 *mask_8,
 {
 	/* Do we need to process src IP? */
 	if ((net_ip & netmask) == (src_ip & netmask)) {
-		unsigned char slot = (ntohl(src_ip) & 0xFF0000) >> 16;
+		uint8_t slot = (ntohl(src_ip) & 0xFF0000) >> 16;
 		pr_debug("ACCOUNT: Calculated SRC 24 bit network slot: %d\n", slot);
 
 		/* Do we need to create a new mask_24 bucket? */
@@ -461,7 +463,7 @@ static void ipt_acc_depth2_insert(struct ipt_acc_mask_8 *mask_8,
 
 	/* Do we need to process dst IP? */
 	if ((net_ip & netmask) == (dst_ip & netmask)) {
-		unsigned char slot = (ntohl(dst_ip) & 0xFF0000) >> 16;
+		uint8_t slot = (ntohl(dst_ip) & 0xFF0000) >> 16;
 		pr_debug("ACCOUNT: Calculated DST 24 bit network slot: %d\n", slot);
 
 		/* Do we need to create a new mask_24 bucket? */
@@ -594,7 +596,7 @@ static int ipt_acc_handle_prepare_read(char *tablename,
 		 struct ipt_acc_handle *dest, uint32_t *count)
 {
 	int table_nr = -1;
-	unsigned char depth;
+	uint8_t depth;
 
 	for (table_nr = 0; table_nr < ACCOUNT_MAX_TABLES; table_nr++)
 		if (strncmp(ipt_acc_tables[table_nr].name, tablename,
@@ -775,7 +777,7 @@ static int ipt_acc_handle_get_data(uint32_t handle, void *to_user)
 {
 	unsigned long to_user_pos = 0, tmpbuf_pos = 0;
 	uint32_t net_ip;
-	unsigned char depth;
+	uint8_t depth;
 
 	if (handle >= ACCOUNT_MAX_HANDLES) {
 		printk("ACCOUNT: invalid handle for ipt_acc_handle_get_data() "
