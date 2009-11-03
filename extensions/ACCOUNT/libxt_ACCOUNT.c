@@ -57,10 +57,6 @@ static int account_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 			xtables_error(PARAMETER_PROBLEM, "Can't specify --%s twice",
 				account_tg_opts[0].name);
 
-		if (xtables_check_inverse(optarg, &invert, NULL, 0))
-			xtables_error(PARAMETER_PROBLEM, "Unexpected `!' after --%s",
-				account_tg_opts[0].name);
-
 		xtables_ipparse_any(optarg, &addrs, &mask, &naddrs);
 		if (naddrs > 1)
 			xtables_error(PARAMETER_PROBLEM, "multiple IP addresses not allowed");
@@ -75,11 +71,6 @@ static int account_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (*flags & IPT_ACCOUNT_OPT_TABLE)
 			xtables_error(PARAMETER_PROBLEM,
 				"Can't specify --%s twice",
-				account_tg_opts[1].name);
-
-		if (xtables_check_inverse(optarg, &invert, NULL, 0))
-			xtables_error(PARAMETER_PROBLEM,
-				"Unexpected `!' after --%s",
 				account_tg_opts[1].name);
 
 		if (strlen(optarg) > ACCOUNT_TABLE_NAME_LEN - 1)
