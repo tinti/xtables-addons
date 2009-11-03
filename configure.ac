@@ -9,11 +9,18 @@ AM_PROG_CC_C_O
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
-kbuilddir="/lib/modules/$(uname -r)/build";
 AC_ARG_WITH([kbuild],
 	AS_HELP_STRING([--with-kbuild=PATH],
 	[Path to kernel build directory [[/lib/modules/CURRENT/build]]]),
-	[kbuilddir="$withval"])
+	[kbuilddir="$withval"],
+	[kbuilddir="/lib/modules/$(uname -r)/build"])
+#
+# check for --without-kbuild
+#
+if [[ "$kbuilddir" == no ]]; then
+	kbuilddir="";
+fi
+
 AC_ARG_WITH([ksource],,[ksourcedir="$withval"])
 AC_ARG_WITH([xtables],
 	AS_HELP_STRING([--with-xtables=PATH],
