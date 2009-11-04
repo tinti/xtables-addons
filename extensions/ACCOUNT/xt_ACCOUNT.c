@@ -746,7 +746,7 @@ static int ipt_acc_handle_copy_data(void *to_user, unsigned long *to_user_pos,
 
 	for (i = 0; i <= 255; i++) {
 		if (data->ip[i].src_packets || data->ip[i].dst_packets) {
-			handle_ip.ip = htonl(net_ip | net_OR_mask | i);
+			handle_ip.ip = net_ip | net_OR_mask | i;
 
 			handle_ip.src_packets = data->ip[i].src_packets;
 			handle_ip.src_bytes = data->ip[i].src_bytes;
