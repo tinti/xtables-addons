@@ -11,6 +11,7 @@ CCLD            = ${CC}
 
 regular_CFLAGS  = @regular_CFLAGS@
 libxtables_CFLAGS = @libxtables_CFLAGS@
+libxtables_LIBS   = @libxtables_LIBS@
 AM_CFLAGS         = ${regular_CFLAGS} ${libxtables_CFLAGS}
 AM_DEPFLAGS     = -Wp,-MMD,$(@D)/.$(@F).d,-MT,$@
 
@@ -53,7 +54,7 @@ clean:
 	rm -f *.oo *.so;
 
 lib%.so: lib%.oo
-	${AM_V_CCLD}${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $< ${LDLIBS};
+	${AM_V_CCLD}${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $< ${libxtables_LIBS} ${LDLIBS};
 
 %.oo: ${XA_SRCDIR}/%.c
 	${AM_V_CC}${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} -DPIC -fPIC ${CFLAGS} -o $@ -c $<;
