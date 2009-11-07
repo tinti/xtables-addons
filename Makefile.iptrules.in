@@ -10,8 +10,8 @@ CC              = @CC@
 CCLD            = ${CC}
 
 regular_CFLAGS  = @regular_CFLAGS@
-xtables_CFLAGS  = @xtables_CFLAGS@
-AM_CFLAGS       = ${regular_CFLAGS} ${xtables_CFLAGS}
+libxtables_CFLAGS = @libxtables_CFLAGS@
+AM_CFLAGS         = ${regular_CFLAGS} ${libxtables_CFLAGS}
 AM_DEPFLAGS     = -Wp,-MMD,$(@D)/.$(@F).d,-MT,$@
 
 AM_DEFAULT_VERBOSITY = 0
