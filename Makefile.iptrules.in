@@ -53,7 +53,7 @@ clean:
 	rm -f *.oo *.so;
 
 lib%.so: lib%.oo
-	${AM_V_CCLD}${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $<;
+	${AM_V_CCLD}${CCLD} ${AM_LDFLAGS} -shared ${LDFLAGS} -o $@ $< ${LDLIBS};
 
 %.oo: ${XA_SRCDIR}/%.c
 	${AM_V_CC}${CC} ${AM_DEPFLAGS} ${AM_CFLAGS} -DPIC -fPIC ${CFLAGS} -o $@ -c $<;
