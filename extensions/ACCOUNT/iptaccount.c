@@ -21,6 +21,7 @@
 #include <getopt.h>
 #include <signal.h>
 
+#include <arpa/inet.h>
 #include <linux/types.h>
 #include <libxt_ACCOUNT_cl.h>
 
