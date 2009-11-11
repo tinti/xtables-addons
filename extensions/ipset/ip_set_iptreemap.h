@@ -3,7 +3,7 @@
 
 #include "ip_set.h"
 
-#define SETTYPE_NAME "iptreemap"
+#define SETTYPE_NAME		"iptreemap"
 
 #ifdef __KERNEL__
 struct ip_set_iptreemap_d {

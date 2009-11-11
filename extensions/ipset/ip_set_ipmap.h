@@ -4,7 +4,7 @@
 #include "ip_set.h"
 #include "ip_set_bitmaps.h"
 
-#define SETTYPE_NAME "ipmap"
+#define SETTYPE_NAME		"ipmap"
 
 struct ip_set_ipmap {
 	void *members;			/* the ipmap proper */

@@ -4,7 +4,7 @@
 #include "ip_set.h"
 #include "ip_set_hashes.h"
 
-#define SETTYPE_NAME "iphash"
+#define SETTYPE_NAME		"iphash"
 
 struct ip_set_iphash {
 	ip_set_ip_t *members;		/* the iphash proper */

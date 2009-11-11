@@ -4,7 +4,7 @@
 #include "ip_set.h"
 #include "ip_set_hashes.h"
 
-#define SETTYPE_NAME "ipportnethash"
+#define SETTYPE_NAME			"ipportnethash"
 
 struct ipportip {
 	ip_set_ip_t ip;
