@@ -99,15 +99,15 @@ the set, then add all elements. Then create the next set, add all its elements
 and so on. Also, it is a restore operation, so the sets being restored must 
 not exist.
 .TP
-\fB\-A\fP, \fB\-\-add\fP \fIsetname\fP \fIaddress\fP
-Add an IP address entry to a set.
+\fB\-A\fP, \fB\-\-add\fP \fIsetname\fP \fIentry\fP
+Add an entry to a set.
 .TP
-\fB\-D\fP, \fB\-\-del\fP \fIsetname\fP \fIaddress\fP
-Delete an IP address entry from a set.
+\fB\-D\fP, \fB\-\-del\fP \fIsetname\fP \fIentry\fP
+Delete an entry from a set.
 .TP
-\fB-T\fP, \fB\-\-test\fP \fIsetname\fP \fIaddress\fP
-Test wether an IP address entry is in a set or not. Exit status number is zero
-if the tested address is in the set and nonzero if it is missing from
+\fB-T\fP, \fB\-\-test\fP \fIsetname\fP \fIentry\fP
+Test wether an entry is in a set or not. Exit status number is zero
+if the tested entry is in the set and nonzero if it is missing from
 the set.
 .TP
 \fB\-H\fP, \fB\-\-help\fP [\fIsettype\fP]
@@ -176,7 +176,7 @@ The macipmap set type uses a memory range, where each 8 bytes
 represents one IP and a MAC addresses. A macipmap set type can store
 up to 65536 (B-class network) IP addresses with MAC.
 When adding an entry to a macipmap set, you must specify the entry as
-"\fIip\fP\fB,\fP\fImac\fP".
+"\fIaddress\fP\fB,\fP\fImac\fP".
 When deleting or testing macipmap entries, the
 "\fB,\fP\fImac\fP"
 part is not mandatory.
@@ -269,10 +269,10 @@ ipset \-N test iphash \-\-probes 2
 The nethash set type uses a hash to store different size of
 network addresses. The
 .I
-IP
-"address" used in the ipset commands must be in the form
-"\fIip-address\fP\fB/\fP\fIprefixlen\fP"
-where the CIDR block size must be in the inclusive range of 1-31.
+entry
+used in the ipset commands must be in the form
+"\fIaddress\fP\fB/\fP\fIprefixlen\fP"
+where prefixlen must be in the inclusive range of 1-31.
 In order to avoid clashes in the hash 
 double-hashing, and as a last resort, dynamic growing of the hash performed.
 .P
@@ -314,7 +314,7 @@ resort, dynamic growing of the hash performed. An ipporthash set can
 store up to 65536 (B-class network) IP addresses with all possible port
 values. When adding, deleting and testing values in an ipporthash type of
 set, the entries must be specified as
-"\fIip\fP\fB,\fP\fIport\fP".
+"\fIaddress\fP\fB,\fP\fIport\fP".
 .P
 The ipporthash types of sets evaluates two src/dst parameters of the 
 "set"
@@ -353,7 +353,7 @@ address triples. The first IP address must come form a maximum /16
 sized network or range while the port number and the second IP address
 parameters are arbitrary. When adding, deleting and testing values in an 
 ipportiphash type of set, the entries must be specified as
-"\fIip\fP\fB,\fP\fIport\fP\fB,\fP\fIip\fP".
+"\fIaddress\fP\fB,\fP\fIport\fP\fB,\fP\fIaddress\fP".
 .P
 The ipportiphash types of sets evaluates three src/dst parameters of the 
 "set"
@@ -394,7 +394,7 @@ parameters are arbitrary, but the size of the network address must be
 between /1-/31. When adding, deleting 
 and testing values in an ipportnethash type of set, the entries must be
 specified as
-"\fIaddress\fP\fB,\fP\fIaddress\fP\fB/\fP\fIprefixlen\fP".
+"\fIaddress\fP\fB,\fP\fIport\fP\fB,\fP\fIaddress\fP\fB/\fP\fIprefixlen\fP".
 .P
 The ipportnethash types of sets evaluates three src/dst parameters of the 
 "set"
