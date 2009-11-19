@@ -846,12 +846,12 @@ pass_security(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		return false;
 	}
 	/* Check for OPEN secret */
-	if (!has_secret(info->open_secret,
+	if (has_secret(info->open_secret,
 					info->open_secret_len, peer->ip,
 					payload, payload_len))
-		return false;
+		return true;
 
-	return true;
+	return false;
 }
 #endif /* PK_CRYPTO */
 
