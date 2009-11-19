@@ -823,6 +823,7 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	kfree(hexresult);
 	return fret;
 }
+#endif /* PK_CRYPTO */
 
 /**
  * If the peer pass the security policy.
@@ -845,15 +846,16 @@ pass_security(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		pk_debug("DENIED (anti-spoof protection)", peer);
 		return false;
 	}
+#ifdef PK_CRYPTO
 	/* Check for OPEN secret */
 	if (has_secret(info->open_secret,
 					info->open_secret_len, peer->ip,
 					payload, payload_len))
 		return true;
+#endif
 
 	return false;
 }
-#endif /* PK_CRYPTO */
 
 /**
  * Validates the peer and updates the peer status for an initiating or
@@ -928,7 +930,6 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 	return false;
 }
 
-#ifdef PK_CRYPTO
 /**
  * Make the peer no more ALLOWED sending a payload with a special secret for
  * closure.
@@ -943,6 +944,7 @@ static bool
 is_close_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 		const unsigned char *payload, unsigned int payload_len)
 {
+#ifdef PK_CRYPTO
 	/* Check for CLOSE secret. */
 	if (has_secret(info->close_secret,
 				info->close_secret_len, peer->ip,
@@ -951,9 +953,9 @@ is_close_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 		pk_debug("BLOCKED", peer);
 		return true;
 	}
+#endif
 	return false;
 }
-#endif /* PK_CRYPTO */
 
 static bool pknock_mt(const struct sk_buff *skb,
     const struct xt_match_param *par)
