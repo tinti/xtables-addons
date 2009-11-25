@@ -175,7 +175,8 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	/*
 	 * Copy the skb, and route the copy. Will later return %XT_CONTINUE for
 	 * the original skb, which should continue on its way as if nothing has
-	 * happened. The copy should be independently delivered to the TEE --gw.
+	 * happened. The copy should be independently delivered to the TEE
+	 * --gateway.
 	 */
 	skb = skb_copy(skb, GFP_ATOMIC);
 	if (skb == NULL) {

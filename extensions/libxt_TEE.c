@@ -51,7 +51,7 @@ static int tee_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 	case 'g':
 		if (*flags & FLAG_GATEWAY)
 			xtables_error(PARAMETER_PROBLEM,
-			           "Cannot specify --gw more than once");
+			           "Cannot specify --gateway more than once");
 
 		ia = xtables_numeric_to_ipaddr(optarg);
 		if (ia == NULL)
@@ -76,7 +76,7 @@ static int tee_tg6_parse(int c, char **argv, int invert, unsigned int *flags,
 	case 'g':
 		if (*flags & FLAG_GATEWAY)
 			xtables_error(PARAMETER_PROBLEM,
-			           "Cannot specify --gw more than once");
+			           "Cannot specify --gateway more than once");
 
 		ia = xtables_numeric_to_ip6addr(optarg);
 		if (ia == NULL)
