@@ -15,8 +15,13 @@
  * Socket option interface shared between kernel (xt_ACCOUNT) and userspace
  * library (libxt_ACCOUNT_cl). Hopefully we are unique at least within our
  * kernel & xtables-addons space.
+ *
+ * Turned out often enough we are not.
+ * 64-67	used by ip_tables, ip6_tables
+ * 96-100	used by arp_tables
+ * 128-131	used by ebtables
  */
-#define SO_ACCOUNT_BASE_CTL 90
+#define SO_ACCOUNT_BASE_CTL 70
 
 #define IPT_SO_SET_ACCOUNT_HANDLE_FREE (SO_ACCOUNT_BASE_CTL + 1)
 #define IPT_SO_SET_ACCOUNT_HANDLE_FREE_ALL (SO_ACCOUNT_BASE_CTL + 2)
