@@ -3,6 +3,12 @@ HEAD
 ====
 
 
+Xtables-addons 1.21 (December 09 2009)
+======================================
+- ACCOUNT: avoid collision with arp_tables setsockopt numbers
+- doc: fix option mismatch --gw/--gateway in libxt_TEE.man
+
+
 Xtables-addons 1.20 (November 19 2009)
 ======================================
 - ipp2p: add more boundary checks
