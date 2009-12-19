@@ -25,8 +25,11 @@ static inline struct rtable *skb_rtable(const struct sk_buff *skb)
 #	define skb_ifindex(skb) \
 		(((skb)->input_dev != NULL) ? (skb)->input_dev->ifindex : 0)
 #	define skb_nfmark(skb) (((struct sk_buff *)(skb))->nfmark)
-#else
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 #	define skb_ifindex(skb) (skb)->iif
+#	define skb_nfmark(skb) (((struct sk_buff *)(skb))->mark)
+#else
+#	define skb_ifindex(skb) (skb)->skb_iif
 #	define skb_nfmark(skb) (((struct sk_buff *)(skb))->mark)
 #endif
 
