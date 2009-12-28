@@ -17,17 +17,19 @@
 #include "xt_quota2.h"
 
 enum {
-	FL_QUOTA  = 1 << 0,
-	FL_NAME   = 1 << 1,
-	FL_GROW   = 1 << 2,
-	FL_PACKET = 1 << 3,
+	FL_QUOTA     = 1 << 0,
+	FL_NAME      = 1 << 1,
+	FL_GROW      = 1 << 2,
+	FL_PACKET    = 1 << 3,
+	FL_NO_CHANGE = 1 << 4,
 };
 
 static const struct option quota_mt2_opts[] = {
-	{.name = "grow",    .has_arg = false, .val = 'g'},
-	{.name = "name",    .has_arg = true,  .val = 'n'},
-	{.name = "quota",   .has_arg = true,  .val = 'q'},
-	{.name = "packets", .has_arg = false, .val = 'p'},
+	{.name = "grow",      .has_arg = false, .val = 'g'},
+	{.name = "no-change", .has_arg = false, .val = 'c'},
+	{.name = "name",      .has_arg = true,  .val = 'n'},
+	{.name = "quota",     .has_arg = true,  .val = 'q'},
+	{.name = "packets",   .has_arg = false, .val = 'p'},
 	{NULL},
 };
 
@@ -36,6 +38,7 @@ static void quota_mt2_help(void)
 	printf(
 	"quota match options:\n"
 	"    --grow           provide an increasing counter\n"
+	"    --no-change      never change counter/quota value for matching packets\n"
 	"    --name name      name for the file in sysfs\n"
 	"[!] --quota quota    initial quota (bytes or packets)\n"
 	"    --packets        count packets instead of bytes\n"
@@ -55,6 +58,12 @@ quota_mt2_parse(int c, char **argv, int invert, unsigned int *flags,
 		xtables_param_act(XTF_NO_INVERT, "quota", "--grow", invert);
 		info->flags |= XT_QUOTA_GROW;
 		*flags |= FL_GROW;
+		return true;
+	case 'c': /* no-change */
+		xtables_param_act(XTF_ONLY_ONCE, "quota", "--no-change", *flags & FL_NO_CHANGE);
+		xtables_param_act(XTF_NO_INVERT, "quota", "--no-change", invert);
+		info->flags |= XT_QUOTA_NO_CHANGE;
+		*flags |= FL_NO_CHANGE;
 		return true;
 	case 'n':
 		/* zero termination done on behalf of the kernel module */
@@ -92,6 +101,8 @@ quota_mt2_save(const void *ip, const struct xt_entry_match *match)
 		printf("! ");
 	if (q->flags & XT_QUOTA_GROW)
 		printf("--grow ");
+	if (q->flags & XT_QUOTA_NO_CHANGE)
+		printf("--no-change ");
 	if (q->flags & XT_QUOTA_PACKET)
 		printf("--packets ");
 	if (*q->name != '\0')
@@ -117,6 +128,8 @@ static void quota_mt2_print(const void *ip, const struct xt_entry_match *match,
 		printf("packets ");
 	else
 		printf("bytes ");
+	if (q->flags & XT_QUOTA_NO_CHANGE)
+		printf("(no-change mode) ");
 }
 
 static struct xtables_match quota_mt2_reg = {

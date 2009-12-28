@@ -10,6 +10,12 @@ the match will return false, just like the original "quota" match. In growing
 \fB\-\-grow\fP
 Count upwards instead of downwards.
 .TP
+\fB\-\-no\-change\fP
+Makes it so the counter or quota amount is never changed by packets matching
+this rule. This is only really useful in "quota" mode, as it will allow you to
+use complex prerouting rules in association with the quota system, without
+counting a packet twice.
+.TP
 \fB\-\-name\fP \fIname\fP
 Assign the counter a specific name. This option must be present, as an empty
 name is not allowed. Names starting with a dot or names containing a slash are

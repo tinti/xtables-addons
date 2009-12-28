@@ -199,12 +199,19 @@ quota_mt2(const struct sk_buff *skb, const struct xt_match_param *par)
 
 	spin_lock_bh(&e->lock);
 	if (q->flags & XT_QUOTA_GROW) {
-		e->quota += (q->flags & XT_QUOTA_PACKET) ? 1 : skb->len;
-		q->quota = e->quota;
+		/*
+		 * While no_change is pointless in "grow" mode, we will
+		 * implement it here simply to have a consistent behavior.
+		 */
+		if (!(q->flags & XT_QUOTA_NO_CHANGE)) {
+			e->quota += (q->flags & XT_QUOTA_PACKET) ? 1 : skb->len;
+			q->quota = e->quota;
+		}
 		ret = true;
 	} else {
 		if (e->quota >= skb->len) {
-			e->quota -= (q->flags & XT_QUOTA_PACKET) ? 1 : skb->len;
+			if (!(q->flags & XT_QUOTA_NO_CHANGE))
+				e->quota -= (q->flags & XT_QUOTA_PACKET) ? 1 : skb->len;
 			ret = !ret;
 		} else {
 			/* we do not allow even small packets from now on */
