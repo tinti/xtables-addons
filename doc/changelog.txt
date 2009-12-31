@@ -1,7 +1,10 @@
 
 HEAD
 ====
+- compat_xtables: support for 2.6.33 skb_iif changes
 - geoip: for FHS compliance use /usr/share/xt_geoip instead of /var/geoip
+- ipset: enable build of ip_set_setlist.ko
+- quota2: add the --no-change mode
 
 
 Xtables-addons 1.21 (December 09 2009)
