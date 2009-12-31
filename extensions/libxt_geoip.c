@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <xtables.h>
 #include "xt_geoip.h"
-#define GEOIP_DB_DIR "/var/geoip"
+#define GEOIP_DB_DIR "/usr/share/xt_geoip"
 
 static void geoip_help(void)
 {

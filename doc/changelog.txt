@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- geoip: for FHS compliance use /usr/share/xt_geoip instead of /var/geoip
 
 
 Xtables-addons 1.21 (December 09 2009)
