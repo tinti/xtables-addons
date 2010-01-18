@@ -47,7 +47,7 @@ all: ${targets}
 install: ${targets}
 	@for i in ${subdirs_list}; do ${MAKE} -C $$i $@; done;
 	install -dm0755 "${DESTDIR}/${xtlibdir}";
-	install -pm0755 $^ "${DESTDIR}/${xtlibdir}";
+	@for i in $^; do install -pm0755 $$i "${DESTDIR}/${xtlibdir}"; done;
 
 clean:
 	@for i in ${subdirs_list}; do ${MAKE} -C $$i $@; done;
