@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- ipset: update to 4.2
 
 
 Xtables-addons 1.22 (January 22 2009)

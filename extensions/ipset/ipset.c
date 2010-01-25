@@ -30,7 +30,7 @@
 #define PROC_SYS_MODPROBE "/proc/sys/kernel/modprobe"
 #endif
 
-#define IPSET_VERSION "4.1"
+#define IPSET_VERSION "4.2"
 
 char program_name[] = "ipset";
 char program_version[] = IPSET_VERSION;
