@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- ipp2p: updated bittorent command recognition
 
 
 Xtables-addons 1.23 (February 24 2010)

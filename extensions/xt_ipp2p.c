@@ -505,19 +505,18 @@ search_bittorrent(const unsigned char *payload, const unsigned int plen)
 		if (payload[0] == 0x13)
 			if (memcmp(payload + 1, "BitTorrent protocol", 19) == 0)
 				return IPP2P_BIT * 100;
-
 		/*
-		 * get tracker commandos, all starts with GET /
-		 * then it can follow: scrape| announce
-		 * and then ?hash_info=
+		 * Any tracker command starts with GET / then *may be* some file on web server
+		 * (e.g. announce.php or dupa.pl or whatever.cgi or NOTHING for tracker on root dir)
+		 * but *must have* one (or more) of strings listed below (true for scrape and announce)
 		 */
 		if (memcmp(payload, "GET /", 5) == 0) {
-			/* message scrape */
-			if (memcmp(payload + 5, "scrape?info_hash=", 17) == 0)
+			if (HX_memmem(payload, plen, "info_hash=", 9) != NULL)
 				return IPP2P_BIT * 100 + 1;
-			/* message announce */
-			if (memcmp(payload + 5, "announce?info_hash=", 19) == 0)
+			if (HX_memmem(payload, plen, "peer_id=", 8) != NULL)
 				return IPP2P_BIT * 100 + 2;
+			if (HX_memmem(payload, plen, "passkey=", 8) != NULL)
+				return IPP2P_BIT * 100 + 4;
 		}
 	} else {
 	    	/* bitcomet encryptes the first packet, so we have to detect another
