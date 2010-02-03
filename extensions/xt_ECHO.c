@@ -32,7 +32,7 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_target_param *par)
 	unsigned int addr_type, data_len;
 	void *payload;
 
-	printk(KERN_INFO "dst_out=%p\n", (*poldskb)->dst->output);
+	printk(KERN_INFO "dst_out=%p\n", skb_dst(*poldskb)->output);
 
 	/* This allows us to do the copy operation in fewer lines of code. */
 	if (skb_linearize(*poldskb) < 0)
@@ -84,18 +84,17 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_target_param *par)
 #endif
 		addr_type = RTN_LOCAL;
 
-	/* ip_route_me_harder expects skb->dst to be set */
-	dst_hold(oldskb->dst);
-	newskb->dst = oldskb->dst;
+	/* ip_route_me_harder expects the skb's dst to be set */
+	skb_dst_set(newskb, dst_clone(skb_dst(oldskb)));
 
 	if (ip_route_me_harder(&newskb, addr_type) < 0)
 		goto free_nskb;
 
-	newip->ttl        = dst_metric(newskb->dst, RTAX_HOPLIMIT);
+	newip->ttl        = dst_metric(skb_dst(newskb), RTAX_HOPLIMIT);
 	newskb->ip_summed = CHECKSUM_NONE;
 
 	/* "Never happens" (?) */
-	if (newskb->len > dst_mtu(newskb->dst))
+	if (newskb->len > dst_mtu(skb_dst(newskb)))
 		goto free_nskb;
 
 	nf_ct_attach(newskb, *poldskb);
