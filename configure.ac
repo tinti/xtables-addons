@@ -63,10 +63,6 @@ regular_CFLAGS="-D_LARGEFILE_SOURCE=1 -D_LARGE_FILES -D_FILE_OFFSET_BITS=64 \
 	-D_REENTRANT -Wall -Waggregate-return -Wmissing-declarations \
 	-Wmissing-prototypes -Wredundant-decls -Wshadow -Wstrict-prototypes \
 	-Winline -pipe -DXTABLES_LIBDIR=\\\"\${xtlibdir}\\\"";
-kinclude_CFLAGS="";
-if [[ -n "$kbuilddir" ]]; then
-	kinclude_CFLAGS="$kinclude_CFLAGS -I $kbuilddir/include";
-fi;
 
 #
 # check kernel version
@@ -103,7 +99,6 @@ elif test \( "$kmajor" -lt 2 -o "$kminor" -lt 6 -o "$kmicro" -lt 17 \) -o \
 fi;
 
 AC_SUBST([regular_CFLAGS])
-AC_SUBST([kinclude_CFLAGS])
 AC_SUBST([kbuilddir])
 AC_SUBST([xtlibdir])
 AC_CONFIG_FILES([Makefile Makefile.iptrules Makefile.mans
