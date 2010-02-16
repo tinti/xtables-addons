@@ -21,7 +21,6 @@ if [[ "$kbuilddir" == no ]]; then
 	kbuilddir="";
 fi
 
-AC_ARG_WITH([ksource],,[ksourcedir="$withval"])
 AC_ARG_WITH([xtables],
 	AS_HELP_STRING([--with-xtables=PATH],
 	[Path to the Xtables includes [[none]]]),
@@ -68,9 +67,6 @@ kinclude_CFLAGS="";
 if [[ -n "$kbuilddir" ]]; then
 	kinclude_CFLAGS="$kinclude_CFLAGS -I $kbuilddir/include";
 fi;
-if [[ -n "$ksourcedir" ]]; then
-	kinclude_CFLAGS="$kinclude_CFLAGS -I $ksourcedir/include";
-fi;
 
 #
 # check kernel version
@@ -109,7 +105,6 @@ fi;
 AC_SUBST([regular_CFLAGS])
 AC_SUBST([kinclude_CFLAGS])
 AC_SUBST([kbuilddir])
-AC_SUBST([ksourcedir])
 AC_SUBST([xtlibdir])
 AC_CONFIG_FILES([Makefile Makefile.iptrules Makefile.mans
 	extensions/Makefile extensions/ACCOUNT/Makefile
