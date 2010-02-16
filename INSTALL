@@ -51,7 +51,6 @@ Configuring and compiling
 	For RPM building, it should be /usr/src/linux-obj/...
 	or whatever location the distro makes use of.
 
---with-xtables=
 
 	Specifies the path to the directory where we may find
 	xtables.h, should it not be within the standard C compiler
@@ -72,6 +71,13 @@ If you want to enable debugging, use
 
 (-O0 is used to turn off instruction reordering, which makes debugging
 much easier.)
+
+To make use of a libxtables that is not in the default path, override
+the pkgconfig variables, for example:
+
+	./configure libxtables_CFLAGS="-I../iptables/include" \
+		libxtables_LIBS="-L../iptables/.libs \
+			-Wl,-rpath,../iptables/.libs -lxtables"
 
 
 Build-time options

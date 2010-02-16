@@ -21,41 +21,13 @@ if [[ "$kbuilddir" == no ]]; then
 	kbuilddir="";
 fi
 
-AC_ARG_WITH([xtables],
-	AS_HELP_STRING([--with-xtables=PATH],
-	[Path to the Xtables includes [[none]]]),
-	[xtables_location="$withval"])
 AC_ARG_WITH([xtlibdir],
 	AS_HELP_STRING([--with-xtlibdir=PATH],
 	[Path where to install Xtables extensions [[LIBEXECDIR/xtables]]]),
 	[xtlibdir="$withval"],
 	[xtlibdir='${libexecdir}/xtables'])
 
-#
-# --with-xtables= overrides a possibly installed pkgconfig file.
-#
-if [[ -n "$xtables_location" ]]; then
-	AC_MSG_CHECKING([xtables.h presence])
-	if [[ -f "$xtables_location/xtables.h" ]]; then
-		AC_MSG_RESULT([$xtables_location/xtables.h])
-		libxtables_CFLAGS="-I $xtables_location";
-	elif [[ -f "$xtables_location/include/xtables.h" ]]; then
-		AC_MSG_RESULT([$xtables_location/include/xtables.h])
-		libxtables_CFLAGS="-I $xtables_location/include";
-	fi;
-	if [[ -z "$xtables_CFLAGS" ]]; then
-		if [[ -f "$includedir/xtables.h" ]]; then
-			AC_MSG_RESULT([$includedir/xtables.h])
-		else
-			AC_MSG_RESULT([no])
-		fi;
-	fi;
-	libxtables_LIBS="-lxtables";
-	AC_SUBST([libxtables_CFLAGS])
-	AC_SUBST([libxtables_LIBS])
-else
-	PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
-fi;
+PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
 AC_CHECK_HEADERS([linux/netfilter/x_tables.h], [],
 	[AC_MSG_ERROR([You need to have linux/netfilter/x_tables.h, either through /usr/include or the iptables directory (--with-xtables=)])])
 
