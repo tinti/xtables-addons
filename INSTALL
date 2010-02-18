@@ -51,14 +51,6 @@ Configuring and compiling
 	For RPM building, it should be /usr/src/linux-obj/...
 	or whatever location the distro makes use of.
 
-
-	Specifies the path to the directory where we may find
-	xtables.h, should it not be within the standard C compiler
-	include path (/usr/include), or if you want to override it.
-	The directory will be checked for xtables.h and
-	include/xtables.h. (The latter to support both standard
-	/usr/include and the iptables source root.)
-
 --with-xtlibdir=
 
 	Specifies the path to where the newly built extensions should
