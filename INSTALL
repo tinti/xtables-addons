@@ -70,11 +70,18 @@ To make use of a libxtables that is not in the default path, either
 
 	PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
-  b) override the default pkg-config variables, for example:
+     (Assuming that files have been installed)
+or,
+
+  b) override the pkg-config variables, for example:
 
 	./configure libxtables_CFLAGS="-I../iptables/include" \
 		libxtables_LIBS="-L../iptables/.libs \
 			-Wl,-rpath,../iptables/.libs -lxtables"
+
+     (Use this in case you wish to use it without having to
+     run `make install`. This is because the libxtables.pc pkgconfig
+     file in ../iptables would already point to e.g. /usr/local.)
 
 
 Build-time options
@@ -91,6 +98,6 @@ Note to distribution packagers
 Except for --with-kbuild, distributions should not have a need to
 supply any other flags (besides --prefix=/usr and perhaps
 --libdir=/usr/lib64, etc.) to configure when all prerequired packages
-are installed. If iptables-devel is installed, necessary headers
-should be in /usr/include, so PKG_CONFIG_PATH, libxtables_CFLAGS and
-libxtables_LIBS variables are not needed.
+are installed. If iptables-devel is installed, necessary headers should
+already be in /usr/include, so that overriding PKG_CONFIG_PATH,
+libxtables_CFLAGS and libxtables_LIBS variables should not be needed.
