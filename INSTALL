@@ -64,8 +64,13 @@ If you want to enable debugging, use
 (-O0 is used to turn off instruction reordering, which makes debugging
 much easier.)
 
-To make use of a libxtables that is not in the default path, override
-the pkgconfig variables, for example:
+To make use of a libxtables that is not in the default path, either
+
+  a) append the location of the pkg-config files like:
+
+	PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+
+  b) override the default pkg-config variables, for example:
 
 	./configure libxtables_CFLAGS="-I../iptables/include" \
 		libxtables_LIBS="-L../iptables/.libs \
@@ -86,5 +91,6 @@ Note to distribution packagers
 Except for --with-kbuild, distributions should not have a need to
 supply any other flags (besides --prefix=/usr and perhaps
 --libdir=/usr/lib64, etc.) to configure when all prerequired packages
-are installed. If iptables-devel is installed, necessary headers should
-be in /usr/include, so --with-xtables is not needed.
+are installed. If iptables-devel is installed, necessary headers
+should be in /usr/include, so PKG_CONFIG_PATH, libxtables_CFLAGS and
+libxtables_LIBS variables are not needed.

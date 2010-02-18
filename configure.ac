@@ -29,7 +29,7 @@ AC_ARG_WITH([xtlibdir],
 
 PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
 AC_CHECK_HEADERS([linux/netfilter/x_tables.h], [],
-	[AC_MSG_ERROR([You need to have linux/netfilter/x_tables.h, either through /usr/include or the iptables directory (--with-xtables=)])])
+	[AC_MSG_ERROR([You need to have linux/netfilter/x_tables.h, see INSTALL file for details])])
 
 regular_CFLAGS="-D_LARGEFILE_SOURCE=1 -D_LARGE_FILES -D_FILE_OFFSET_BITS=64 \
 	-D_REENTRANT -Wall -Waggregate-return -Wmissing-declarations \
