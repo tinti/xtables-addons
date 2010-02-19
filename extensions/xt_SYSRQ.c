@@ -23,6 +23,10 @@
 #include <net/ip.h>
 #include "compat_xtables.h"
 
+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+#	define WITH_IPV6 1
+#endif
+
 static bool sysrq_once;
 static char sysrq_password[64];
 static char sysrq_hash[16] = "sha1";
@@ -214,6 +218,7 @@ sysrq_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	return sysrq_tg((void *)udph + sizeof(struct udphdr), len);
 }
 
+#ifdef WITH_IPV6
 static unsigned int
 sysrq_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 {
@@ -242,6 +247,7 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 		       ntohs(udph->dest), len);
 	return sysrq_tg(udph + sizeof(struct udphdr), len);
 }
+#endif
 
 static bool sysrq_tg_check(const struct xt_tgchk_param *par)
 {
@@ -278,6 +284,7 @@ static struct xt_target sysrq_tg_reg[] __read_mostly = {
 		.checkentry = sysrq_tg_check,
 		.me         = THIS_MODULE,
 	},
+#ifdef WITH_IPV6
 	{
 		.name       = "SYSRQ",
 		.revision   = 1,
@@ -286,6 +293,7 @@ static struct xt_target sysrq_tg_reg[] __read_mostly = {
 		.checkentry = sysrq_tg_check,
 		.me         = THIS_MODULE,
 	},
+#endif
 };
 
 static int __init sysrq_tg_init(void)
