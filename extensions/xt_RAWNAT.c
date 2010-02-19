@@ -22,6 +22,10 @@
 #include "compat_xtables.h"
 #include "xt_RAWNAT.h"
 
+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+#	define WITH_IPV6 1
+#endif
+
 static inline __be32
 remask(__be32 addr, __be32 repl, unsigned int shift)
 {
@@ -29,6 +33,7 @@ remask(__be32 addr, __be32 repl, unsigned int shift)
 	return htonl((ntohl(addr) & mask) | (ntohl(repl) & ~mask));
 }
 
+#ifdef WITH_IPV6
 static void
 rawnat_ipv6_mask(__be32 *addr, const __be32 *repl, unsigned int mask)
 {
@@ -72,6 +77,7 @@ rawnat_ipv6_mask(__be32 *addr, const __be32 *repl, unsigned int mask)
 		break;
 	}
 }
+#endif
 
 static void rawnat4_update_l4(struct sk_buff *skb, __be32 oldip, __be32 newip)
 {
@@ -162,6 +168,7 @@ rawdnat_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	return XT_CONTINUE;
 }
 
+#ifdef WITH_IPV6
 static bool rawnat6_prepare_l4(struct sk_buff **pskb, unsigned int *l4offset,
     unsigned int *l4proto)
 {
@@ -274,6 +281,7 @@ rawdnat_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 	memcpy(&iph->daddr, &new_addr, sizeof(new_addr));
 	return XT_CONTINUE;
 }
+#endif
 
 static bool rawnat_tg_check(const struct xt_tgchk_param *par)
 {
@@ -296,6 +304,7 @@ static struct xt_target rawnat_tg_reg[] __read_mostly = {
 		.checkentry = rawnat_tg_check,
 		.me         = THIS_MODULE,
 	},
+#ifdef WITH_IPV6
 	{
 		.name       = "RAWSNAT",
 		.revision   = 0,
@@ -305,6 +314,7 @@ static struct xt_target rawnat_tg_reg[] __read_mostly = {
 		.checkentry = rawnat_tg_check,
 		.me         = THIS_MODULE,
 	},
+#endif
 	{
 		.name       = "RAWDNAT",
 		.revision   = 0,
@@ -314,6 +324,7 @@ static struct xt_target rawnat_tg_reg[] __read_mostly = {
 		.checkentry = rawnat_tg_check,
 		.me         = THIS_MODULE,
 	},
+#ifdef WITH_IPV6
 	{
 		.name       = "RAWDNAT",
 		.revision   = 0,
@@ -323,6 +334,7 @@ static struct xt_target rawnat_tg_reg[] __read_mostly = {
 		.checkentry = rawnat_tg_check,
 		.me         = THIS_MODULE,
 	},
+#endif
 };
 
 static int __init rawnat_tg_init(void)
