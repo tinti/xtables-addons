@@ -136,6 +136,30 @@ static bool xtlength_layer7(unsigned int *length, const struct sk_buff *skb,
 	}
 }
 
+static bool
+length2_mt(const struct sk_buff *skb, const struct xt_match_param *par)
+{
+	const struct xt_length_mtinfo2 *info = par->matchinfo;
+	const struct iphdr *iph = ip_hdr(skb);
+	unsigned int len = 0;
+	bool hit = true;
+
+	if (info->flags & XT_LENGTH_LAYER3)
+		len = ntohs(iph->tot_len);
+	else if (info->flags & XT_LENGTH_LAYER4)
+		len = ntohs(iph->tot_len) - par->thoff;
+	else if (info->flags & XT_LENGTH_LAYER5)
+		hit = xtlength_layer5(&len, skb, iph->protocol, par->thoff);
+	else if (info->flags & XT_LENGTH_LAYER7)
+		hit = xtlength_layer7(&len, skb, iph->protocol, par->thoff);
+	if (!hit)
+		return false;
+
+	return (len >= info->min && len <= info->max) ^
+	       !!(info->flags & XT_LENGTH_INVERT);
+}
+
+#ifdef WITH_IPV6
 /**
  * llayer4_proto - figure out the L4 protocol in an IPv6 packet
  * @skb:	skb pointer
@@ -173,30 +197,6 @@ llayer4_proto(const struct sk_buff *skb, unsigned int *offset, bool *hotdrop)
 	return NEXTHDR_MAX;
 }
 
-static bool
-length2_mt(const struct sk_buff *skb, const struct xt_match_param *par)
-{
-	const struct xt_length_mtinfo2 *info = par->matchinfo;
-	const struct iphdr *iph = ip_hdr(skb);
-	unsigned int len = 0;
-	bool hit = true;
-
-	if (info->flags & XT_LENGTH_LAYER3)
-		len = ntohs(iph->tot_len);
-	else if (info->flags & XT_LENGTH_LAYER4)
-		len = ntohs(iph->tot_len) - par->thoff;
-	else if (info->flags & XT_LENGTH_LAYER5)
-		hit = xtlength_layer5(&len, skb, iph->protocol, par->thoff);
-	else if (info->flags & XT_LENGTH_LAYER7)
-		hit = xtlength_layer7(&len, skb, iph->protocol, par->thoff);
-	if (!hit)
-		return false;
-
-	return (len >= info->min && len <= info->max) ^
-	       !!(info->flags & XT_LENGTH_INVERT);
-}
-
-#ifdef WITH_IPV6
 static bool
 length2_mt6(const struct sk_buff *skb, const struct xt_match_param *par)
 {
