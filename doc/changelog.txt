@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+Xtables-addons 1.23 (February 24 2010)
+======================================
 - build: support for Linux 2.6.34
 - build: remove unused --with-ksource option
 - build: remove unneeded --with-xtables option
@@ -9,7 +13,7 @@ HEAD
 - ECHO: fix compilation w.r.t. skb_dst
 
 
-Xtables-addons 1.22 (January 22 2009)
+Xtables-addons 1.22 (January 22 2010)
 =====================================
 - compat_xtables: support for 2.6.33 skb_iif changes
 - geoip: for FHS compliance use /usr/share/xt_geoip instead of /var/geoip
