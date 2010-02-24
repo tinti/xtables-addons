@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- build: support for Linux 2.6.34
 - build: remove unused --with-ksource option
 - build: remove unneeded --with-xtables option
 - build: fix compilations in RAWNAT, SYSRQ and length2 when CONFIG_IPV6=n

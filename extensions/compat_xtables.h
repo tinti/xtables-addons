@@ -78,6 +78,15 @@
 #	define inet_proto_csum_replace4 xtnu_proto_csum_replace4
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+#	define ipt_unregister_table(tbl) ipt_unregister_table(&init_net, (tbl))
+#	define ip6t_unregister_table(tbl) ip6t_unregister_table(&init_net, (tbl))
+#else
+#	define ipt_unregister_table(tbl) ipt_unregister_table(tbl)
+#	define ip6t_unregister_table(tbl) ip6t_unregister_table(tbl)
+#endif
+
+
 #if !defined(NIP6) && !defined(NIP6_FMT)
 #	define NIP6(addr) \
 		ntohs((addr).s6_addr16[0]), \
