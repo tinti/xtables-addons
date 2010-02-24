@@ -1,7 +1,11 @@
 
 HEAD
 ====
+- build: remove unused --with-ksource option
+- build: remove unneeded --with-xtables option
+- build: fix compilations in RAWNAT, SYSRQ and length2 when CONFIG_IPV6=n
 - ipset: update to 4.2
+- ECHO: fix compilation w.r.t. skb_dst
 
 
 Xtables-addons 1.22 (January 22 2009)
