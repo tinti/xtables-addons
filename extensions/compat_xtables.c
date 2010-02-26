@@ -509,4 +509,18 @@ int xtnu_skb_linearize(struct sk_buff *skb)
 EXPORT_SYMBOL_GPL(xtnu_skb_linearize);
 #endif
 
+void *HX_memmem(const void *space, size_t spacesize,
+    const void *point, size_t pointsize)
+{
+	size_t i;
+
+	if (pointsize > spacesize)
+		return NULL;
+	for (i = 0; i <= spacesize - pointsize; ++i)
+		if (memcmp(space + i, point, pointsize) == 0)
+			return (void *)space + i;
+	return NULL;
+}
+EXPORT_SYMBOL_GPL(HX_memmem);
+
 MODULE_LICENSE("GPL");

@@ -154,4 +154,6 @@ extern void xtnu_proto_csum_replace4(__u16 __bitwise *, struct sk_buff *,
 	__be32, __be32, bool);
 extern int xtnu_skb_linearize(struct sk_buff *);
 
+extern void *HX_memmem(const void *, size_t, const void *, size_t);
+
 #endif /* _COMPAT_XTNU_H */
