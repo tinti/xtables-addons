@@ -2,6 +2,7 @@
 HEAD
 ====
 - ipp2p: updated bittorent command recognition
+- SYSRQ: let module load when crypto is unavailable
 
 
 Xtables-addons 1.23 (February 24 2010)

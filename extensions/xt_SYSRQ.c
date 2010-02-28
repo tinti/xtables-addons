@@ -1,6 +1,6 @@
 /*
  *	"SYSRQ" target extension for Netfilter
- *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008 - 2010
  *
  *	Based upon the ipt_SYSRQ idea by Marek Zalem <marek [at] terminus sk>
  *
@@ -23,6 +23,10 @@
 #include <net/ip.h>
 #include "compat_xtables.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19) && \
+    (defined(CONFIG_CRYPTO) || defined(CRYPTO_CONFIG_MODULE))
+#	define WITH_CRYPTO 1
+#endif
 #if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
 #	define WITH_IPV6 1
 #endif
@@ -42,7 +46,7 @@ MODULE_PARM_DESC(hash, "hash algorithm, default sha1");
 MODULE_PARM_DESC(seqno, "sequence number for remote sysrq");
 MODULE_PARM_DESC(debug, "debugging: 0=off, 1=on");
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+#ifdef WITH_CRYPTO
 static struct crypto_hash *sysrq_tfm;
 static int sysrq_digest_size;
 static unsigned char *sysrq_digest_password;
@@ -296,10 +300,25 @@ static struct xt_target sysrq_tg_reg[] __read_mostly = {
 #endif
 };
 
-static int __init sysrq_tg_init(void)
+static void sysrq_crypto_exit(void)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+#ifdef WITH_CRYPTO
+	if (sysrq_tfm)
+		crypto_free_hash(sysrq_tfm);
+	if (sysrq_digest)
+		kfree(sysrq_digest);
+	if (sysrq_hexdigest)
+		kfree(sysrq_hexdigest);
+	if (sysrq_digest_password)
+		kfree(sysrq_digest_password);
+#endif
+}
+
+static int __init sysrq_crypto_init(void)
+{
+#if defined(WITH_CRYPTO)
 	struct timeval now;
+	int ret;
 
 	sysrq_tfm = crypto_alloc_hash(sysrq_hash, 0, CRYPTO_ALG_ASYNC);
 	if (IS_ERR(sysrq_tfm)) {
@@ -307,10 +326,12 @@ static int __init sysrq_tg_init(void)
 			": Error: Could not find or load %s hash\n",
 			sysrq_hash);
 		sysrq_tfm = NULL;
+		ret = PTR_ERR(sysrq_tfm);
 		goto fail;
 	}
 	sysrq_digest_size = crypto_hash_digestsize(sysrq_tfm);
 	sysrq_digest = kmalloc(sysrq_digest_size, GFP_KERNEL);
+	ret = -ENOMEM;
 	if (sysrq_digest == NULL) {
 		printk(KERN_WARNING KBUILD_MODNAME
 			": Cannot allocate digest\n");
@@ -330,33 +351,31 @@ static int __init sysrq_tg_init(void)
 	}
 	do_gettimeofday(&now);
 	sysrq_seqno = now.tv_sec;
-	return xt_register_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
+	ret = xt_register_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
+	if (ret < 0)
+		goto fail;
+	return ret;
 
  fail:
-	if (sysrq_tfm)
-		crypto_free_hash(sysrq_tfm);
-	if (sysrq_digest)
-		kfree(sysrq_digest);
-	if (sysrq_hexdigest)
-		kfree(sysrq_hexdigest);
-	if (sysrq_digest_password)
-		kfree(sysrq_digest_password);
-	return -EINVAL;
-#else
-	printk(KERN_WARNING "xt_SYSRQ does not provide crypto for <= 2.6.18\n");
-	return xt_register_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
+	sysrq_crypto_exit();
+	return ret;
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+	printk(KERN_WARNING "xt_SYSRQ does not provide crypto for < 2.6.19\n");
 #endif
+	return -EINVAL;
+}
+
+static int __init sysrq_tg_init(void)
+{
+	if (sysrq_crypto_init() < 0)
+		printk(KERN_WARNING "xt_SYSRQ starting without crypto\n");
+	return xt_register_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
 }
 
 static void __exit sysrq_tg_exit(void)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-	crypto_free_hash(sysrq_tfm);
-	kfree(sysrq_digest);
-	kfree(sysrq_hexdigest);
-	kfree(sysrq_digest_password);
-#endif
-	return xt_unregister_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
+	sysrq_crypto_exit();
+	xt_unregister_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
 }
 
 module_init(sysrq_tg_init);
