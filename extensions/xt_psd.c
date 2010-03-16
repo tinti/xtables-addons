@@ -312,7 +312,7 @@ out_match:
 
 static struct xt_match xt_psd_reg __read_mostly = {
 	.name		= "psd",
-    .family		= AF_INET,
+	.family    = NFPROTO_IPV4,
 	.revision  = 1,
 	.match		= xt_psd_match,
 	.matchsize	= sizeof(struct xt_psd_info),
