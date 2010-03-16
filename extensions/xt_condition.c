@@ -35,6 +35,7 @@ static unsigned int condition_gid_perms = 0;
 
 MODULE_AUTHOR("Stephane Ouellette <ouellettes@videotron.ca>");
 MODULE_AUTHOR("Massimiliano Hofer <max@nucleus.it>");
+MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
 MODULE_DESCRIPTION("Allows rules to match against condition variables");
 MODULE_LICENSE("GPL");
 module_param(condition_list_perms, uint, S_IRUSR | S_IWUSR);
@@ -55,7 +56,7 @@ struct condition_variable {
 
 /* proc_lock is a user context only semaphore used for write access */
 /*           to the conditions' list.                               */
-static struct semaphore proc_lock;
+static struct mutex proc_lock;
 
 static LIST_HEAD(conditions_list);
 static struct proc_dir_entry *proc_net_condition;
@@ -129,13 +130,13 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 	 * Let's acquire the lock, check for the condition and add it
 	 * or increase the reference counter.
 	 */
-	if (down_interruptible(&proc_lock))
+	if (mutex_lock_interruptible(&proc_lock) != 0)
 		return false;
 
 	list_for_each_entry(var, &conditions_list, list) {
 		if (strcmp(info->name, var->status_proc->name) == 0) {
 			var->refcount++;
-			up(&proc_lock);
+			mutex_unlock(&proc_lock);
 			info->condvar = var;
 			return true;
 		}
@@ -145,7 +146,7 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 	var = kmalloc(sizeof(struct condition_variable), GFP_KERNEL);
 
 	if (var == NULL) {
-		up(&proc_lock);
+		mutex_unlock(&proc_lock);
 		return false;
 	}
 
@@ -155,7 +156,7 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 
 	if (var->status_proc == NULL) {
 		kfree(var);
-		up(&proc_lock);
+		mutex_unlock(&proc_lock);
 		return false;
 	}
 
@@ -174,7 +175,7 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 	var->status_proc->uid = condition_uid_perms;
 	var->status_proc->gid = condition_gid_perms;
 
-	up(&proc_lock);
+	mutex_unlock(&proc_lock);
 
 	info->condvar = var;
 	return true;
@@ -185,11 +186,11 @@ static void condition_mt_destroy(const struct xt_mtdtor_param *par)
 	const struct xt_condition_mtinfo *info = par->matchinfo;
 	struct condition_variable *var = info->condvar;
 
-	down(&proc_lock);
+	mutex_lock(&proc_lock);
 	if (--var->refcount == 0) {
 		list_del_rcu(&var->list);
 		remove_proc_entry(var->status_proc->name, proc_net_condition);
-		up(&proc_lock);
+		mutex_unlock(&proc_lock);
 		/*
 		 * synchronize_rcu() would be good enough, but
 		 * synchronize_net() guarantees that no packet
@@ -200,7 +201,7 @@ static void condition_mt_destroy(const struct xt_mtdtor_param *par)
 		kfree(var);
 		return;
 	}
-	up(&proc_lock);
+	mutex_unlock(&proc_lock);
 }
 
 static struct xt_match condition_mt_reg[] __read_mostly = {
@@ -232,7 +233,7 @@ static int __init condition_mt_init(void)
 {
 	int ret;
 
-	sema_init(&proc_lock, 1);
+	mutex_init(&proc_lock);
 	proc_net_condition = proc_mkdir(dir_name, init_net__proc_net);
 	if (proc_net_condition == NULL)
 		return -EACCES;
