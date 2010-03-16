@@ -70,7 +70,6 @@ static int condition_proc_read(char __user *buffer, char **start, off_t offset,
 	buffer[1] = '\n';
 	if (length >= 2)
 		*eof = true;
-
 	return 2;
 }
 
@@ -93,7 +92,6 @@ static int condition_proc_write(struct file *file, const char __user *buffer,
 			break;
 		}
 	}
-
 	return length;
 }
 
@@ -125,7 +123,6 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 		       info->name);
 		return false;
 	}
-
 	/*
 	 * Let's acquire the lock, check for the condition and add it
 	 * or increase the reference counter.
@@ -144,7 +141,6 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 
 	/* At this point, we need to allocate a new condition variable. */
 	var = kmalloc(sizeof(struct condition_variable), GFP_KERNEL);
-
 	if (var == NULL) {
 		mutex_unlock(&proc_lock);
 		return false;
@@ -153,7 +149,6 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 	/* Create the condition variable's proc file entry. */
 	var->status_proc = create_proc_entry(info->name, condition_list_perms,
 	                   proc_net_condition);
-
 	if (var->status_proc == NULL) {
 		kfree(var);
 		mutex_unlock(&proc_lock);
@@ -169,14 +164,10 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 	wmb();
 	var->status_proc->read_proc  = condition_proc_read;
 	var->status_proc->write_proc = condition_proc_write;
-
 	list_add_rcu(&var->list, &conditions_list);
-
 	var->status_proc->uid = condition_uid_perms;
 	var->status_proc->gid = condition_gid_perms;
-
 	mutex_unlock(&proc_lock);
-
 	info->condvar = var;
 	return true;
 }
