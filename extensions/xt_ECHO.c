@@ -113,7 +113,6 @@ static struct xt_target echo_tg_reg __read_mostly = {
 	.proto      = IPPROTO_UDP,
 	.table      = "filter",
 	.target     = echo_tg4,
-	.targetsize = XT_ALIGN(0),
 	.me         = THIS_MODULE,
 };
 
