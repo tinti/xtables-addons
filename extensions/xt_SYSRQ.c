@@ -208,7 +208,7 @@ sysrq_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 		return NF_DROP;
 
 	iph = ip_hdr(skb);
-	if (iph->protocol != IPPROTO_UDP)
+	if (iph->protocol != IPPROTO_UDP && iph->protocol != IPPROTO_UDPLITE)
 		return NF_ACCEPT; /* sink it */
 
 	udph = (const void *)iph + ip_hdrlen(skb);

@@ -3,6 +3,7 @@ HEAD
 ====
 - ipp2p: updated bittorent command recognition
 - SYSRQ: let module load when crypto is unavailable
+- SYSRQ: allow processing of UDP-Lite
 
 
 Xtables-addons 1.23 (February 24 2010)
