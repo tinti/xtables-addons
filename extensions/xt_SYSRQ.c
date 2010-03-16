@@ -24,7 +24,7 @@
 #include "compat_xtables.h"
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19) && \
-    (defined(CONFIG_CRYPTO) || defined(CRYPTO_CONFIG_MODULE))
+    (defined(CONFIG_CRYPTO) || defined(CONFIG_CRYPTO_MODULE))
 #	define WITH_CRYPTO 1
 #endif
 #if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
