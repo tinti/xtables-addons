@@ -50,7 +50,7 @@ static struct xt_match ipv4options_mt_reg __read_mostly = {
 	.revision  = 1,
 	.family    = NFPROTO_IPV4,
 	.match     = ipv4options_mt,
-	.matchsize = XT_ALIGN(sizeof(struct xt_ipv4options_mtinfo1)),
+	.matchsize = sizeof(struct xt_ipv4options_mtinfo1),
 	.me        = THIS_MODULE,
 };
 

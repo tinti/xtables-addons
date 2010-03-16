@@ -139,7 +139,7 @@ static struct xt_match dhcpmac_mt_reg __read_mostly = {
 	.family     = NFPROTO_IPV4,
 	.proto      = IPPROTO_UDP,
 	.match      = dhcpmac_mt,
-	.matchsize  = XT_ALIGN(sizeof(struct dhcpmac_info)),
+	.matchsize  = sizeof(struct dhcpmac_info),
 	.me         = THIS_MODULE,
 };
 
