@@ -259,7 +259,7 @@ geoip_save(const void *ip, const struct xt_entry_match *match)
 }
 
 static struct xtables_match geoip_match = {
-	 .family        = AF_INET,
+	 .family        = NFPROTO_IPV4,
 	 .name          = "geoip",
 	 .revision      = 1,
 	 .version       = XTABLES_VERSION,

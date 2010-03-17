@@ -151,7 +151,7 @@ ipmark_tg_save(const void *entry, const struct xt_entry_target *target)
 static struct xtables_target ipmark_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "IPMARK",
-	.family        = PF_UNSPEC,
+	.family        = NFPROTO_UNSPEC,
 	.revision      = 1,
 	.size          = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_ipmark_tginfo)),

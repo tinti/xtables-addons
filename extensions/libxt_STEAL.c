@@ -19,7 +19,7 @@ static void steal_tg_check(unsigned int flags)
 static struct xtables_target steal_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "STEAL",
-	.family        = AF_UNSPEC,
+	.family        = NFPROTO_UNSPEC,
 	.help          = steal_tg_help,
 	.parse         = steal_tg_parse,
 	.final_check   = steal_tg_check,

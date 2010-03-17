@@ -24,7 +24,7 @@ static void tarpit_tg_check(unsigned int flags)
 static struct xtables_target tarpit_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "TARPIT",
-	.family        = AF_INET,
+	.family        = NFPROTO_IPV4,
 	.help          = tarpit_tg_help,
 	.parse         = tarpit_tg_parse,
 	.final_check   = tarpit_tg_check,

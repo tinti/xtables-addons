@@ -103,6 +103,7 @@ static struct xtables_match fuzzy_mt_reg = {
 	.name          = "fuzzy",
 	.revision      = 1,
 	.version       = XTABLES_VERSION,
+	.family        = NFPROTO_UNSPEC,
 	.size          = XT_ALIGN(sizeof(struct xt_fuzzy_mtinfo)),
 	.userspacesize = offsetof(struct xt_fuzzy_mtinfo, packets_total),
 	.help          = fuzzy_mt_help,

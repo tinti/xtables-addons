@@ -29,7 +29,7 @@ static void echo_tg_check(unsigned int flags)
 static struct xtables_target echo_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "ECHO",
-	.family        = AF_UNSPEC,
+	.family        = NFPROTO_UNSPEC,
 	.help          = echo_tg_help,
 	.parse         = echo_tg_parse,
 	.final_check   = echo_tg_check,

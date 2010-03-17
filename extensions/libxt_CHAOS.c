@@ -95,7 +95,7 @@ static void chaos_tg_save(const void *ip, const struct xt_entry_target *target)
 static struct xtables_target chaos_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "CHAOS",
-	.family        = AF_INET,
+	.family        = NFPROTO_IPV4,
 	.size          = XT_ALIGN(sizeof(struct xt_chaos_tginfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_chaos_tginfo)),
 	.help          = chaos_tg_help,
