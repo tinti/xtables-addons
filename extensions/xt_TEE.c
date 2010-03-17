@@ -232,9 +232,10 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 
 	memset(&fl, 0, sizeof(fl));
 	fl.iif = skb_ifindex(skb);
+	/* No mark in flowi before 2.6.19 */
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 19)
 	fl.nl_u.ip6_u.fwmark = skb_nfmark(skb);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
 	fl.mark = skb_nfmark(skb);
 #endif
 	fl.nl_u.ip6_u.daddr = info->gw.in6;
