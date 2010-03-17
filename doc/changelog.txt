@@ -1,6 +1,8 @@
 
 HEAD
 ====
+- build: fix build of userspace modules against old (pre-2.6.25)
+  headers from linux-glibc-devel (/usr/include/linux)
 - ipp2p: updated bittorent command recognition
 - SYSRQ: let module load when crypto is unavailable
 - SYSRQ: allow processing of UDP-Lite
