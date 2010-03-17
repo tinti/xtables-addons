@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+Xtables-addons 1.24 (March 17 2010)
+===================================
 - build: fix build of userspace modules against old (pre-2.6.25)
   headers from linux-glibc-devel (/usr/include/linux)
 - ipp2p: updated bittorent command recognition
