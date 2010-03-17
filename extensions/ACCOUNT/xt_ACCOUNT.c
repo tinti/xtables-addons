@@ -1082,7 +1082,7 @@ static int ipt_acc_get_ctl(struct sock *sk, int cmd, void *user, int *len)
 static struct xt_target xt_acc_reg __read_mostly = {
 	.name = "ACCOUNT",
 	.revision = 1,
-	.family = AF_INET,
+	.family     = NFPROTO_IPV4,
 	.target = ipt_acc_target,
 	.targetsize = sizeof(struct ipt_acc_info),
 	.checkentry = ipt_acc_checkentry,
