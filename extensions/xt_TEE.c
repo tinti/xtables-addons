@@ -165,11 +165,17 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	/*
 	 * If we are in PREROUTING/INPUT, the checksum must be recalculated
 	 * since the length could have changed as a result of defragmentation.
+	 *
+	 * We also decrease the TTL to mitigate potential TEE loops
+	 * between two hosts.
 	 */
 	if (par->hooknum == NF_INET_PRE_ROUTING ||
-	    par->hooknum == NF_INET_LOCAL_IN)
-		ip_send_check(ip_hdr(skb));
+	    par->hooknum == NF_INET_LOCAL_IN) {
+		struct iphdr *iph = ip_hdr(skb);
 
+		--iph->ttl;
+		ip_send_check(iph);
+	}
 	/*
 	 * Copy the skb, and route the copy. Will later return %XT_CONTINUE for
 	 * the original skb, which should continue on its way as if nothing has
@@ -276,6 +282,11 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 	skb->nfctinfo = IP_CT_NEW;
 	nf_conntrack_get(skb->nfct);
 #endif
+	if (par->hooknum == NF_INET_PRE_ROUTING ||
+	    par->hooknum == NF_INET_LOCAL_IN) {
+		struct ipv6hdr *iph = ipv6_hdr(skb);
+		--iph->hop_limit;
+	}
 	if (tee_tg_route6(skb, info))
 		tee_tg_send(skb);
 
