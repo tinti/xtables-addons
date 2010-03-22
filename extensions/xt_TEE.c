@@ -163,10 +163,11 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	skb = *pskb;
 
 	/*
-	 * If we are in INPUT, the checksum must be recalculated since
-	 * the length could have changed as a result of defragmentation.
+	 * If we are in PREROUTING/INPUT, the checksum must be recalculated
+	 * since the length could have changed as a result of defragmentation.
 	 */
-	if (par->hooknum == NF_INET_LOCAL_IN)
+	if (par->hooknum == NF_INET_PRE_ROUTING ||
+	    par->hooknum == NF_INET_LOCAL_IN)
 		ip_send_check(ip_hdr(skb));
 
 	/*

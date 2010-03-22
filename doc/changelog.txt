@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- TEE: do rechecksumming in PREROUTING too
 
 
 Xtables-addons 1.24 (March 17 2010)
