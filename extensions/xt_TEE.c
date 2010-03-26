@@ -145,6 +145,7 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct xt_tee_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
+	struct iphdr *iph;
 
 #ifdef WITH_CONNTRACK
 	if (skb->nfct == &tee_track.ct_general) {
@@ -172,14 +173,17 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	 *
 	 * We also decrease the TTL to mitigate potential TEE loops
 	 * between two hosts.
+	 *
+	 * Set %IP_DF so that the original source is notified of a potentially
+	 * decreased MTU on the clone route. IPv6 does this too.
 	 */
+	iph = ip_hdr(skb);
+	iph->frag_off |= htons(IP_DF);
 	if (par->hooknum == NF_INET_PRE_ROUTING ||
-	    par->hooknum == NF_INET_LOCAL_IN) {
-		struct iphdr *iph = ip_hdr(skb);
-
+	    par->hooknum == NF_INET_LOCAL_IN)
 		--iph->ttl;
-		ip_send_check(iph);
-	}
+	ip_send_check(iph);
+
 #ifdef WITH_CONNTRACK
 	/*
 	 * Tell conntrack to forget this packet since it may get confused

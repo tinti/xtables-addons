@@ -3,6 +3,7 @@ HEAD
 ====
 - TEE: do rechecksumming in PREROUTING too
 - TEE: decrease TTL on cloned packet
+- TEE: set dont-fragment on cloned packets
 
 
 Xtables-addons 1.24 (March 17 2010)
