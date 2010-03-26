@@ -332,23 +332,14 @@ static int __init sysrq_crypto_init(void)
 	sysrq_digest_size = crypto_hash_digestsize(sysrq_tfm);
 	sysrq_digest = kmalloc(sysrq_digest_size, GFP_KERNEL);
 	ret = -ENOMEM;
-	if (sysrq_digest == NULL) {
-		printk(KERN_WARNING KBUILD_MODNAME
-			": Cannot allocate digest\n");
+	if (sysrq_digest == NULL)
 		goto fail;
-	}
 	sysrq_hexdigest = kmalloc(2 * sysrq_digest_size + 1, GFP_KERNEL);
-	if (sysrq_hexdigest == NULL) {
-		printk(KERN_WARNING KBUILD_MODNAME
-			": Cannot allocate hexdigest\n");
+	if (sysrq_hexdigest == NULL)
 		goto fail;
-	}
 	sysrq_digest_password = kmalloc(sizeof(sysrq_password), GFP_KERNEL);
-	if (sysrq_digest_password == NULL) {
-		printk(KERN_WARNING KBUILD_MODNAME
-			": Cannot allocate password digest space\n");
+	if (sysrq_digest_password == NULL)
 		goto fail;
-	}
 	do_gettimeofday(&now);
 	sysrq_seqno = now.tv_sec;
 	ret = xt_register_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));

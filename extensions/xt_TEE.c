@@ -179,11 +179,8 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	 * --gateway.
 	 */
 	skb = skb_copy(skb, GFP_ATOMIC);
-	if (skb == NULL) {
-		if (net_ratelimit())
-			pr_debug(KBUILD_MODNAME "copy failed!\n");
+	if (skb == NULL)
 		return XT_CONTINUE;
-	}
 
 #ifdef WITH_CONNTRACK
 	/*
