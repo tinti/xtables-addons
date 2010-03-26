@@ -76,6 +76,7 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 		if (net_ratelimit())
 			pr_debug(KBUILD_MODNAME
 			         ": could not route packet (%d)", err);
+		kfree_skb(skb);
 		return false;
 	}
 
@@ -249,6 +250,7 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	if (dst == NULL) {
 		if (net_ratelimit())
 			printk(KERN_ERR "ip6_route_output failed for tee\n");
+		kfree_skb(skb);
 		return false;
 	}
 
