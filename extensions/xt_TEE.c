@@ -157,11 +157,15 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 		return NF_DROP;
 	}
 #endif
-
-	if (!skb_make_writable(pskb, sizeof(struct iphdr)))
-		return NF_DROP;
-	skb = *pskb;
-
+	/*
+	 * Copy the skb, and route the copy. Will later return %XT_CONTINUE for
+	 * the original skb, which should continue on its way as if nothing has
+	 * happened. The copy should be independently delivered to the TEE
+	 * --gateway.
+	 */
+	skb = skb_copy(skb, GFP_ATOMIC);
+	if (skb == NULL)
+		return XT_CONTINUE;
 	/*
 	 * If we are in PREROUTING/INPUT, the checksum must be recalculated
 	 * since the length could have changed as a result of defragmentation.
@@ -176,16 +180,6 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 		--iph->ttl;
 		ip_send_check(iph);
 	}
-	/*
-	 * Copy the skb, and route the copy. Will later return %XT_CONTINUE for
-	 * the original skb, which should continue on its way as if nothing has
-	 * happened. The copy should be independently delivered to the TEE
-	 * --gateway.
-	 */
-	skb = skb_copy(skb, GFP_ATOMIC);
-	if (skb == NULL)
-		return XT_CONTINUE;
-
 #ifdef WITH_CONNTRACK
 	/*
 	 * Tell conntrack to forget this packet since it may get confused
