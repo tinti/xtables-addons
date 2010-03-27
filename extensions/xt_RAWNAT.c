@@ -283,15 +283,15 @@ rawdnat_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 }
 #endif
 
-static bool rawnat_tg_check(const struct xt_tgchk_param *par)
+static int rawnat_tg_check(const struct xt_tgchk_param *par)
 {
 	if (strcmp(par->table, "raw") == 0 ||
 	    strcmp(par->table, "rawpost") == 0)
-		return true;
+		return 0;
 
 	printk(KERN_ERR KBUILD_MODNAME " may only be used in the \"raw\" or "
 	       "\"rawpost\" table.\n");
-	return false;
+	return -EINVAL;
 }
 
 static struct xt_target rawnat_tg_reg[] __read_mostly = {

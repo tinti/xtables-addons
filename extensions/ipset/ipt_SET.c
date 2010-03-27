@@ -45,7 +45,7 @@ target(struct sk_buff **pskb, const struct xt_target_param *par)
 	return XT_CONTINUE;
 }
 
-static bool
+static int
 checkentry(const struct xt_tgchk_param *par)
 {
 	struct ipt_set_info_target *info = par->targinfo;
@@ -54,7 +54,7 @@ checkentry(const struct xt_tgchk_param *par)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
 	if (targinfosize != IPT_ALIGN(sizeof(*info))) {
 		DP("bad target info size %u", targinfosize);
-		return 0;
+		return -EINVAL;
 	}
 #endif
 
@@ -63,7 +63,7 @@ checkentry(const struct xt_tgchk_param *par)
 		if (index == IP_SET_INVALID_ID) {
 			ip_set_printk("cannot find add_set index %u as target",
 				      info->add_set.index);
-			return 0;	/* error */
+			return -EINVAL;
 		}
 	}
 
@@ -72,16 +72,16 @@ checkentry(const struct xt_tgchk_param *par)
 		if (index == IP_SET_INVALID_ID) {
 			ip_set_printk("cannot find del_set index %u as target",
 				      info->del_set.index);
-			return 0;	/* error */
+			return -EINVAL;
 		}
 	}
 	if (info->add_set.flags[IP_SET_MAX_BINDINGS] != 0
 	    || info->del_set.flags[IP_SET_MAX_BINDINGS] != 0) {
 		ip_set_printk("That's nasty!");
-		return 0;	/* error */
+		return -EINVAL;
 	}
 
-	return 1;
+	return 0;
 }
 
 static void destroy(const struct xt_tgdtor_param *par)

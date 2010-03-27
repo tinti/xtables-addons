@@ -85,7 +85,7 @@ struct xtnu_match {
 	struct list_head list;
 	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
 	bool (*match)(const struct sk_buff *, const struct xt_match_param *);
-	bool (*checkentry)(const struct xt_mtchk_param *);
+	int (*checkentry)(const struct xt_mtchk_param *);
 	void (*destroy)(const struct xt_mtdtor_param *);
 	struct module *me;
 	const char *table;
@@ -101,7 +101,7 @@ struct xtnu_target {
 	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
 	unsigned int (*target)(struct sk_buff **,
 		const struct xt_target_param *);
-	bool (*checkentry)(const struct xt_tgchk_param *);
+	int (*checkentry)(const struct xt_tgchk_param *);
 	void (*destroy)(const struct xt_tgdtor_param *);
 	struct module *me;
 	const char *table;
