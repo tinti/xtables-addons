@@ -5,6 +5,7 @@ HEAD
 - TEE: decrease TTL on cloned packet
 - TEE: set dont-fragment on cloned packets
 - TEE: free skb when route lookup failed
+- TEE: do not limit use to mangle table
 
 
 Xtables-addons 1.24 (March 17 2010)
