@@ -46,23 +46,28 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	struct geoip_country_user umem;
 	struct geoip_country_kernel *p;
 	struct geoip_subnet *s;
+	int ret;
 
 	if (copy_from_user(&umem, umem_ptr, sizeof(umem)) != 0)
-		return NULL;
+		return ERR_PTR(-EFAULT);
 
 	p = kmalloc(sizeof(struct geoip_country_kernel), GFP_KERNEL);
 	if (p == NULL)
-		return NULL;
+		return ERR_PTR(-ENOMEM);
 
 	p->count   = umem.count;
 	p->cc      = umem.cc;
 
 	s = vmalloc(p->count * sizeof(struct geoip_subnet));
-	if (s == NULL)
+	if (s == NULL) {
+		ret = -ENOMEM;
 		goto free_p;
+	}
 	if (copy_from_user(s, (const void __user *)(unsigned long)umem.subnets,
-	    p->count * sizeof(struct geoip_subnet)) != 0)
+	    p->count * sizeof(struct geoip_subnet)) != 0) {
+		ret = -EFAULT;
 		goto free_s;
+	}
 
 	p->subnets = s;
 	atomic_set(&p->ref, 1);
@@ -78,7 +83,7 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	vfree(s);
  free_p:
 	kfree(p);
-	return NULL;
+	return ERR_PTR(ret);
 }
 
 static void geoip_try_remove_node(struct geoip_country_kernel *p)
@@ -168,7 +173,7 @@ xt_geoip_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	return info->flags & XT_GEOIP_INV;
 }
 
-static bool xt_geoip_mt_checkentry(const struct xt_mtchk_param *par)
+static int xt_geoip_mt_checkentry(const struct xt_mtchk_param *par)
 {
 	struct xt_geoip_match_info *info = par->matchinfo;
 	struct geoip_country_kernel *node;
@@ -176,13 +181,15 @@ static bool xt_geoip_mt_checkentry(const struct xt_mtchk_param *par)
 
 	for (i = 0; i < info->count; i++) {
 		node = find_node(info->cc[i]);
-		if (node == NULL)
-			if ((node = geoip_add_node((const void __user *)(unsigned long)info->mem[i].user)) == NULL) {
+		if (node == NULL) {
+			node = geoip_add_node((const void __user *)(unsigned long)info->mem[i].user);
+			if (IS_ERR(node)) {
 				printk(KERN_ERR
-						"xt_geoip: unable to load '%c%c' into memory\n",
-						COUNTRY(info->cc[i]));
-				return false;
+						"xt_geoip: unable to load '%c%c' into memory: %ld\n",
+						COUNTRY(info->cc[i]), PTR_ERR(node));
+				return PTR_ERR(node);
 			}
+		}
 
 		/* Overwrite the now-useless pointer info->mem[i] with
 		 * a pointer to the node's kernelspace structure.
@@ -192,7 +199,7 @@ static bool xt_geoip_mt_checkentry(const struct xt_mtchk_param *par)
 		info->mem[i].kernel = node;
 	}
 
-	return true;
+	return 0;
 }
 
 static void xt_geoip_mt_destroy(const struct xt_mtdtor_param *par)

@@ -47,7 +47,7 @@ match(const struct sk_buff *skb, const struct xt_match_param *par)
 			 info->match_set.flags[0] & IPSET_MATCH_INV);
 }
 
-static bool
+static int
 checkentry(const struct xt_mtchk_param *par)
 {
 	struct ipt_set_info_match *info = par->matchinfo;
@@ -56,7 +56,7 @@ checkentry(const struct xt_mtchk_param *par)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)
 	if (matchsize != IPT_ALIGN(sizeof(struct ipt_set_info_match))) {
 		ip_set_printk("invalid matchsize %d", matchsize);
-		return 0;
+		return -EINVAL;
 	}
 #endif
 
@@ -65,14 +65,14 @@ checkentry(const struct xt_mtchk_param *par)
 	if (index == IP_SET_INVALID_ID) {
 		ip_set_printk("Cannot find set indentified by id %u to match",
 			      info->match_set.index);
-		return 0;	/* error */
+		return -ENOENT;
 	}
 	if (info->match_set.flags[IP_SET_MAX_BINDINGS] != 0) {
 		ip_set_printk("That's nasty!");
-		return 0;	/* error */
+		return -EINVAL;
 	}
 
-	return 1;
+	return 0;
 }
 
 static void destroy(const struct xt_mtdtor_param *par)
