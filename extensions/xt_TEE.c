@@ -129,12 +129,6 @@ static void tee_tg_send(struct sk_buff *skb)
 	}
 }
 
-/*
- * To detect and deter routed packet loopback when using the --tee option, we
- * take a page out of the raw.patch book: on the copied skb, we set up a fake
- * ->nfct entry, pointing to the local &route_tee_track. We skip routing
- * packets when we see they already have that ->nfct.
- */
 static unsigned int
 tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 {
@@ -142,17 +136,6 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	struct sk_buff *skb = *pskb;
 	struct iphdr *iph;
 
-#ifdef WITH_CONNTRACK
-	if (skb->nfct == &tee_track.ct_general) {
-		/*
-		 * Loopback - a packet we already routed, is to be
-		 * routed another time. Avoid that, now.
-		 */
-		if (net_ratelimit())
-			pr_debug(KBUILD_MODNAME "loopback - DROP!\n");
-		return NF_DROP;
-	}
-#endif
 	/*
 	 * Copy the skb, and route the copy. Will later return %XT_CONTINUE for
 	 * the original skb, which should continue on its way as if nothing has
@@ -181,12 +164,9 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 
 #ifdef WITH_CONNTRACK
 	/*
-	 * Tell conntrack to forget this packet since it may get confused
-	 * when a packet is leaving with dst address == our address.
-	 * Good idea? Dunno. Need advice.
-	 *
-	 * NEW: mark the skb with our &tee_track, so we avoid looping
-	 * on any already routed packet.
+	 * Tell conntrack to forget this packet. It may have side effects to
+	 * see the same packet twice, as for example, accounting the original
+	 * connection for the cloned packet.
 	 */
 	nf_conntrack_put(skb->nfct);
 	skb->nfct     = &tee_track.ct_general;
@@ -254,12 +234,6 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 	const struct xt_tee_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
 
-	/* Try silence. */
-#ifdef WITH_CONNTRACK
-	if (skb->nfct == &tee_track.ct_general)
-		return NF_DROP;
-#endif
-
 	if ((skb = skb_copy(skb, GFP_ATOMIC)) == NULL)
 		return XT_CONTINUE;
 
@@ -317,8 +291,7 @@ static int __init tee_tg_init(void)
 {
 #ifdef WITH_CONNTRACK
 	/*
-	 * Set up fake conntrack (stolen from raw.patch):
-	 * - to never be deleted, not in any hashes
+	 * Set up fake conntrack - to never be deleted, not in any hashes
 	 */
 	atomic_set(&tee_track.ct_general.use, 1);
 
