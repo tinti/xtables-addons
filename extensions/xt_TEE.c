@@ -60,12 +60,6 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	struct flowi fl;
 
 	memset(&fl, 0, sizeof(fl));
-	fl.iif = skb_ifindex(skb);
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
-	fl.nl_u.ip4_u.fwmark = skb_nfmark(skb);
-#else
-	fl.mark = skb_nfmark(skb);
-#endif
 	fl.nl_u.ip4_u.daddr = info->gw.ip;
 	fl.nl_u.ip4_u.tos   = RT_TOS(iph->tos);
 	fl.nl_u.ip4_u.scope = RT_SCOPE_UNIVERSE;
@@ -231,13 +225,6 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	struct flowi fl;
 
 	memset(&fl, 0, sizeof(fl));
-	fl.iif = skb_ifindex(skb);
-	/* No mark in flowi before 2.6.19 */
-#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 19)
-	fl.nl_u.ip6_u.fwmark = skb_nfmark(skb);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
-	fl.mark = skb_nfmark(skb);
-#endif
 	fl.nl_u.ip6_u.daddr = info->gw.in6;
 	fl.nl_u.ip6_u.flowlabel = ((iph->flow_lbl[0] & 0xF) << 16) |
 		(iph->flow_lbl[1] << 8) | iph->flow_lbl[2];
