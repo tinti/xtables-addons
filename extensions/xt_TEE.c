@@ -33,6 +33,7 @@ static struct nf_conn tee_track;
 #include "compat_xtables.h"
 #include "xt_TEE.h"
 
+static bool tee_active[NR_CPUS];
 static const union nf_inet_addr tee_zero_address;
 
 /*
@@ -135,7 +136,10 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	const struct xt_tee_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
 	struct iphdr *iph;
+	unsigned int cpu = smp_processor_id();
 
+	if (tee_active[cpu])
+		return XT_CONTINUE;
 	/*
 	 * Copy the skb, and route the copy. Will later return %XT_CONTINUE for
 	 * the original skb, which should continue on its way as if nothing has
@@ -190,9 +194,11 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	 * Also on purpose, no fragmentation is done, to preserve the
 	 * packet as best as possible.
 	 */
-	if (tee_tg_route4(skb, info))
+	if (tee_tg_route4(skb, info)) {
+		tee_active[cpu] = true;
 		tee_tg_send(skb);
-
+		tee_active[cpu] = false;
+	}
 	return XT_CONTINUE;
 }
 
@@ -233,7 +239,10 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct xt_tee_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
+	unsigned int cpu = smp_processor_id();
 
+	if (tee_active[cpu])
+		return XT_CONTINUE;
 	if ((skb = skb_copy(skb, GFP_ATOMIC)) == NULL)
 		return XT_CONTINUE;
 
@@ -248,9 +257,11 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 		struct ipv6hdr *iph = ipv6_hdr(skb);
 		--iph->hop_limit;
 	}
-	if (tee_tg_route6(skb, info))
+	if (tee_tg_route6(skb, info)) {
+		tee_active[cpu] = true;
 		tee_tg_send(skb);
-
+		tee_active[cpu] = false;
+	}
 	return XT_CONTINUE;
 }
 #endif /* WITH_IPV6 */
