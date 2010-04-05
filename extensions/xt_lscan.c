@@ -216,16 +216,16 @@ lscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	       (info->match_gr && ctdata->mark == mark_grscan);
 }
 
-static bool lscan_mt_check(const struct xt_mtchk_param *par)
+static int lscan_mt_check(const struct xt_mtchk_param *par)
 {
 	const struct xt_lscan_mtinfo *info = par->matchinfo;
 
 	if ((info->match_stealth & ~1) || (info->match_syn & ~1) ||
 	    (info->match_cn & ~1) || (info->match_gr & ~1)) {
 		printk(KERN_WARNING PFX "Invalid flags\n");
-		return false;
+		return -EINVAL;
 	}
-	return true;
+	return 0;
 }
 
 static struct xt_match lscan_mt_reg[] __read_mostly = {

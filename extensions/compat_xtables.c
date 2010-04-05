@@ -84,6 +84,33 @@ static bool xtnu_match_check(const char *table, const void *entry,
 	return nm->checkentry(&local_par);
 }
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
+    LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+static bool xtnu_match_check(const struct xt_mtchk_param *par)
+{
+	struct xtnu_match *nm = xtcompat_numatch(cm);
+
+	if (nm == NULL)
+		return false;
+	if (nm->checkentry == NULL)
+		return true;
+	return nm->checkentry(par) == 0 ? true : false;
+}
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
+    LINUX_VERSION_CODE <  KERNEL_VERSION(2, 6, 34)
+static bool xtnu_match_check(const struct xt_mtchk_param *par)
+{
+	struct xtnu_match *nm = xtcompat_numatch(cm);
+
+	if (nm == NULL)
+		return false;
+	if (nm->checkentry == NULL)
+		return true;
+	return nm->checkentry(par);
+}
+#endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
 static void xtnu_match_destroy(const struct xt_match *cm, void *matchinfo,
@@ -105,7 +132,7 @@ static void xtnu_match_destroy(const struct xt_match *cm, void *matchinfo)
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 int xtnu_register_match(struct xtnu_match *nt)
 {
 	struct xt_match *ct;
@@ -250,6 +277,20 @@ static bool xtnu_target_check(const char *table, const void *entry,
 }
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
+    LINUX_VERSION_CODE <  KERNEL_VERSION(2, 6, 34)
+static bool xtnu_target_check(const struct xt_tgchk_param *par)
+{
+	struct xtnu_target *nt = xtcompat_nutarget(cm);
+
+	if (nt == NULL)
+		return false;
+	if (nt->checkentry == NULL)
+		return true;
+	return nt->checkentry(par) == 0 ? true : false;
+}
+#endif
+
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
 static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo,
     unsigned int targinfosize)
@@ -292,7 +333,7 @@ int xtnu_register_target(struct xtnu_target *nt)
 	ct->hooks      = nt->hooks;
 	ct->proto      = nt->proto;
 	ct->target     = xtnu_target_run;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	ct->checkentry = xtnu_target_check;
 	ct->destroy    = xtnu_target_destroy;
 #else

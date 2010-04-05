@@ -264,7 +264,7 @@ static int ipt_acc_table_insert(const char *name, __be32 ip, __be32 netmask)
 	return -1;
 }
 
-static bool ipt_acc_checkentry(const struct xt_tgchk_param *par)
+static int ipt_acc_checkentry(const struct xt_tgchk_param *par)
 {
 	struct ipt_acc_info *info = par->targinfo;
 	int table_nr;
@@ -276,13 +276,13 @@ static bool ipt_acc_checkentry(const struct xt_tgchk_param *par)
 
 	if (table_nr == -1) {
 		printk("ACCOUNT: Table insert problem. Aborting\n");
-		return false;
+		return -EINVAL;
 	}
 	/* Table nr caching so we don't have to do an extra string compare
 	   for every packet */
 	info->table_nr = table_nr;
 
-	return true;
+	return 0;
 }
 
 static void ipt_acc_destroy(const struct xt_tgdtor_param *par)

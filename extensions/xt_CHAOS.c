@@ -141,22 +141,22 @@ chaos_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 	return NF_DROP;
 }
 
-static bool chaos_tg_check(const struct xt_tgchk_param *par)
+static int chaos_tg_check(const struct xt_tgchk_param *par)
 {
 	const struct xt_chaos_tginfo *info = par->targinfo;
 
 	if (info->variant == XTCHAOS_DELUDE && !have_delude) {
 		printk(KERN_WARNING PFX "Error: Cannot use --delude when "
 		       "DELUDE module not available\n");
-		return false;
+		return -EINVAL;
 	}
 	if (info->variant == XTCHAOS_TARPIT && !have_tarpit) {
 		printk(KERN_WARNING PFX "Error: Cannot use --tarpit when "
 		       "TARPIT module not available\n");
-		return false;
+		return -EINVAL;
 	}
 
-	return true;
+	return 0;
 }
 
 static struct xt_target chaos_tg_reg = {

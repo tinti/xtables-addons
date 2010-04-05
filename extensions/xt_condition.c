@@ -109,7 +109,7 @@ condition_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 	return x ^ info->invert;
 }
 
-static bool condition_mt_check(const struct xt_mtchk_param *par)
+static int condition_mt_check(const struct xt_mtchk_param *par)
 {
 	struct xt_condition_mtinfo *info = par->matchinfo;
 	struct condition_variable *var;
@@ -121,21 +121,21 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 		printk(KERN_INFO KBUILD_MODNAME ": name not allowed or too "
 		       "long: \"%.*s\"\n", (unsigned int)sizeof(info->name),
 		       info->name);
-		return false;
+		return -EINVAL;
 	}
 	/*
 	 * Let's acquire the lock, check for the condition and add it
 	 * or increase the reference counter.
 	 */
 	if (mutex_lock_interruptible(&proc_lock) != 0)
-		return false;
+		return -EINTR;
 
 	list_for_each_entry(var, &conditions_list, list) {
 		if (strcmp(info->name, var->status_proc->name) == 0) {
 			var->refcount++;
 			mutex_unlock(&proc_lock);
 			info->condvar = var;
-			return true;
+			return 0;
 		}
 	}
 
@@ -143,7 +143,7 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 	var = kmalloc(sizeof(struct condition_variable), GFP_KERNEL);
 	if (var == NULL) {
 		mutex_unlock(&proc_lock);
-		return false;
+		return -ENOMEM;
 	}
 
 	/* Create the condition variable's proc file entry. */
@@ -152,7 +152,7 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 	if (var->status_proc == NULL) {
 		kfree(var);
 		mutex_unlock(&proc_lock);
-		return false;
+		return -ENOMEM;
 	}
 
 	var->refcount = 1;
@@ -169,7 +169,7 @@ static bool condition_mt_check(const struct xt_mtchk_param *par)
 	var->status_proc->gid = condition_gid_perms;
 	mutex_unlock(&proc_lock);
 	info->condvar = var;
-	return true;
+	return 0;
 }
 
 static void condition_mt_destroy(const struct xt_mtdtor_param *par)

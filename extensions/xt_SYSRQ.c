@@ -253,9 +253,8 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 }
 #endif
 
-static bool sysrq_tg_check(const struct xt_tgchk_param *par)
+static int sysrq_tg_check(const struct xt_tgchk_param *par)
 {
-
 	if (par->target->family == NFPROTO_IPV4) {
 		const struct ipt_entry *entry = par->entryinfo;
 
@@ -272,11 +271,11 @@ static bool sysrq_tg_check(const struct xt_tgchk_param *par)
 			goto out;
 	}
 
-	return true;
+	return 0;
 
  out:
 	printk(KERN_ERR KBUILD_MODNAME ": only available for UDP and UDP-Lite");
-	return false;
+	return -EINVAL;
 }
 
 static struct xt_target sysrq_tg_reg[] __read_mostly = {

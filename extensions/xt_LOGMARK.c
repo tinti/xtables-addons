@@ -81,17 +81,17 @@ logmark_tg(struct sk_buff **pskb, const struct xt_target_param *par)
 	return XT_CONTINUE;
 }
 
-static bool
+static int
 logmark_tg_check(const struct xt_tgchk_param *par)
 {
 	const struct xt_logmark_tginfo *info = par->targinfo;
 
 	if (info->level >= 8) {
 		pr_debug("LOGMARK: level %u >= 8\n", info->level);
-		return false;
+		return -EINVAL;
 	}
 
-	return true;
+	return 0;
 }
 
 static struct xt_target logmark_tg_reg[] __read_mostly = {

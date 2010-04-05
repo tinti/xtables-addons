@@ -285,13 +285,13 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 }
 #endif /* WITH_IPV6 */
 
-static bool tee_tg_check(const struct xt_tgchk_param *par)
+static int tee_tg_check(const struct xt_tgchk_param *par)
 {
 	const struct xt_tee_tginfo *info = par->targinfo;
 
 	/* 0.0.0.0 and :: not allowed */
-	return memcmp(&info->gw, &tee_zero_address,
-	       sizeof(tee_zero_address)) != 0;
+	return (memcmp(&info->gw, &tee_zero_address,
+	       sizeof(tee_zero_address)) == 0) ? -EINVAL : 0;
 }
 
 static struct xt_target tee_tg_reg[] __read_mostly = {

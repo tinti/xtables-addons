@@ -1064,9 +1064,9 @@ out:
 	return ret;
 }
 
-#define RETURN_ERR(err) do { printk(KERN_ERR PKNOCK err); return false; } while (false)
+#define RETURN_ERR(err) do { printk(KERN_ERR PKNOCK err); return -EINVAL; } while (false)
 
-static bool pknock_mt_check(const struct xt_mtchk_param *par)
+static int pknock_mt_check(const struct xt_mtchk_param *par)
 {
 	struct xt_pknock_mtinfo *info = par->matchinfo;
 
@@ -1124,9 +1124,10 @@ static bool pknock_mt_check(const struct xt_mtchk_param *par)
 	}
 
 	if (!add_rule(info))
+		/* should ENOMEM here */
 		RETURN_ERR("add_rule() error in checkentry() function.\n");
 
-	return true;
+	return 0;
 }
 
 static void pknock_mt_destroy(const struct xt_mtdtor_param *par)
