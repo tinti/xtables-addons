@@ -1,6 +1,13 @@
 
 HEAD
 ====
+- TEE: do rechecksumming in PREROUTING too
+- TEE: decrease TTL on cloned packet
+- TEE: set dont-fragment on cloned packets
+- TEE: free skb when route lookup failed
+- TEE: do not limit use to mangle table
+- TEE: do not retain iif and mark on cloned packet
+- TEE: new loop detection logic
 
 
 Xtables-addons 1.24 (March 17 2010)

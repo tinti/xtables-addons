@@ -33,6 +33,7 @@ static struct nf_conn tee_track;
 #include "compat_xtables.h"
 #include "xt_TEE.h"
 
+static bool tee_active[NR_CPUS];
 static const union nf_inet_addr tee_zero_address;
 
 /*
@@ -60,12 +61,6 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	struct flowi fl;
 
 	memset(&fl, 0, sizeof(fl));
-	fl.iif = skb_ifindex(skb);
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
-	fl.nl_u.ip4_u.fwmark = skb_nfmark(skb);
-#else
-	fl.mark = skb_nfmark(skb);
-#endif
 	fl.nl_u.ip4_u.daddr = info->gw.ip;
 	fl.nl_u.ip4_u.tos   = RT_TOS(iph->tos);
 	fl.nl_u.ip4_u.scope = RT_SCOPE_UNIVERSE;
@@ -76,6 +71,7 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 		if (net_ratelimit())
 			pr_debug(KBUILD_MODNAME
 			         ": could not route packet (%d)", err);
+		kfree_skb(skb);
 		return false;
 	}
 
@@ -134,44 +130,16 @@ static void tee_tg_send(struct sk_buff *skb)
 	}
 }
 
-/*
- * To detect and deter routed packet loopback when using the --tee option, we
- * take a page out of the raw.patch book: on the copied skb, we set up a fake
- * ->nfct entry, pointing to the local &route_tee_track. We skip routing
- * packets when we see they already have that ->nfct.
- */
 static unsigned int
 tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct xt_tee_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
+	struct iphdr *iph;
+	unsigned int cpu = smp_processor_id();
 
-#ifdef WITH_CONNTRACK
-	if (skb->nfct == &tee_track.ct_general) {
-		/*
-		 * Loopback - a packet we already routed, is to be
-		 * routed another time. Avoid that, now.
-		 */
-		if (net_ratelimit())
-			pr_debug(KBUILD_MODNAME "loopback - DROP!\n");
-		return NF_DROP;
-	}
-#endif
-
-	if (!skb_make_writable(pskb, sizeof(struct iphdr)))
-		return NF_DROP;
-	skb = *pskb;
-
-	/*
-	 * If we are in INPUT, the checksum must be recalculated since
-	 * the length could have changed as a result of defragmentation.
-	 */
-	if (par->hooknum == NF_INET_LOCAL_IN) {
-		struct iphdr *iph = ip_hdr(skb);
-		iph->check = 0;
-		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-	}
-
+	if (tee_active[cpu])
+		return XT_CONTINUE;
 	/*
 	 * Copy the skb, and route the copy. Will later return %XT_CONTINUE for
 	 * the original skb, which should continue on its way as if nothing has
@@ -181,15 +149,28 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	skb = skb_copy(skb, GFP_ATOMIC);
 	if (skb == NULL)
 		return XT_CONTINUE;
+	/*
+	 * If we are in PREROUTING/INPUT, the checksum must be recalculated
+	 * since the length could have changed as a result of defragmentation.
+	 *
+	 * We also decrease the TTL to mitigate potential TEE loops
+	 * between two hosts.
+	 *
+	 * Set %IP_DF so that the original source is notified of a potentially
+	 * decreased MTU on the clone route. IPv6 does this too.
+	 */
+	iph = ip_hdr(skb);
+	iph->frag_off |= htons(IP_DF);
+	if (par->hooknum == NF_INET_PRE_ROUTING ||
+	    par->hooknum == NF_INET_LOCAL_IN)
+		--iph->ttl;
+	ip_send_check(iph);
 
 #ifdef WITH_CONNTRACK
 	/*
-	 * Tell conntrack to forget this packet since it may get confused
-	 * when a packet is leaving with dst address == our address.
-	 * Good idea? Dunno. Need advice.
-	 *
-	 * NEW: mark the skb with our &tee_track, so we avoid looping
-	 * on any already routed packet.
+	 * Tell conntrack to forget this packet. It may have side effects to
+	 * see the same packet twice, as for example, accounting the original
+	 * connection for the cloned packet.
 	 */
 	nf_conntrack_put(skb->nfct);
 	skb->nfct     = &tee_track.ct_general;
@@ -213,9 +194,11 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	 * Also on purpose, no fragmentation is done, to preserve the
 	 * packet as best as possible.
 	 */
-	if (tee_tg_route4(skb, info))
+	if (tee_tg_route4(skb, info)) {
+		tee_active[cpu] = true;
 		tee_tg_send(skb);
-
+		tee_active[cpu] = false;
+	}
 	return XT_CONTINUE;
 }
 
@@ -228,13 +211,6 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	struct flowi fl;
 
 	memset(&fl, 0, sizeof(fl));
-	fl.iif = skb_ifindex(skb);
-	/* No mark in flowi before 2.6.19 */
-#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 19)
-	fl.nl_u.ip6_u.fwmark = skb_nfmark(skb);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
-	fl.mark = skb_nfmark(skb);
-#endif
 	fl.nl_u.ip6_u.daddr = info->gw.in6;
 	fl.nl_u.ip6_u.flowlabel = ((iph->flow_lbl[0] & 0xF) << 16) |
 		(iph->flow_lbl[1] << 8) | iph->flow_lbl[2];
@@ -247,6 +223,7 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	if (dst == NULL) {
 		if (net_ratelimit())
 			printk(KERN_ERR "ip6_route_output failed for tee\n");
+		kfree_skb(skb);
 		return false;
 	}
 
@@ -262,13 +239,10 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 {
 	const struct xt_tee_tginfo *info = par->targinfo;
 	struct sk_buff *skb = *pskb;
+	unsigned int cpu = smp_processor_id();
 
-	/* Try silence. */
-#ifdef WITH_CONNTRACK
-	if (skb->nfct == &tee_track.ct_general)
-		return NF_DROP;
-#endif
-
+	if (tee_active[cpu])
+		return XT_CONTINUE;
 	if ((skb = skb_copy(skb, GFP_ATOMIC)) == NULL)
 		return XT_CONTINUE;
 
@@ -278,9 +252,16 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 	skb->nfctinfo = IP_CT_NEW;
 	nf_conntrack_get(skb->nfct);
 #endif
-	if (tee_tg_route6(skb, info))
+	if (par->hooknum == NF_INET_PRE_ROUTING ||
+	    par->hooknum == NF_INET_LOCAL_IN) {
+		struct ipv6hdr *iph = ipv6_hdr(skb);
+		--iph->hop_limit;
+	}
+	if (tee_tg_route6(skb, info)) {
+		tee_active[cpu] = true;
 		tee_tg_send(skb);
-
+		tee_active[cpu] = false;
+	}
 	return XT_CONTINUE;
 }
 #endif /* WITH_IPV6 */
@@ -299,7 +280,6 @@ static struct xt_target tee_tg_reg[] __read_mostly = {
 		.name       = "TEE",
 		.revision   = 0,
 		.family     = NFPROTO_IPV4,
-		.table      = "mangle",
 		.target     = tee_tg4,
 		.targetsize = sizeof(struct xt_tee_tginfo),
 		.checkentry = tee_tg_check,
@@ -310,7 +290,6 @@ static struct xt_target tee_tg_reg[] __read_mostly = {
 		.name       = "TEE",
 		.revision   = 0,
 		.family     = NFPROTO_IPV6,
-		.table      = "mangle",
 		.target     = tee_tg6,
 		.targetsize = sizeof(struct xt_tee_tginfo),
 		.checkentry = tee_tg_check,
@@ -323,8 +302,7 @@ static int __init tee_tg_init(void)
 {
 #ifdef WITH_CONNTRACK
 	/*
-	 * Set up fake conntrack (stolen from raw.patch):
-	 * - to never be deleted, not in any hashes
+	 * Set up fake conntrack - to never be deleted, not in any hashes
 	 */
 	atomic_set(&tee_track.ct_general.use, 1);
 
