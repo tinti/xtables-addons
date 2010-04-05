@@ -8,7 +8,7 @@ _kcall = -C ${kbuilddir} M=${abs_srcdir}
 
 modules:
 	@echo -n "Xtables-addons ${PACKAGE_VERSION} - Linux "
-	@if [ -n "${kbuilddir}" ]; then ${MAKE} ${_kcall} -s kernelrelease; fi;
+	@if [ -n "${kbuilddir}" ]; then ${MAKE} ${_kcall} --no-print-directory -s kernelrelease; fi;
 	${AM_V_silent}if [ -n "${kbuilddir}" ]; then ${MAKE} ${_kcall} modules; fi;
 
 modules_install:
