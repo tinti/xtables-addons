@@ -8,6 +8,7 @@ HEAD
 - TEE: do not limit use to mangle table
 - TEE: do not retain iif and mark on cloned packet
 - TEE: new loop detection logic
+- TEE: use less expensive pskb_copy
 
 
 Xtables-addons 1.24 (March 17 2010)

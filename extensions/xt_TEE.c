@@ -146,7 +146,7 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	 * happened. The copy should be independently delivered to the TEE
 	 * --gateway.
 	 */
-	skb = skb_copy(skb, GFP_ATOMIC);
+	skb = pskb_copy(skb, GFP_ATOMIC);
 	if (skb == NULL)
 		return XT_CONTINUE;
 	/*
@@ -243,7 +243,8 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 
 	if (tee_active[cpu])
 		return XT_CONTINUE;
-	if ((skb = skb_copy(skb, GFP_ATOMIC)) == NULL)
+	skb = pskb_copy(skb, GFP_ATOMIC);
+	if (skb == NULL)
 		return XT_CONTINUE;
 
 #ifdef WITH_CONNTRACK
