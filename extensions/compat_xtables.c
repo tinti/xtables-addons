@@ -88,27 +88,13 @@ static bool xtnu_match_check(const char *table, const void *entry,
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static bool xtnu_match_check(const struct xt_mtchk_param *par)
 {
-	struct xtnu_match *nm = xtcompat_numatch(cm);
+	struct xtnu_match *nm = xtcompat_numatch(par->match);
 
 	if (nm == NULL)
 		return false;
 	if (nm->checkentry == NULL)
 		return true;
 	return nm->checkentry(par) == 0 ? true : false;
-}
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
-    LINUX_VERSION_CODE <  KERNEL_VERSION(2, 6, 34)
-static bool xtnu_match_check(const struct xt_mtchk_param *par)
-{
-	struct xtnu_match *nm = xtcompat_numatch(cm);
-
-	if (nm == NULL)
-		return false;
-	if (nm->checkentry == NULL)
-		return true;
-	return nm->checkentry(par);
 }
 #endif
 
@@ -154,9 +140,15 @@ int xtnu_register_match(struct xtnu_match *nt)
 	ct->table      = (char *)nt->table;
 	ct->hooks      = nt->hooks;
 	ct->proto      = nt->proto;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 	ct->match      = xtnu_match_run;
 	ct->checkentry = xtnu_match_check;
 	ct->destroy    = xtnu_match_destroy;
+#else
+	ct->match      = nt->match;
+	ct->checkentry = xtnu_match_check;
+	ct->destroy    = nt->destroy;
+#endif
 	ct->matchsize  = nt->matchsize;
 	ct->me         = nt->me;
 
@@ -281,7 +273,7 @@ static bool xtnu_target_check(const char *table, const void *entry,
     LINUX_VERSION_CODE <  KERNEL_VERSION(2, 6, 34)
 static bool xtnu_target_check(const struct xt_tgchk_param *par)
 {
-	struct xtnu_target *nt = xtcompat_nutarget(cm);
+	struct xtnu_target *nt = xtcompat_nutarget(par->target);
 
 	if (nt == NULL)
 		return false;
@@ -333,9 +325,12 @@ int xtnu_register_target(struct xtnu_target *nt)
 	ct->hooks      = nt->hooks;
 	ct->proto      = nt->proto;
 	ct->target     = xtnu_target_run;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 	ct->checkentry = xtnu_target_check;
 	ct->destroy    = xtnu_target_destroy;
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+	ct->checkentry = xtnu_target_check;
+	ct->destroy    = nt->destroy;
 #else
 	ct->checkentry = nt->checkentry;
 	ct->destroy    = nt->destroy;
