@@ -56,7 +56,7 @@ struct condition_variable {
 
 /* proc_lock is a user context only semaphore used for write access */
 /*           to the conditions' list.                               */
-static struct mutex proc_lock;
+static DEFINE_MUTEX(proc_lock);
 
 static LIST_HEAD(conditions_list);
 static struct proc_dir_entry *proc_net_condition;
@@ -122,9 +122,7 @@ static int condition_mt_check(const struct xt_mtchk_param *par)
 	 * Let's acquire the lock, check for the condition and add it
 	 * or increase the reference counter.
 	 */
-	if (mutex_lock_interruptible(&proc_lock) != 0)
-		return -EINTR;
-
+	mutex_lock(&proc_lock);
 	list_for_each_entry(var, &conditions_list, list) {
 		if (strcmp(info->name, var->status_proc->name) == 0) {
 			var->refcount++;
