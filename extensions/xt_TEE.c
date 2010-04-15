@@ -35,27 +35,10 @@
 static bool tee_active[NR_CPUS];
 static const union nf_inet_addr tee_zero_address;
 
-/*
- * Try to route the packet according to the routing keys specified in
- * route_info. Keys are :
- *  - ifindex :
- *      0 if no oif preferred,
- *      otherwise set to the index of the desired oif
- *  - route_info->gateway :
- *      0 if no gateway specified,
- *      otherwise set to the next host to which the pkt must be routed
- * If success, skb->dev is the output device to which the packet must
- * be sent and skb->dst is not NULL
- *
- * RETURN: false - if an error occured
- *         true  - if the packet was succesfully routed to the
- *                 destination desired
- */
 static bool
 tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 {
 	const struct iphdr *iph = ip_hdr(skb);
-	int err;
 	struct rtable *rt;
 	struct flowi fl;
 
@@ -64,12 +47,7 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	fl.nl_u.ip4_u.tos   = RT_TOS(iph->tos);
 	fl.nl_u.ip4_u.scope = RT_SCOPE_UNIVERSE;
 
-	/* Trying to route the packet using the standard routing table. */
-	err = ip_route_output_key(&init_net, &rt, &fl);
-	if (err != 0) {
-		if (net_ratelimit())
-			pr_debug(KBUILD_MODNAME
-			         ": could not route packet (%d)", err);
+	if (ip_route_output_key(&init_net, &rt, &fl) != 0) {
 		kfree_skb(skb);
 		return false;
 	}
@@ -118,15 +96,12 @@ static void tee_tg_send(struct sk_buff *skb)
 		skb = skb2;
 	}
 
-	if (dst->hh != NULL) {
+	if (dst->hh != NULL)
 		neigh_hh_output(dst->hh, skb);
-	} else if (dst->neighbour != NULL) {
+	else if (dst->neighbour != NULL)
 		dst->neighbour->output(skb);
-	} else {
-		if (net_ratelimit())
-			pr_debug(KBUILD_MODNAME "no hdr & no neighbour cache!\n");
+	else
 		kfree_skb(skb);
-	}
 }
 
 static unsigned int
@@ -220,8 +195,6 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	dst = ip6_route_output(dev_net(skb->dev), NULL, &fl);
 #endif
 	if (dst == NULL) {
-		if (net_ratelimit())
-			printk(KERN_ERR "ip6_route_output failed for tee\n");
 		kfree_skb(skb);
 		return false;
 	}
