@@ -47,10 +47,8 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	fl.nl_u.ip4_u.tos   = RT_TOS(iph->tos);
 	fl.nl_u.ip4_u.scope = RT_SCOPE_UNIVERSE;
 
-	if (ip_route_output_key(&init_net, &rt, &fl) != 0) {
-		kfree_skb(skb);
+	if (ip_route_output_key(&init_net, &rt, &fl) != 0)
 		return false;
-	}
 
 	dst_release(skb_dst(skb));
 	skb_dst_set(skb, &rt->u.dst);
@@ -172,6 +170,8 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 		tee_active[cpu] = true;
 		tee_tg_send(skb);
 		tee_active[cpu] = false;
+	} else {
+		kfree_skb(skb);
 	}
 	return XT_CONTINUE;
 }
@@ -194,10 +194,8 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 #else
 	dst = ip6_route_output(dev_net(skb->dev), NULL, &fl);
 #endif
-	if (dst == NULL) {
-		kfree_skb(skb);
+	if (dst == NULL)
 		return false;
-	}
 
 	dst_release(skb_dst(skb));
 	skb_dst_set(skb, dst);
@@ -234,6 +232,8 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 		tee_active[cpu] = true;
 		tee_tg_send(skb);
 		tee_active[cpu] = false;
+	} else {
+		kfree_skb(skb);
 	}
 	return XT_CONTINUE;
 }
