@@ -9,6 +9,7 @@ HEAD
 - TEE: do not retain iif and mark on cloned packet
 - TEE: new loop detection logic
 - TEE: use less expensive pskb_copy
+- condition: remove unnecessary RCU protection
 
 
 Xtables-addons 1.24 (March 17 2010)

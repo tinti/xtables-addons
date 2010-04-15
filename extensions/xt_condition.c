@@ -56,7 +56,7 @@ struct condition_variable {
 
 /* proc_lock is a user context only semaphore used for write access */
 /*           to the conditions' list.                               */
-static struct mutex proc_lock;
+static DEFINE_MUTEX(proc_lock);
 
 static LIST_HEAD(conditions_list);
 static struct proc_dir_entry *proc_net_condition;
@@ -100,13 +100,8 @@ condition_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 {
 	const struct xt_condition_mtinfo *info = par->matchinfo;
 	const struct condition_variable *var   = info->condvar;
-	bool x;
 
-	rcu_read_lock();
-	x = rcu_dereference(var->enabled);
-	rcu_read_unlock();
-
-	return x ^ info->invert;
+	return var->enabled ^ info->invert;
 }
 
 static int condition_mt_check(const struct xt_mtchk_param *par)
@@ -127,9 +122,7 @@ static int condition_mt_check(const struct xt_mtchk_param *par)
 	 * Let's acquire the lock, check for the condition and add it
 	 * or increase the reference counter.
 	 */
-	if (mutex_lock_interruptible(&proc_lock) != 0)
-		return -EINTR;
-
+	mutex_lock(&proc_lock);
 	list_for_each_entry(var, &conditions_list, list) {
 		if (strcmp(info->name, var->status_proc->name) == 0) {
 			var->refcount++;
@@ -164,7 +157,7 @@ static int condition_mt_check(const struct xt_mtchk_param *par)
 	wmb();
 	var->status_proc->read_proc  = condition_proc_read;
 	var->status_proc->write_proc = condition_proc_write;
-	list_add_rcu(&var->list, &conditions_list);
+	list_add(&var->list, &conditions_list);
 	var->status_proc->uid = condition_uid_perms;
 	var->status_proc->gid = condition_gid_perms;
 	mutex_unlock(&proc_lock);
@@ -179,16 +172,9 @@ static void condition_mt_destroy(const struct xt_mtdtor_param *par)
 
 	mutex_lock(&proc_lock);
 	if (--var->refcount == 0) {
-		list_del_rcu(&var->list);
+		list_del(&var->list);
 		remove_proc_entry(var->status_proc->name, proc_net_condition);
 		mutex_unlock(&proc_lock);
-		/*
-		 * synchronize_rcu() would be good enough, but
-		 * synchronize_net() guarantees that no packet
-		 * will go out with the old rule after
-		 * succesful removal.
-		 */
-		synchronize_net();
 		kfree(var);
 		return;
 	}
