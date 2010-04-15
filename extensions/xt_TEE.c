@@ -24,7 +24,6 @@
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
 #	define WITH_CONNTRACK 1
 #	include <net/netfilter/nf_conntrack.h>
-static struct nf_conn tee_track;
 #endif
 #if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
 #	define WITH_IPV6 1
@@ -173,7 +172,7 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	 * connection for the cloned packet.
 	 */
 	nf_conntrack_put(skb->nfct);
-	skb->nfct     = &tee_track.ct_general;
+	skb->nfct     = &nf_conntrack_untracked.ct_general;
 	skb->nfctinfo = IP_CT_NEW;
 	nf_conntrack_get(skb->nfct);
 #endif
@@ -249,7 +248,7 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 
 #ifdef WITH_CONNTRACK
 	nf_conntrack_put(skb->nfct);
-	skb->nfct     = &tee_track.ct_general;
+	skb->nfct     = &nf_conntrack_untracked.ct_general;
 	skb->nfctinfo = IP_CT_NEW;
 	nf_conntrack_get(skb->nfct);
 #endif
@@ -301,26 +300,12 @@ static struct xt_target tee_tg_reg[] __read_mostly = {
 
 static int __init tee_tg_init(void)
 {
-#ifdef WITH_CONNTRACK
-	/*
-	 * Set up fake conntrack - to never be deleted, not in any hashes
-	 */
-	atomic_set(&tee_track.ct_general.use, 1);
-
-	/* - and look it like as a confirmed connection */
-	set_bit(IPS_CONFIRMED_BIT, &tee_track.status);
-
-	/* Initialize fake conntrack so that NAT will skip it */
-	tee_track.status |= IPS_NAT_DONE_MASK;
-#endif
-
 	return xt_register_targets(tee_tg_reg, ARRAY_SIZE(tee_tg_reg));
 }
 
 static void __exit tee_tg_exit(void)
 {
 	xt_unregister_targets(tee_tg_reg, ARRAY_SIZE(tee_tg_reg));
-	/* [SC]: shoud not we cleanup tee_track here? */
 }
 
 module_init(tee_tg_init);
