@@ -24,7 +24,6 @@
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
 #	define WITH_CONNTRACK 1
 #	include <net/netfilter/nf_conntrack.h>
-static struct nf_conn tee_track;
 #endif
 #if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
 #	define WITH_IPV6 1
@@ -36,27 +35,10 @@ static struct nf_conn tee_track;
 static bool tee_active[NR_CPUS];
 static const union nf_inet_addr tee_zero_address;
 
-/*
- * Try to route the packet according to the routing keys specified in
- * route_info. Keys are :
- *  - ifindex :
- *      0 if no oif preferred,
- *      otherwise set to the index of the desired oif
- *  - route_info->gateway :
- *      0 if no gateway specified,
- *      otherwise set to the next host to which the pkt must be routed
- * If success, skb->dev is the output device to which the packet must
- * be sent and skb->dst is not NULL
- *
- * RETURN: false - if an error occured
- *         true  - if the packet was succesfully routed to the
- *                 destination desired
- */
 static bool
 tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 {
 	const struct iphdr *iph = ip_hdr(skb);
-	int err;
 	struct rtable *rt;
 	struct flowi fl;
 
@@ -65,15 +47,8 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	fl.nl_u.ip4_u.tos   = RT_TOS(iph->tos);
 	fl.nl_u.ip4_u.scope = RT_SCOPE_UNIVERSE;
 
-	/* Trying to route the packet using the standard routing table. */
-	err = ip_route_output_key(&init_net, &rt, &fl);
-	if (err != 0) {
-		if (net_ratelimit())
-			pr_debug(KBUILD_MODNAME
-			         ": could not route packet (%d)", err);
-		kfree_skb(skb);
+	if (ip_route_output_key(&init_net, &rt, &fl) != 0)
 		return false;
-	}
 
 	dst_release(skb_dst(skb));
 	skb_dst_set(skb, &rt->u.dst);
@@ -119,15 +94,12 @@ static void tee_tg_send(struct sk_buff *skb)
 		skb = skb2;
 	}
 
-	if (dst->hh != NULL) {
+	if (dst->hh != NULL)
 		neigh_hh_output(dst->hh, skb);
-	} else if (dst->neighbour != NULL) {
+	else if (dst->neighbour != NULL)
 		dst->neighbour->output(skb);
-	} else {
-		if (net_ratelimit())
-			pr_debug(KBUILD_MODNAME "no hdr & no neighbour cache!\n");
+	else
 		kfree_skb(skb);
-	}
 }
 
 static unsigned int
@@ -173,7 +145,7 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 	 * connection for the cloned packet.
 	 */
 	nf_conntrack_put(skb->nfct);
-	skb->nfct     = &tee_track.ct_general;
+	skb->nfct     = &nf_conntrack_untracked.ct_general;
 	skb->nfctinfo = IP_CT_NEW;
 	nf_conntrack_get(skb->nfct);
 #endif
@@ -198,6 +170,8 @@ tee_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 		tee_active[cpu] = true;
 		tee_tg_send(skb);
 		tee_active[cpu] = false;
+	} else {
+		kfree_skb(skb);
 	}
 	return XT_CONTINUE;
 }
@@ -220,12 +194,8 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 #else
 	dst = ip6_route_output(dev_net(skb->dev), NULL, &fl);
 #endif
-	if (dst == NULL) {
-		if (net_ratelimit())
-			printk(KERN_ERR "ip6_route_output failed for tee\n");
-		kfree_skb(skb);
+	if (dst == NULL)
 		return false;
-	}
 
 	dst_release(skb_dst(skb));
 	skb_dst_set(skb, dst);
@@ -249,7 +219,7 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 
 #ifdef WITH_CONNTRACK
 	nf_conntrack_put(skb->nfct);
-	skb->nfct     = &tee_track.ct_general;
+	skb->nfct     = &nf_conntrack_untracked.ct_general;
 	skb->nfctinfo = IP_CT_NEW;
 	nf_conntrack_get(skb->nfct);
 #endif
@@ -262,6 +232,8 @@ tee_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 		tee_active[cpu] = true;
 		tee_tg_send(skb);
 		tee_active[cpu] = false;
+	} else {
+		kfree_skb(skb);
 	}
 	return XT_CONTINUE;
 }
@@ -301,26 +273,12 @@ static struct xt_target tee_tg_reg[] __read_mostly = {
 
 static int __init tee_tg_init(void)
 {
-#ifdef WITH_CONNTRACK
-	/*
-	 * Set up fake conntrack - to never be deleted, not in any hashes
-	 */
-	atomic_set(&tee_track.ct_general.use, 1);
-
-	/* - and look it like as a confirmed connection */
-	set_bit(IPS_CONFIRMED_BIT, &tee_track.status);
-
-	/* Initialize fake conntrack so that NAT will skip it */
-	tee_track.status |= IPS_NAT_DONE_MASK;
-#endif
-
 	return xt_register_targets(tee_tg_reg, ARRAY_SIZE(tee_tg_reg));
 }
 
 static void __exit tee_tg_exit(void)
 {
 	xt_unregister_targets(tee_tg_reg, ARRAY_SIZE(tee_tg_reg));
-	/* [SC]: shoud not we cleanup tee_track here? */
 }
 
 module_init(tee_tg_init);
