@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+Xtables-addons 1.25 (April 26 2010)
+===================================
 - TEE: do rechecksumming in PREROUTING too
 - TEE: decrease TTL on cloned packet
 - TEE: set dont-fragment on cloned packets
