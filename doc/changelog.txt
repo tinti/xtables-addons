@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- compat_xtables: fix 2.6.34 compile error due to a typo
 
 
 Xtables-addons 1.25 (April 26 2010)

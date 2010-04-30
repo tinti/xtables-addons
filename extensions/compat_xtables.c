@@ -270,7 +270,7 @@ static bool xtnu_target_check(const char *table, const void *entry,
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
-    LINUX_VERSION_CODE <  KERNEL_VERSION(2, 6, 34)
+    LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static bool xtnu_target_check(const struct xt_tgchk_param *par)
 {
 	struct xtnu_target *nt = xtcompat_nutarget(par->target);
