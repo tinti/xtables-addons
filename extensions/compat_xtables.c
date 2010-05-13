@@ -207,12 +207,9 @@ static unsigned int xtnu_target_run(struct sk_buff **pskb,
 static unsigned int xtnu_target_run(struct sk_buff *skb,
     const struct net_device *in, const struct net_device *out,
     unsigned int hooknum, const struct xt_target *ct, const void *targinfo)
-#else
-static unsigned int
-xtnu_target_run(struct sk_buff *skb, const struct xt_target_param *par)
 #endif
-{
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+{
 	struct xtnu_target *nt = xtcompat_nutarget(ct);
 	struct xt_target_param local_par = {
 		.in       = in,
@@ -222,20 +219,25 @@ xtnu_target_run(struct sk_buff *skb, const struct xt_target_param *par)
 		.targinfo = targinfo,
 		.family   = NFPROTO_UNSPEC,
 	};
-#else
-	struct xtnu_target *nt = xtcompat_nutarget(par->target);
-#endif
 
 	if (nt != NULL && nt->target != NULL)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 		return nt->target(pskb, &local_par);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 		return nt->target(&skb, &local_par);
-#else
-		return nt->target(&skb, par);
 #endif
 	return XT_CONTINUE;
 }
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
+    LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+static unsigned int
+xtnu_target_run(struct sk_buff *skb, const struct xt_target_param *par)
+{
+	struct xtnu_target *nt = xtcompat_nutarget(par->target);
+	return nt->target(&skb, par);
+}
+#endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
 static int xtnu_target_check(const char *table, const void *entry,
