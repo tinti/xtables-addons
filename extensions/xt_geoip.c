@@ -141,7 +141,7 @@ static bool geoip_bsearch(const struct geoip_subnet *range,
 }
 
 static bool
-xt_geoip_mt(const struct sk_buff *skb, const struct xt_action_param *par)
+xt_geoip_mt(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct xt_geoip_match_info *info = par->matchinfo;
 	const struct geoip_country_kernel *node;

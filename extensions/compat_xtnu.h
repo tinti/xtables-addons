@@ -95,7 +95,7 @@ struct xtnu_match {
 	 */
 	char name[sizeof(((struct xt_match *)NULL)->name) - 1 - sizeof(void *)];
 	uint8_t revision;
-	bool (*match)(const struct sk_buff *, const struct xt_action_param *);
+	bool (*match)(const struct sk_buff *, struct xt_action_param *);
 	int (*checkentry)(const struct xt_mtchk_param *);
 	void (*destroy)(const struct xt_mtdtor_param *);
 	struct module *me;

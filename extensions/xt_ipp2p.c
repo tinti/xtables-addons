@@ -808,7 +808,7 @@ static const struct {
 };
 
 static bool
-ipp2p_mt(const struct sk_buff *skb, const struct xt_action_param *par)
+ipp2p_mt(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct ipt_p2p_info *info = par->matchinfo;
 	const unsigned char  *haystack;

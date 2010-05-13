@@ -189,7 +189,7 @@ static void quota_mt2_destroy(const struct xt_mtdtor_param *par)
 }
 
 static bool
-quota_mt2(const struct sk_buff *skb, const struct xt_action_param *par)
+quota_mt2(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	struct xt_quota_mtinfo2 *q = (void *)par->matchinfo;
 	struct xt_quota_counter *e = q->master;
