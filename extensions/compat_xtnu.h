@@ -84,6 +84,7 @@ struct xt_tgdtor_param {
 struct xtnu_match {
 	struct list_head list;
 	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
+	uint8_t revision;
 	bool (*match)(const struct sk_buff *, const struct xt_match_param *);
 	int (*checkentry)(const struct xt_mtchk_param *);
 	void (*destroy)(const struct xt_mtdtor_param *);
@@ -91,7 +92,6 @@ struct xtnu_match {
 	const char *table;
 	unsigned int matchsize, hooks;
 	unsigned short proto, family;
-	uint8_t revision;
 
 	void *__compat_match;
 };
@@ -99,6 +99,7 @@ struct xtnu_match {
 struct xtnu_target {
 	struct list_head list;
 	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
+	uint8_t revision;
 	unsigned int (*target)(struct sk_buff **,
 		const struct xt_target_param *);
 	int (*checkentry)(const struct xt_tgchk_param *);
@@ -107,7 +108,6 @@ struct xtnu_target {
 	const char *table;
 	unsigned int targetsize, hooks;
 	unsigned short proto, family;
-	uint8_t revision;
 
 	void *__compat_target;
 };
