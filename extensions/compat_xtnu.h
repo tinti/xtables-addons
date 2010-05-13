@@ -83,7 +83,11 @@ struct xt_tgdtor_param {
 
 struct xtnu_match {
 	struct list_head list;
-	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
+	/*
+	 * Making it smaller by sizeof(void *) on purpose to catch
+	 * lossy translation, if any.
+	 */
+	char name[sizeof(((struct xt_match *)NULL)->name) - 1 - sizeof(void *)];
 	uint8_t revision;
 	bool (*match)(const struct sk_buff *, const struct xt_match_param *);
 	int (*checkentry)(const struct xt_mtchk_param *);
@@ -98,7 +102,7 @@ struct xtnu_match {
 
 struct xtnu_target {
 	struct list_head list;
-	char name[XT_FUNCTION_MAXNAMELEN - 1 - sizeof(void *)];
+	char name[sizeof(((struct xt_target *)NULL)->name) - 1 - sizeof(void *)];
 	uint8_t revision;
 	unsigned int (*target)(struct sk_buff **,
 		const struct xt_target_param *);
