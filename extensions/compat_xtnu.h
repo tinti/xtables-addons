@@ -82,7 +82,6 @@ struct xt_tgdtor_param {
 #endif
 
 struct xtnu_match {
-	struct list_head list;
 	/*
 	 * Making it smaller by sizeof(void *) on purpose to catch
 	 * lossy translation, if any.
@@ -101,7 +100,6 @@ struct xtnu_match {
 };
 
 struct xtnu_target {
-	struct list_head list;
 	char name[sizeof(((struct xt_target *)NULL)->name) - 1 - sizeof(void *)];
 	uint8_t revision;
 	unsigned int (*target)(struct sk_buff **,
