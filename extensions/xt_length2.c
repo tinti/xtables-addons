@@ -209,7 +209,7 @@ length2_mt6(const struct sk_buff *skb, struct xt_action_param *par)
 	if (info->flags & XT_LENGTH_LAYER3) {
 		len = sizeof(struct ipv6hdr) + ntohs(iph->payload_len);
 	} else {
-		l4proto = llayer4_proto(skb, &thoff, par->hotdrop);
+		l4proto = llayer4_proto(skb, &thoff, &par->hotdrop);
 		if (l4proto == NEXTHDR_MAX)
 			return false;
 		if (info->flags & XT_LENGTH_LAYER4)

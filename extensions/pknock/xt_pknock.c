@@ -975,7 +975,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 		/* We've been asked to examine this packet, and we
 		 * can't. Hence, no choice but to drop.
 		 */
-		*par->hotdrop = true;
+		par->hotdrop = true;
 		return false;
 	}
 

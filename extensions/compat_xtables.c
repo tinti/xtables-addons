@@ -34,7 +34,7 @@ static bool xtnu_match_run(const struct sk_buff *skb,
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 {
 	struct xtnu_match *nm = xtcompat_numatch(cm);
-	bool lo_drop = false, lo_ret;
+	bool lo_ret;
 	struct xt_action_param local_par;
 	local_par.in        = in;
 	local_par.out       = out;
@@ -42,13 +42,13 @@ static bool xtnu_match_run(const struct sk_buff *skb,
 	local_par.matchinfo = matchinfo;
 	local_par.fragoff   = offset;
 	local_par.thoff     = protoff;
-	local_par.hotdrop   = &lo_drop;
+	local_par.hotdrop   = false;
 	local_par.family    = NFPROTO_UNSPEC; /* don't have that info */
 
 	if (nm == NULL || nm->match == NULL)
 		return false;
 	lo_ret = nm->match(skb, &local_par);
-	*hotdrop = lo_drop;
+	*hotdrop = local_par.hotdrop;
 	return lo_ret;
 }
 #endif
@@ -59,6 +59,7 @@ static bool xtnu_match_run(const struct sk_buff *skb,
 {
 	struct xtnu_match *nm = xtcompat_numatch(par->match);
 	struct xt_action_param local_par;
+	bool ret;
 
 	local_par.in        = par->in;
 	local_par.out       = par->out;
@@ -66,12 +67,14 @@ static bool xtnu_match_run(const struct sk_buff *skb,
 	local_par.matchinfo = par->matchinfo;
 	local_par.fragoff   = par->fragoff;
 	local_par.thoff     = par->thoff;
-	local_par.hotdrop   = par->hotdrop;
+	local_par.hotdrop   = false;
 	local_par.family    = par->family;
 
 	if (nm == NULL || nm->match == NULL)
 		return false;
-	return nm->match(skb, &local_par);
+	ret = nm->match(skb, &local_par);
+	*par->hotdrop = local_par.hotdrop;
+	return ret;
 }
 #endif
 

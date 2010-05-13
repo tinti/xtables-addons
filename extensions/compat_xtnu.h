@@ -84,7 +84,7 @@ struct xt_action_param {
 	int fragoff;
 	unsigned int thoff, hooknum;
 	u_int8_t family;
-	bool *hotdrop;
+	bool hotdrop;
 };
 #endif
 
