@@ -171,7 +171,7 @@ static inline unsigned int lscan_mt_full(int mark,
 }
 
 static bool
-lscan_mt(const struct sk_buff *skb, const struct xt_match_param *par)
+lscan_mt(const struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_lscan_mtinfo *info = par->matchinfo;
 	enum ip_conntrack_info ctstate;

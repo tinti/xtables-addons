@@ -21,7 +21,7 @@
 #include "compat_xtables.h"
 
 static unsigned int
-echo_tg4(struct sk_buff **poldskb, const struct xt_target_param *par)
+echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
 {
 	const struct sk_buff *oldskb = *poldskb;
 	const struct udphdr *oldudp;

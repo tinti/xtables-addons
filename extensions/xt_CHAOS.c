@@ -45,7 +45,7 @@ static const struct xt_tcp tcp_params = {
 
 /* CHAOS functions */
 static void
-xt_chaos_total(struct sk_buff *skb, const struct xt_target_param *par)
+xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_chaos_tginfo *info = par->targinfo;
 	const struct iphdr *iph = ip_hdr(skb);
@@ -88,15 +88,21 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_target_param *par)
 	destiny->target(skb, par->in, par->out, par->hooknum, destiny, NULL);
 #else
 	{
-		struct xt_target_param local_par = *par;
-		local_par.target = destiny;
+		struct xt_target_param local_par = {
+			.in       = par->in,
+			.out      = par->out,
+			.hooknum  = par->hooknum,
+			.target   = destiny,
+			.targinfo = par->targinfo,
+			.family   = par->family,
+		};
 		destiny->target(skb, &local_par);
 	}
 #endif
 }
 
 static unsigned int
-chaos_tg(struct sk_buff **pskb, const struct xt_target_param *par)
+chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	/*
 	 * Equivalent to:

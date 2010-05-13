@@ -60,7 +60,7 @@ static uint8_t mf_low(uint32_t tx, uint32_t mini, uint32_t maxi)
 }
 
 static bool
-fuzzy_mt(const struct sk_buff *skb, const struct xt_match_param *par)
+fuzzy_mt(const struct sk_buff *skb, const struct xt_action_param *par)
 {
 	struct xt_fuzzy_mtinfo *info = (void *)par->matchinfo;
 	unsigned long amount;

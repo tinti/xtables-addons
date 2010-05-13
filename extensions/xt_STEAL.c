@@ -8,7 +8,7 @@
 #include "compat_xtables.h"
 
 static unsigned int
-steal_tg(struct sk_buff **pskb, const struct xt_target_param *par)
+steal_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	kfree_skb(*pskb);
 	return NF_STOLEN;

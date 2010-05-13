@@ -29,7 +29,7 @@ static uint32_t ipv4options_rd(const uint8_t *data, int len)
 }
 
 static bool ipv4options_mt(const struct sk_buff *skb,
-    const struct xt_match_param *par)
+    const struct xt_action_param *par)
 {
 	const struct xt_ipv4options_mtinfo1 *info = par->matchinfo;
 	const struct iphdr *iph = ip_hdr(skb);

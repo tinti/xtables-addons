@@ -188,7 +188,7 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 }
 
 static unsigned int
-tarpit_tg(struct sk_buff **pskb, const struct xt_target_param *par)
+tarpit_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
