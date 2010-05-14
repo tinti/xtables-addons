@@ -6,7 +6,7 @@ use strict;
 
 &main(\@ARGV);
 
-sub main ($)
+sub main
 {
 	local *FH;
 
@@ -30,7 +30,7 @@ sub main ($)
 	close FH;
 }
 
-sub process_index ($)
+sub process_index
 {
 	my $top = shift @_;
 	my($agent, $res, $url);
@@ -68,14 +68,14 @@ sub process_index ($)
 	}
 }
 
-sub slash_remove ($)
+sub slash_remove
 {
 	my $s = shift @_;
 	$s =~ s{(\w+://)(.*)}{$1.&slash_remove2($2)}eg;
 	return $s;
 }
 
-sub slash_remove2 ($)
+sub slash_remove2
 {
 	my $s = shift @_;
 	$s =~ s{/+}{/}g;
