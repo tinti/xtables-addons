@@ -275,6 +275,15 @@ xtnu_target_run(struct sk_buff *skb, const struct xt_target_param *par)
 	return nt->target(&skb, &local_par);
 }
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35)
+static unsigned int
+xtnu_target_run(struct sk_buff *skb, const struct xt_action_param *par)
+{
+	struct xtnu_target *nt = xtcompat_nutarget(par->target);
+
+	return nt->target(&skb, par);
+}
+#endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
 static int xtnu_target_check(const char *table, const void *entry,

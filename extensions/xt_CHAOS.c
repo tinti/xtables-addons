@@ -62,7 +62,7 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 	ret = xm_tcp->match(skb, par->in, par->out, xm_tcp, &tcp_params,
 	                    fragoff, thoff, &hotdrop);
-#else
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	{
 		struct xt_match_param local_par = {
 			.in        = par->in,
@@ -75,6 +75,19 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 		};
 		ret = xm_tcp->match(skb, &local_par);
 	}
+#else
+	{
+		struct xt_action_param local_par;
+		local_par.in        = par->in,
+		local_par.out       = par->out,
+		local_par.match     = xm_tcp;
+		local_par.matchinfo = &tcp_params;
+		local_par.fragoff   = fragoff;
+		local_par.thoff     = thoff;
+		local_par.hotdrop   = false;
+		ret = xm_tcp->match(skb, &local_par);
+		hotdrop = local_par.hotdrop;
+	}
 #endif
 	if (!ret || hotdrop || (unsigned int)net_random() > delude_percentage)
 		return;
@@ -86,7 +99,7 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 	destiny->target(&skb, par->in, par->out, par->hooknum, destiny, NULL);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 	destiny->target(skb, par->in, par->out, par->hooknum, destiny, NULL);
-#else
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	{
 		struct xt_target_param local_par = {
 			.in       = par->in,
@@ -96,6 +109,17 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 			.targinfo = par->targinfo,
 			.family   = par->family,
 		};
+		destiny->target(skb, &local_par);
+	}
+#else
+	{
+		struct xt_action_param local_par;
+		local_par.in       = par->in;
+		local_par.out      = par->out;
+		local_par.hooknum  = par->hooknum;
+		local_par.target   = destiny;
+		local_par.targinfo = par->targinfo;
+		local_par.family   = par->family;
 		destiny->target(skb, &local_par);
 	}
 #endif
@@ -126,7 +150,7 @@ chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 		return xt_reject->target(skb, par->in, par->out, par->hooknum,
 		       xt_reject, &reject_params);
-#else
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 		struct xt_target_param local_par = {
 			.in       = par->in,
 			.out      = par->out,
@@ -134,6 +158,14 @@ chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 			.target   = xt_reject,
 			.targinfo = &reject_params,
 		};
+		return xt_reject->target(skb, &local_par);
+#else
+		struct xt_action_param local_par;
+		local_par.in       = par->in;
+		local_par.out      = par->out;
+		local_par.hooknum  = par->hooknum;
+		local_par.target   = xt_reject;
+		local_par.targinfo = &reject_params;
 		return xt_reject->target(skb, &local_par);
 #endif
 	}
