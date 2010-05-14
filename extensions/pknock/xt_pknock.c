@@ -958,7 +958,7 @@ is_close_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 }
 
 static bool pknock_mt(const struct sk_buff *skb,
-    const struct xt_match_param *par)
+    struct xt_action_param *par)
 {
 	const struct xt_pknock_mtinfo *info = par->matchinfo;
 	struct xt_pknock_rule *rule;
@@ -975,7 +975,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 		/* We've been asked to examine this packet, and we
 		 * can't. Hence, no choice but to drop.
 		 */
-		*par->hotdrop = true;
+		par->hotdrop = true;
 		return false;
 	}
 

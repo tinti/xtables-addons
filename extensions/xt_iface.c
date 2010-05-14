@@ -41,7 +41,7 @@ static const struct xt_iface_flag_pairs xt_iface_lookup[] =
 };
 
 static bool xt_iface_mt(const struct sk_buff *skb,
-    const struct xt_match_param *par)
+    struct xt_action_param *par)
 {
 	const struct xt_iface_mtinfo *info = par->matchinfo;
 	struct net_device *dev;

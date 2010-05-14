@@ -38,7 +38,7 @@ match_set(const struct ipt_set_info *info,
 }
 
 static bool
-match(const struct sk_buff *skb, const struct xt_match_param *par)
+match(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct ipt_set_info_match *info = par->matchinfo;
 		

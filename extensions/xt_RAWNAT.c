@@ -125,7 +125,7 @@ static unsigned int rawnat4_writable_part(const struct iphdr *iph)
 }
 
 static unsigned int
-rawsnat_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
+rawsnat_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	struct iphdr *iph;
@@ -147,7 +147,7 @@ rawsnat_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
 }
 
 static unsigned int
-rawdnat_tg4(struct sk_buff **pskb, const struct xt_target_param *par)
+rawdnat_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	struct iphdr *iph;
@@ -241,7 +241,7 @@ static void rawnat6_update_l4(struct sk_buff *skb, unsigned int l4proto,
 }
 
 static unsigned int
-rawsnat_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
+rawsnat_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	unsigned int l4offset, l4proto;
@@ -262,7 +262,7 @@ rawsnat_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
 }
 
 static unsigned int
-rawdnat_tg6(struct sk_buff **pskb, const struct xt_target_param *par)
+rawdnat_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	unsigned int l4offset, l4proto;

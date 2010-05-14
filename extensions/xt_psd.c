@@ -100,7 +100,7 @@ static inline int hashfunc(struct in_addr addr)
 }
 
 static bool
-xt_psd_match(const struct sk_buff *pskb, const struct xt_match_param *match)
+xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
 	const struct iphdr *iph;
 	const struct tcphdr *tcph;

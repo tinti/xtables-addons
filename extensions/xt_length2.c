@@ -137,7 +137,7 @@ static bool xtlength_layer7(unsigned int *length, const struct sk_buff *skb,
 }
 
 static bool
-length2_mt(const struct sk_buff *skb, const struct xt_match_param *par)
+length2_mt(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct xt_length_mtinfo2 *info = par->matchinfo;
 	const struct iphdr *iph = ip_hdr(skb);
@@ -198,7 +198,7 @@ llayer4_proto(const struct sk_buff *skb, unsigned int *offset, bool *hotdrop)
 }
 
 static bool
-length2_mt6(const struct sk_buff *skb, const struct xt_match_param *par)
+length2_mt6(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct xt_length_mtinfo2 *info = par->matchinfo;
 	const struct ipv6hdr *iph = ipv6_hdr(skb);
@@ -209,7 +209,7 @@ length2_mt6(const struct sk_buff *skb, const struct xt_match_param *par)
 	if (info->flags & XT_LENGTH_LAYER3) {
 		len = sizeof(struct ipv6hdr) + ntohs(iph->payload_len);
 	} else {
-		l4proto = llayer4_proto(skb, &thoff, par->hotdrop);
+		l4proto = llayer4_proto(skb, &thoff, &par->hotdrop);
 		if (l4proto == NEXTHDR_MAX)
 			return false;
 		if (info->flags & XT_LENGTH_LAYER4)

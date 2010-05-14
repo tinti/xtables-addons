@@ -69,7 +69,7 @@ static bool ether_cmp(const unsigned char *lh, const unsigned char *rh,
 }
 
 static bool
-dhcpmac_mt(const struct sk_buff *skb, const struct xt_match_param *par)
+dhcpmac_mt(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct dhcpmac_info *info = par->matchinfo;
 	const struct dhcp_message *dh;
@@ -89,7 +89,7 @@ dhcpmac_mt(const struct sk_buff *skb, const struct xt_match_param *par)
 }
 
 static unsigned int
-dhcpmac_tg(struct sk_buff **pskb, const struct xt_target_param *par)
+dhcpmac_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct dhcpmac_info *info = par->targinfo;
 	struct dhcp_message dhcpbuf, *dh;

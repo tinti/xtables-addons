@@ -478,7 +478,7 @@ static void ipt_acc_depth2_insert(struct ipt_acc_mask_8 *mask_8,
 	}
 }
 
-static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_target_param *par)
+static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct ipt_acc_info *info =
 		par->targinfo;

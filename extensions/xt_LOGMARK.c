@@ -30,7 +30,7 @@ static const char *const dir_names[] = {
 };
 
 static unsigned int
-logmark_tg(struct sk_buff **pskb, const struct xt_target_param *par)
+logmark_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct sk_buff *skb = *pskb;
 	const struct xt_logmark_tginfo *info = par->targinfo;

@@ -29,7 +29,7 @@
 #include "../compat_xtables.h"
 
 static unsigned int
-target(struct sk_buff **pskb, const struct xt_target_param *par)
+target(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct ipt_set_info_target *info = par->targinfo;
 
