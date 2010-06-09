@@ -135,13 +135,13 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 			"0123456789abcdef"[sysrq_digest[i] & 0xf];
 	}
 	sysrq_hexdigest[2*sysrq_digest_size] = '\0';
-	if (len - n < sysrq_digest_size) {
+	if (len - n < sysrq_digest_size * 2) {
 		if (sysrq_debug)
 			printk(KERN_INFO KBUILD_MODNAME ": Short digest,"
 			       " expected %s\n", sysrq_hexdigest);
 		return NF_DROP;
 	}
-	if (strncmp(data + n, sysrq_hexdigest, sysrq_digest_size) != 0) {
+	if (strncmp(data + n, sysrq_hexdigest, sysrq_digest_size * 2) != 0) {
 		if (sysrq_debug)
 			printk(KERN_INFO KBUILD_MODNAME ": Bad digest,"
 			       " expected %s\n", sysrq_hexdigest);
@@ -324,8 +324,8 @@ static int __init sysrq_crypto_init(void)
 		printk(KERN_WARNING KBUILD_MODNAME
 			": Error: Could not find or load %s hash\n",
 			sysrq_hash);
-		sysrq_tfm = NULL;
 		ret = PTR_ERR(sysrq_tfm);
+		sysrq_tfm = NULL;
 		goto fail;
 	}
 	sysrq_digest_size = crypto_hash_digestsize(sysrq_tfm);
