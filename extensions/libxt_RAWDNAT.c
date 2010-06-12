@@ -79,7 +79,7 @@ rawdnat_tg6_parse(int c, char **argv, int invert, unsigned int *flags,
 		end = strchr(optarg, '/');
 		if (end != NULL) {
 			*end++ = '\0';
-			if (!xtables_strtoui(end, NULL, &mask, 0, 32))
+			if (!xtables_strtoui(end, NULL, &mask, 0, 128))
 				xtables_param_act(XTF_BAD_VALUE, "RAWDNAT",
 					"--to-destination", optarg);
 			info->mask = mask;

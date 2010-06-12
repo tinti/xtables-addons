@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- RAWNAT: IPv6 variants erroneously rejected masks /33-/128
 
 
 Xtables-addons 1.27 (May 16 2010)
