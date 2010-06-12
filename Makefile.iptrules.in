@@ -8,6 +8,7 @@ xtlibdir        = @xtlibdir@
 
 CC              = @CC@
 CCLD            = ${CC}
+CFLAGS          = @CFLAGS@
 
 regular_CFLAGS  = @regular_CFLAGS@
 libxtables_CFLAGS = @libxtables_CFLAGS@
