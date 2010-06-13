@@ -126,13 +126,13 @@ static bool geoip_bsearch(const struct geoip_subnet *range,
 {
 	int mid;
 
-	if (hi < lo)
+	if (hi <= lo)
 		return false;
 	mid = (lo + hi) / 2;
 	if (range[mid].begin <= addr && addr <= range[mid].end)
 		return true;
 	if (range[mid].begin > addr)
-		return geoip_bsearch(range, addr, lo, mid - 1);
+		return geoip_bsearch(range, addr, lo, mid);
 	else if (range[mid].end < addr)
 		return geoip_bsearch(range, addr, mid + 1, hi);
 
