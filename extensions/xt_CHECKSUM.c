@@ -1,5 +1,4 @@
-/* iptables module for the packet checksum mangling
- *
+/*
  * (C) 2002 by Harald Welte <laforge@netfilter.org>
  * (C) 2010 Red Hat, Inc.
  *

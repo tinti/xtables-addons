@@ -1,14 +1,9 @@
-/* Shared library add-on to xtables for CHECKSUM
- *
+/*
  * (C) 2002 by Harald Welte <laforge@gnumonks.org>
  * (C) 2010 by Red Hat, Inc
  * Author: Michael S. Tsirkin <mst@redhat.com>
  *
  * This program is distributed under the terms of GNU GPL v2, 1991
- *
- * libxt_CHECKSUM.c borrowed some bits from libipt_ECN.c
- *
- * $Id$
  */
 #include <stdio.h>
 #include <string.h>
