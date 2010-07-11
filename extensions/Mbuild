@@ -2,6 +2,7 @@
 
 obj-${build_ACCOUNT}     += ACCOUNT/
 obj-${build_CHAOS}       += libxt_CHAOS.so
+obj-${build_CHECKSUM}    += libxt_CHECKSUM.so
 obj-${build_DELUDE}      += libxt_DELUDE.so
 obj-${build_DHCPMAC}     += libxt_DHCPMAC.so libxt_dhcpmac.so
 obj-${build_ECHO}        += libxt_ECHO.so
