@@ -12,7 +12,7 @@
 #define XT_CHECKSUM_OP_FILL	0x01	/* fill in checksum in IP header */
 
 struct xt_CHECKSUM_info {
-	u_int8_t operation;	/* bitset of operations */
+	__u8 operation;	/* bitset of operations */
 };
 
 #endif /* _IPT_CHECKSUM_TARGET_H */
