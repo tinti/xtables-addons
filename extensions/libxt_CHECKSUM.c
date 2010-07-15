@@ -33,9 +33,8 @@ static int CHECKSUM_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	switch (c) {
 	case 'F':
-		if (*flags)
-			xtables_error(PARAMETER_PROBLEM,
-			        "CHECKSUM target: Only use --checksum-fill ONCE!");
+		xtables_param_act(XTF_ONLY_ONCE, "CHECKSUM", "--checksum-fill",
+			*flags & XT_CHECKSUM_OP_FILL);
 		einfo->operation = XT_CHECKSUM_OP_FILL;
 		*flags |= XT_CHECKSUM_OP_FILL;
 		break;
