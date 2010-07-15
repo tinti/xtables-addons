@@ -9,10 +9,8 @@
  * published by the Free Software Foundation.
 */
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-#include <linux/in.h>
 #include <linux/module.h>
 #include <linux/skbuff.h>
-#include <linux/netdevice.h>
 
 #include <linux/netfilter/x_tables.h>
 #include "xt_CHECKSUM.h"
