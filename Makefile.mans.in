@@ -3,8 +3,8 @@
 
 srcdir := @srcdir@
 
-wcman_matches := $(shell find "${srcdir}" -name 'libxt_[a-z]*.man')
-wcman_targets := $(shell find "${srcdir}" -name 'libxt_[A-Z]*.man')
+wcman_matches := $(shell find "${srcdir}" -name 'libxt_[a-z]*.man' | sort)
+wcman_targets := $(shell find "${srcdir}" -name 'libxt_[A-Z]*.man' | sort)
 wlist_matches := $(patsubst ${srcdir}/libxt_%.man,%,${wcman_matches})
 wlist_targets := $(patsubst ${srcdir}/libxt_%.man,%,${wcman_targets})
 
