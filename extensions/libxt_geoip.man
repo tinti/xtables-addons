@@ -10,8 +10,8 @@ NOTE:
 The country is inputed by its ISO-3166 code.
 .PP
 The extra files you will need is the binary database files. They are generated
-from a country-subnet database with the geoip_csv_iv0.pl tool, available at
-http://jengelh.medozas.de/files/geoip/ . The files MUST be moved to
-/usr/share/xt_geoip/
+from a country-subnet database with the geoip_csv_iv0.pl tool that should be
+available in /usr/lib(exec)/xtables-addons/ . The resulting files MUST be moved
+to /usr/share/xt_geoip/
 as the shared library is statically looking for this pathname (e.g.
 /usr/share/xt_geoip/LE/de.iv0).

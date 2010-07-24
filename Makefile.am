@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 
 ACLOCAL_AMFLAGS  = -I m4
-SUBDIRS          = extensions
+SUBDIRS          = extensions geoip
 
 man_MANS := xtables-addons.8
 

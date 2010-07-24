@@ -4,6 +4,7 @@ HEAD
 - RAWNAT: IPv6 variants erroneously rejected masks /33-/128
 - new target xt_CHECKSUM
 - xt_length2: add support for IPv6 jumbograms
+- import xt_geoip database scripts
 
 
 Xtables-addons 1.27 (May 16 2010)
