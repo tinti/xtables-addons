@@ -1,9 +1,14 @@
 
 HEAD
 ====
+
+
+Xtables-addons 1.28 (July 24 2010)
+==================================
 - RAWNAT: IPv6 variants erroneously rejected masks /33-/128
 - new target xt_CHECKSUM
 - xt_length2: add support for IPv6 jumbograms
+- xt_geoip: fix possible out-of-bounds access
 - import xt_geoip database scripts
 
 
