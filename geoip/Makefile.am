@@ -1,3 +1,3 @@
 # -*- Makefile -*-
 
-pkglibexec_SCRIPTS = geoip_csv_iv0.pl geoip_download.sh
+pkglibexec_SCRIPTS = geoip_build_db.pl geoip_download.sh
