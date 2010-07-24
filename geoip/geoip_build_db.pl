@@ -14,9 +14,18 @@ my %country;
 my %names;
 my $csv = Text::CSV_XS->new({binary => 0, eol => $/}); # or Text::CSV
 my $mode = "VV";
+my $target_dir = ".";
 
 &Getopt::Long::Configure(qw(bundling));
-&GetOptions("b" => sub { $mode = "NN"; });
+&GetOptions(
+	"D=s" => \$target_dir,
+	"b"   => sub { $mode = "NN"; },
+);
+
+if (!-d $target_dir) {
+	print STDERR "Target directory $target_dir does not exist.\n";
+	exit 1;
+}
 
 while (my $row = $csv->getline(*ARGV)) {
 	if (!defined($country{$row->[4]})) {
@@ -37,7 +46,7 @@ foreach my $iso_code (sort keys %country) {
 		scalar(@{$country{$iso_code}}),
 		$iso_code, $names{$iso_code};
 
-	open(my $fh, ">".uc($iso_code).".iv0");
+	open(my $fh, "> $target_dir/".uc($iso_code).".iv0");
 	foreach my $range (@{$country{$iso_code}}) {
 		print $fh pack($mode, $range->[0], $range->[1]);
 	}
