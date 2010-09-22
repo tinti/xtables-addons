@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- compat_xtables: return bool for match_check and target_check in 2.6.23..34
 
 
 Xtables-addons 1.28 (July 24 2010)
