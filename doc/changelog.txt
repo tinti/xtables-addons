@@ -3,6 +3,7 @@ HEAD
 ====
 - compat_xtables: return bool for match_check and target_check in 2.6.23..34
 - ipset: enable building of ip_set_ipport{ip,net}hash.ko
+- SYSRQ: resolve compile error with Linux 2.6.36
 
 
 Xtables-addons 1.28 (July 24 2010)

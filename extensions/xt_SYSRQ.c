@@ -152,7 +152,9 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	sysrq_seqno = new_seqno;
 	for (i = 0; i < len && data[i] != ','; ++i) {
 		printk(KERN_INFO KBUILD_MODNAME ": SysRq %c\n", data[i]);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+		handle_sysrq(data[i]);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 		handle_sysrq(data[i], NULL);
 #else
 		handle_sysrq(data[i], NULL, NULL);
@@ -187,7 +189,9 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 		return NF_DROP;
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+	handle_sysrq(c);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 	handle_sysrq(c, NULL);
 #else
 	handle_sysrq(c, NULL, NULL);
