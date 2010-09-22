@@ -73,7 +73,7 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook)
 	/* Rate-limit replies to !SYN,ACKs */
 #if 0
 	if (!oth->syn && oth->ack)
-		if (!xrlim_allow(&ort->u.dst, HZ))
+		if (!xrlim_allow(rt_dst(ort), HZ))
 			return;
 #endif
 

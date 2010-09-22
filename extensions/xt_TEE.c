@@ -51,8 +51,8 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 		return false;
 
 	dst_release(skb_dst(skb));
-	skb_dst_set(skb, &rt->u.dst);
-	skb->dev      = rt->u.dst.dev;
+	skb_dst_set(skb, rt_dst(rt));
+	skb->dev      = rt_dst(rt)->dev;
 	skb->protocol = htons(ETH_P_IP);
 	return true;
 }

@@ -86,6 +86,11 @@
 #	define ip6t_unregister_table(tbl) ip6t_unregister_table(tbl)
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+#	define rt_dst(rt)	(&(rt)->dst)
+#else
+#	define rt_dst(rt)	(&(rt)->u.dst)
+#endif
 
 #if !defined(NIP6) && !defined(NIP6_FMT)
 #	define NIP6(addr) \
