@@ -15,6 +15,7 @@
 
 #include <xtables.h>
 #include "xt_iface.h"
+#include "compat_user.h"
 
 static const struct option iface_mt_opts[] = {
 	{.name = "iface",        .has_arg = true,  .val = 'i'},

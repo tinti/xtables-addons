@@ -23,6 +23,7 @@
 #include <linux/netfilter.h>
 #include <linux/netfilter/x_tables.h>
 #include "xt_TEE.h"
+#include "compat_user.h"
 
 enum {
 	FLAG_GATEWAY = 1 << 0,

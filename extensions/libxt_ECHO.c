@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <xtables.h>
+#include "compat_user.h"
 
 static void echo_tg_help(void)
 {

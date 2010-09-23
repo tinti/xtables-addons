@@ -13,6 +13,7 @@
 
 #include <xtables.h>
 #include <linux/netfilter/x_tables.h>
+#include "compat_user.h"
 
 static void delude_tg_help(void)
 {

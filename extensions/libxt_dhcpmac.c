@@ -16,6 +16,7 @@
 #include <xtables.h>
 #include "xt_DHCPMAC.h"
 #include "mac.c"
+#include "compat_user.h"
 
 enum {
 	F_MAC = 1 << 0,

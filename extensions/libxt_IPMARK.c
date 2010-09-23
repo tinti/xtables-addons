@@ -14,6 +14,7 @@
 #include <string.h>
 #include <xtables.h>
 #include "xt_IPMARK.h"
+#include "compat_user.h"
 
 enum {
 	FL_ADDR_USED     = 1 << 0,

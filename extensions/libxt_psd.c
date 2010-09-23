@@ -28,6 +28,7 @@
 #include <xtables.h>
 #include <linux/netfilter/x_tables.h>
 #include "xt_psd.h"
+#include "compat_user.h"
 
 /* Function which prints out usage message. */
 static void psd_mt_help(void) {

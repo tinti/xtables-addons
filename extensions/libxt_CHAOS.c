@@ -16,6 +16,7 @@
 #include <xtables.h>
 #include <linux/netfilter/x_tables.h>
 #include "xt_CHAOS.h"
+#include "compat_user.h"
 
 enum {
 	F_DELUDE = 1 << 0,

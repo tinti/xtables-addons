@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <xtables.h>
+#include "compat_user.h"
 
 static void steal_tg_help(void)
 {

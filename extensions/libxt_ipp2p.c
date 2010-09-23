@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <xtables.h>
 #include "xt_ipp2p.h"
+#include "compat_user.h"
 #define param_act(t, s, f) xtables_param_act((t), "ipp2p", (s), (f))
 
 static void ipp2p_mt_help(void)

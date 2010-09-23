@@ -15,6 +15,7 @@
 #include <string.h>
 #include <xtables.h>
 #include "xt_quota2.h"
+#include "compat_user.h"
 
 enum {
 	FL_QUOTA     = 1 << 0,

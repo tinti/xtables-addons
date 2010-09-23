@@ -6,6 +6,8 @@ HEAD
 - support for Linux 2.6.36
 - SYSRQ: resolve compile error with Linux 2.6.36
 - TEE: resolve compile error with Linux 2.6.36
+- add workaround for broken linux-glibc-devel 2.6.34 userspace headers
+  ("implicit declaration of function 'ALIGN'")
 
 
 Xtables-addons 1.28 (July 24 2010)

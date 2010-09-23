@@ -17,6 +17,7 @@
 #include <xtables.h>
 #include <linux/netfilter/x_tables.h>
 #include "xt_lscan.h"
+#include "compat_user.h"
 
 static const struct option lscan_mt_opts[] = {
 	{.name = "stealth", .has_arg = false, .val = 'x'},

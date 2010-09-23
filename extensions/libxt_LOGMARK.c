@@ -13,6 +13,7 @@
 #include <string.h>
 #include <xtables.h>
 #include "xt_LOGMARK.h"
+#include "compat_user.h"
 
 enum {
 	F_LEVEL  = 1 << 0,

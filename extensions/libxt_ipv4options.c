@@ -14,6 +14,7 @@
 #include <string.h>
 #include <xtables.h>
 #include "xt_ipv4options.h"
+#include "compat_user.h"
 
 /*
  * Overview from http://www.networksorcery.com/enp/protocol/ip.htm

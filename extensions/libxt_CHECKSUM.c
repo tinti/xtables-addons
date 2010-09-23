@@ -12,6 +12,7 @@
 
 #include <xtables.h>
 #include "xt_CHECKSUM.h"
+#include "compat_user.h"
 
 static void CHECKSUM_help(void)
 {

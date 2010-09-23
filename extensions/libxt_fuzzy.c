@@ -15,6 +15,7 @@
 #include <string.h>
 #include <xtables.h>
 #include "xt_fuzzy.h"
+#include "compat_user.h"
 
 static void fuzzy_mt_help(void)
 {

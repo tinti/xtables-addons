@@ -5,6 +5,7 @@
 #include <string.h>
 #include <xtables.h>
 #include "xt_length2.h"
+#include "compat_user.h"
 
 enum {
 	F_LAYER  = 1 << 0,

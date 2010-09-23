@@ -15,6 +15,7 @@
 #include <xtables.h>
 #include <linux/netfilter.h>
 #include "xt_RAWNAT.h"
+#include "compat_user.h"
 
 enum {
 	FLAGS_TO = 1 << 0,

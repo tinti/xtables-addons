@@ -16,6 +16,7 @@
 #include <getopt.h>
 #include <xtables.h>
 #include "xt_condition.h"
+#include "compat_user.h"
 
 static void condition_help(void)
 {
