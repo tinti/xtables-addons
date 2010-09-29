@@ -16,6 +16,7 @@
 #include <linux/netfilter.h>
 #include <linux/netfilter_ipv4/ip_tables.h>
 #include "xt_pknock.h"
+#include "compat_user.h"
 
 static const struct option pknock_mt_opts[] = {
 	/* .name, .has_arg, .flag, .val */

@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <xtables.h>
 #include "xt_ACCOUNT.h"
+#include "compat_user.h"
 
 static struct option account_tg_opts[] = {
 	{.name = "addr",  .has_arg = true, .val = 'a'},

@@ -1,6 +1,8 @@
 # -*- Makefile -*-
 # MANUAL
 
+abs_top_srcdir  = @abs_top_srcdir@
+
 prefix          = @prefix@
 exec_prefix     = @exec_prefix@
 libexecdir      = @libexecdir@
@@ -13,7 +15,7 @@ CFLAGS          = @CFLAGS@
 regular_CFLAGS  = @regular_CFLAGS@
 libxtables_CFLAGS = @libxtables_CFLAGS@
 libxtables_LIBS   = @libxtables_LIBS@
-AM_CFLAGS         = ${regular_CFLAGS} ${libxtables_CFLAGS}
+AM_CFLAGS         = ${regular_CFLAGS} ${libxtables_CFLAGS} -I${abs_top_srcdir}/extensions
 AM_DEPFLAGS     = -Wp,-MMD,$(@D)/.$(@F).d,-MT,$@
 
 AM_DEFAULT_VERBOSITY = 0
