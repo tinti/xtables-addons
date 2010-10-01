@@ -4,6 +4,10 @@ HEAD
 - update to ipset 4.4
   * ipport{,ip,net}hash did not work with mixed "src" and "dst"
     destination parameters
+- deactivate building xt_TEE and xt_CHECKSUM by default, as these have been
+  merged upstream in Linux 2.6.35 and 2.6.36, respectively.
+  Distros still wishing to build this need to enable it in their build
+  script, e.g. perl -i -pe 's{^build_TEE=.*}{build_TEE=m}' mconfig;
 
 
 v1.29 (September 29 2010)
