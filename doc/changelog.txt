@@ -1,6 +1,9 @@
 
 HEAD
 ====
+- update to ipset 4.4
+  * ipport{,ip,net}hash did not work with mixed "src" and "dst"
+    destination parameters
 
 
 v1.29 (September 29 2010)
