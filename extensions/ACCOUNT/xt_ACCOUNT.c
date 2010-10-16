@@ -494,7 +494,7 @@ static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_action
 			"IPs %u.%u.%u.%u/%u.%u.%u.%u\n", info->table_nr,
 			NIPQUAD(src_ip), NIPQUAD(dst_ip));
 		spin_unlock_bh(&ipt_acc_lock);
-		return IPT_CONTINUE;
+		return XT_CONTINUE;
 	}
 
 	/* 8 bit network or "any" network */
@@ -506,7 +506,7 @@ static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_action
 			ipt_acc_tables[info->table_nr].netmask,
 			src_ip, dst_ip, size, &ipt_acc_tables[info->table_nr].itemcount);
 		spin_unlock_bh(&ipt_acc_lock);
-		return IPT_CONTINUE;
+		return XT_CONTINUE;
 	}
 
 	/* 16 bit network */
@@ -517,7 +517,7 @@ static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_action
 			ipt_acc_tables[info->table_nr].netmask,
 			src_ip, dst_ip, size, &ipt_acc_tables[info->table_nr].itemcount);
 		spin_unlock_bh(&ipt_acc_lock);
-		return IPT_CONTINUE;
+		return XT_CONTINUE;
 	}
 
 	/* 24 bit network */
@@ -528,7 +528,7 @@ static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_action
 			ipt_acc_tables[info->table_nr].netmask,
 			src_ip, dst_ip, size, &ipt_acc_tables[info->table_nr].itemcount);
 		spin_unlock_bh(&ipt_acc_lock);
-		return IPT_CONTINUE;
+		return XT_CONTINUE;
 	}
 
 	printk("ACCOUNT: ipt_acc_target: Unable to process packet. "
@@ -536,7 +536,7 @@ static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_action
 		info->table_nr, NIPQUAD(src_ip), NIPQUAD(dst_ip));
 
 	spin_unlock_bh(&ipt_acc_lock);
-	return IPT_CONTINUE;
+	return XT_CONTINUE;
 }
 
 /*
