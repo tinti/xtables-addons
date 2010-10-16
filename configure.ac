@@ -46,6 +46,7 @@ if grep -q "CentOS release 5\." /etc/redhat-release 2>/dev/null ||
 	# Well, just a warning. Maybe the admin updated the kernel.
 	echo "WARNING: This distribution's shipped kernel is not supported.";
 fi;
+AC_MSG_CHECKING([kernel version that we will build against])
 krel="$(make -sC ${kbuilddir} kernelrelease)";
 krel="${krel%%-*}";
 kmajor="${krel%%.*}";
@@ -61,14 +62,20 @@ else
 		kstable=0;
 	fi;
 fi;
-echo "Found kernel version $kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
-if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 36; then
-	echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
-elif test \( "$kmajor" -lt 2 -o "$kminor" -lt 6 -o "$kmicro" -lt 17 \) -o \
-    \( "$kmajor" -eq 2 -a "$kminor" -eq 6 -a "$kmicro" -eq 18 -a \
-    "$kstable" -lt 5 \); then
-	echo "ERROR: That kernel version is not supported. Please see INSTALL for minimum configuration.";
-	exit 1;
+if test -z "$kmajor" -o -z "$kminor" -o -z "$kmicro"; then
+	echo "WARNING: Version detection did not succeed. Continue at own luck.";
+else
+	echo "$kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
+	if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 36; then
+		echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
+	elif test \( "$kmajor" -lt 2 -o \
+	    \( "$kmajor" -eq 2 -a "$kminor" -lt 6 \) -o \
+	    \( "$kmajor" -eq 2 -a "$kminor" -eq 0 -a "$kmicro" -lt 17 \) -o \
+	    \( "$kmajor" -eq 2 -a "$kminor" -eq 6 -a "$kmicro" -eq 18 -a \
+	    "$kstable" -lt 5 \) \); then
+		echo "ERROR: That kernel version is not supported. Please see INSTALL for minimum configuration.";
+		exit 1;
+	fi;
 fi;
 
 AC_SUBST([regular_CFLAGS])
