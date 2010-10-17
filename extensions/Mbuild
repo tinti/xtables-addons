@@ -25,3 +25,4 @@ obj-${build_lscan}       += libxt_lscan.so
 obj-${build_pknock}      += pknock/
 obj-${build_psd}         += libxt_psd.so
 obj-${build_quota2}      += libxt_quota2.so
+obj-${build_gradm}       += libxt_gradm.so
