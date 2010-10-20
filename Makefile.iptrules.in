@@ -11,6 +11,7 @@ xtlibdir        = @xtlibdir@
 CC              = @CC@
 CCLD            = ${CC}
 CFLAGS          = @CFLAGS@
+LDFLAGS         = @LDFLAGS@
 
 regular_CFLAGS  = @regular_CFLAGS@
 libxtables_CFLAGS = @libxtables_CFLAGS@
