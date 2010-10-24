@@ -53,16 +53,17 @@ static bool xt_iface_mt(const struct sk_buff *skb,
 #else
 	dev = dev_get_by_name(info->ifname);
 #endif
-	retval = dev != NULL;
-	if (retval) {
-		for (i = 0; i < ARRAY_SIZE(xt_iface_lookup) && retval; ++i) {
-			if (info->flags & xt_iface_lookup[i].iface_flag)
-				retval &= dev->flags & xt_iface_lookup[i].iff_flag;
-			if (info->invflags & xt_iface_lookup[i].iface_flag)
-				retval &= !(dev->flags & xt_iface_lookup[i].iff_flag);
-		}
-		dev_put(dev);
+	if (dev == NULL)
+		return false;
+
+	retval = true;
+	for (i = 0; i < ARRAY_SIZE(xt_iface_lookup) && retval; ++i) {
+		if (info->flags & xt_iface_lookup[i].iface_flag)
+			retval &= dev->flags & xt_iface_lookup[i].iff_flag;
+		if (info->invflags & xt_iface_lookup[i].iface_flag)
+			retval &= !(dev->flags & xt_iface_lookup[i].iff_flag);
 	}
+	dev_put(dev);
 	return retval;
 }
 
