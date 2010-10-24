@@ -44,9 +44,7 @@ static void iface_print_opt(const struct xt_iface_mtinfo *info,
     const unsigned int option, const char *command)
 {
 	if (info->flags & option)
-		printf(" %s", command);
-	if (info->invflags & option)
-		printf(" ! %s", command);
+		printf(" %s%s", (info->invflags & option) ? "! " : "", command);
 }
 
 static void iface_setflag(struct xt_iface_mtinfo *info,
@@ -55,10 +53,9 @@ static void iface_setflag(struct xt_iface_mtinfo *info,
 	if (*flags & flag)
 		xtables_error(PARAMETER_PROBLEM,
 			"iface: \"--%s\" flag already specified", command);
+	info->flags |= flag;
 	if (invert)
 		info->invflags |= flag;
-	else
-		info->flags |= flag;
 	*flags |= flag;
 }
 
