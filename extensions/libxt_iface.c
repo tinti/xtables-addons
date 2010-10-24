@@ -17,6 +17,10 @@
 #include "xt_iface.h"
 #include "compat_user.h"
 
+enum {
+	XT_IFACE_IFACE = 1 << 16,
+};
+
 static const struct option iface_mt_opts[] = {
 	{.name = "iface",        .has_arg = true,  .val = 'i'},
 	{.name = "up",           .has_arg = false, .val = 'u'},

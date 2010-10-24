@@ -13,7 +13,6 @@ enum {
 	XT_IFACE_DYNAMIC     = 1 << 8,
 	XT_IFACE_LOWER_UP    = 1 << 9,
 	XT_IFACE_DORMANT     = 1 << 10,
-	XT_IFACE_IFACE       = 1 << 15,
 };
 
 struct xt_iface_mtinfo {
