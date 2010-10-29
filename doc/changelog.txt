@@ -1,6 +1,8 @@
 
 HEAD
 ====
+- LOGMARK: print remaining lifetime of cts
+- build: improve detection of kernel version and error handling
 
 
 v1.30 (October 02 2010)
