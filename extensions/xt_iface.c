@@ -40,12 +40,17 @@ static const struct xt_iface_flag_pairs xt_iface_lookup[] =
 	{.iface_flag = XT_IFACE_DORMANT,	.iff_flag = IFF_DORMANT},
 };
 
-static struct net_device *iface_get(const char *name)
+static const struct net_device *iface_get(const struct xt_iface_mtinfo *info,
+    const struct xt_action_param *par, struct net_device **put)
 {
+	if (info->flags & XT_IFACE_DEV_IN)
+		return par->in;
+	else if (info->flags & XT_IFACE_DEV_OUT)
+		return par->out;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	return dev_get_by_name(&init_net, name);
+	return *put = dev_get_by_name(&init_net, info->ifname);
 #else
-	return dev_get_by_name(name);
+	return *put = dev_get_by_name(info->ifname);
 #endif
 }
 
@@ -66,13 +71,15 @@ static bool xt_iface_mt(const struct sk_buff *skb,
     struct xt_action_param *par)
 {
 	const struct xt_iface_mtinfo *info = par->matchinfo;
-	struct net_device *dev = iface_get(info->ifname);
+	struct net_device *put = NULL;
+	const struct net_device *dev = iface_get(info, par, &put);
 	bool retval;
 
 	if (dev == NULL)
 		return false;
 	retval = iface_flagtest(dev->flags, info->flags, info->invflags);
-	dev_put(dev);
+	if (put != NULL)
+		dev_put(put);
 	return retval;
 }
 

@@ -23,6 +23,8 @@ enum {
 
 static const struct option iface_mt_opts[] = {
 	{.name = "iface",        .has_arg = true,  .val = 'i'},
+	{.name = "dev-in",       .has_arg = false, .val = 'I'},
+	{.name = "dev-out",      .has_arg = false, .val = 'O'},
 	{.name = "up",           .has_arg = false, .val = 'u'},
 	{.name = "down",         .has_arg = false, .val = 'U'}, /* not up */
 	{.name = "broadcast",    .has_arg = false, .val = 'b'},
@@ -70,19 +72,20 @@ static void iface_mt_help(void)
 {
 	printf(
 	"iface match options:\n"
-	"    --iface interface    Name of interface\n"
-	"[!] --up / --down        match if UP flag (not) set\n"
-	"[!] --broadcast          match if BROADCAST flag (not) set\n"
-	"[!] --loopback           match if LOOPBACK flag (not) set\n"
+	"    --iface interface     Name of interface\n"
+	"    --dev-in / --dev-out  Use incoming/outgoing interface instead\n"
+	"[!] --up / --down         match if UP flag (not) set\n"
+	"[!] --broadcast           match if BROADCAST flag (not) set\n"
+	"[!] --loopback            match if LOOPBACK flag (not) set\n"
 	"[!] --pointopoint\n"
-	"[!] --pointtopoint       match if POINTOPOINT flag (not) set\n"
-	"[!] --running            match if RUNNING flag (not) set\n"
-	"[!] --noarp / --arp      match if NOARP flag (not) set\n"
-	"[!] --promisc            match if PROMISC flag (not) set\n"
-	"[!] --multicast          match if MULTICAST flag (not) set\n"
-	"[!] --dynamic            match if DYNAMIC flag (not) set\n"
-	"[!] --lower-up           match if LOWER_UP flag (not) set\n"
-	"[!] --dormant            match if DORMANT flag (not) set\n");
+	"[!] --pointtopoint        match if POINTOPOINT flag (not) set\n"
+	"[!] --running             match if RUNNING flag (not) set\n"
+	"[!] --noarp / --arp       match if NOARP flag (not) set\n"
+	"[!] --promisc             match if PROMISC flag (not) set\n"
+	"[!] --multicast           match if MULTICAST flag (not) set\n"
+	"[!] --dynamic             match if DYNAMIC flag (not) set\n"
+	"[!] --lower-up            match if LOWER_UP flag (not) set\n"
+	"[!] --dormant             match if DORMANT flag (not) set\n");
 }
 
 static int iface_mt_parse(int c, char **argv, int invert, unsigned int *flags,
@@ -111,6 +114,18 @@ static int iface_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 				"iface: Invalid interface name!");
 		strcpy(info->ifname, optarg);
 		*flags |= XT_IFACE_IFACE;
+		return true;
+	case 'I': /* --dev-in */
+		xtables_param_act(XTF_ONLY_ONCE, "iface", "--dev-in",
+			*flags & XT_IFACE_IFACE);
+		*flags |= XT_IFACE_IFACE;
+		iface_setflag(info, flags, invert, XT_IFACE_DEV_IN, "dev-in");
+		return true;
+	case 'O': /* --dev-out */
+		xtables_param_act(XTF_ONLY_ONCE, "iface", "--dev-out",
+			*flags & XT_IFACE_IFACE);
+		*flags |= XT_IFACE_IFACE;
+		iface_setflag(info, flags, invert, XT_IFACE_DEV_OUT, "dev-out");
 		return true;
 	case 'u': /* UP */
 		iface_setflag(info, flags, invert, XT_IFACE_UP, "up");
@@ -154,7 +169,8 @@ static void iface_mt_check(unsigned int flags)
 	if (!(flags & XT_IFACE_IFACE))
 		xtables_error(PARAMETER_PROBLEM,
 			"iface: You must specify an interface");
-	if (flags == 0 || flags == XT_IFACE_IFACE)
+	if ((flags & ~(XT_IFACE_IFACE | XT_IFACE_DEV_IN |
+	    XT_IFACE_DEV_OUT)) == 0)
 		xtables_error(PARAMETER_PROBLEM,
 			"iface: You must specify at least one option");
 }
@@ -164,7 +180,14 @@ static void iface_mt_print(const void *ip, const struct xt_entry_match *match,
 {
 	const struct xt_iface_mtinfo *info = (const void *)match->data;
 
-	printf("iface: \"%s\" [state:", info->ifname);
+	printf("iface: ");
+	if (info->flags & XT_IFACE_DEV_IN)
+		printf("(in)");
+	else if (info->flags & XT_IFACE_DEV_OUT)
+		printf("(out)");
+	else
+		printf("%s", info->ifname);
+	printf(" [state:");
 	iface_print_opt(info, XT_IFACE_UP,          "up");
 	iface_print_opt(info, XT_IFACE_BROADCAST,   "broadcast");
 	iface_print_opt(info, XT_IFACE_LOOPBACK,    "loopback");
@@ -183,7 +206,12 @@ static void iface_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_iface_mtinfo *info = (const void *)match->data;
 
-	printf(" --iface %s", info->ifname);
+	if (info->flags & XT_IFACE_DEV_IN)
+		printf("--dev-in");
+	else if (info->flags & XT_IFACE_DEV_OUT)
+		printf("--dev-out");
+	else
+		printf("--iface %s", info->ifname);
 	iface_print_opt(info, XT_IFACE_UP,          "--up");
 	iface_print_opt(info, XT_IFACE_BROADCAST,   "--broadcast");
 	iface_print_opt(info, XT_IFACE_LOOPBACK,    "--loopback");

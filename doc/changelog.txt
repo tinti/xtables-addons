@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- xt_iface: allow matching against incoming/outgoing interface
 
 
 v1.30 (October 02 2010)
