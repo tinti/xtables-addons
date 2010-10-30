@@ -21,15 +21,17 @@ if [[ "$kbuilddir" == no ]]; then
 	kbuilddir="";
 fi
 
-AC_ARG_WITH([xtlibdir],
-	AS_HELP_STRING([--with-xtlibdir=PATH],
-	[Path where to install Xtables extensions [[LIBEXECDIR/xtables]]]),
-	[xtlibdir="$withval"],
-	[xtlibdir='${libexecdir}/xtables'])
-
-PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
 AC_CHECK_HEADERS([linux/netfilter/x_tables.h], [],
 	[AC_MSG_ERROR([You need to have linux/netfilter/x_tables.h, see INSTALL file for details])])
+PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
+xtlibdir="$(pkg-config --variable=xtlibdir xtables)"
+
+AC_ARG_WITH([xtlibdir],
+	AS_HELP_STRING([--with-xtlibdir=PATH],
+	[Path where to install Xtables extensions [[autodetect]]]]),
+	[xtlibdir="$withval"])
+AC_MSG_CHECKING([Xtables module directory])
+AC_MSG_RESULT([$xtlibdir])
 
 regular_CFLAGS="-D_LARGEFILE_SOURCE=1 -D_LARGE_FILES -D_FILE_OFFSET_BITS=64 \
 	-D_REENTRANT -Wall -Waggregate-return -Wmissing-declarations \

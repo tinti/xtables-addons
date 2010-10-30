@@ -3,6 +3,10 @@ HEAD
 ====
 - LOGMARK: print remaining lifetime of cts
 - build: improve detection of kernel version and error handling
+- build: automatically derive Xtables module directory, thus
+  --with-xtlibdir is no longer needed for ./configure in most cases
+  (If I still see a distro using it, I will scold you for not
+  reading this changelog.)
 
 
 v1.30 (October 02 2010)
