@@ -40,29 +40,46 @@ static const struct xt_iface_flag_pairs xt_iface_lookup[] =
 	{.iface_flag = XT_IFACE_DORMANT,	.iff_flag = IFF_DORMANT},
 };
 
+static const struct net_device *iface_get(const struct xt_iface_mtinfo *info,
+    const struct xt_action_param *par, struct net_device **put)
+{
+	if (info->flags & XT_IFACE_DEV_IN)
+		return par->in;
+	else if (info->flags & XT_IFACE_DEV_OUT)
+		return par->out;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+	return *put = dev_get_by_name(&init_net, info->ifname);
+#else
+	return *put = dev_get_by_name(info->ifname);
+#endif
+}
+
+static bool iface_flagtest(unsigned int devflags, unsigned int flags,
+    unsigned int invflags)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(xt_iface_lookup); ++i)
+		if ((flags & xt_iface_lookup[i].iface_flag) &&
+		    !!(devflags & xt_iface_lookup[i].iff_flag) ^
+		    !(invflags & xt_iface_lookup[i].iface_flag))
+			return false;
+	return true;
+}
+
 static bool xt_iface_mt(const struct sk_buff *skb,
     struct xt_action_param *par)
 {
 	const struct xt_iface_mtinfo *info = par->matchinfo;
-	struct net_device *dev;
+	struct net_device *put = NULL;
+	const struct net_device *dev = iface_get(info, par, &put);
 	bool retval;
-	int i;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	dev = dev_get_by_name(&init_net, info->ifname);
-#else
-	dev = dev_get_by_name(info->ifname);
-#endif
-	retval = dev != NULL;
-	if (retval) {
-		for (i = 0; i < ARRAY_SIZE(xt_iface_lookup) && retval; ++i) {
-			if (info->flags & xt_iface_lookup[i].iface_flag)
-				retval &= dev->flags & xt_iface_lookup[i].iff_flag;
-			if (info->invflags & xt_iface_lookup[i].iface_flag)
-				retval &= !(dev->flags & xt_iface_lookup[i].iff_flag);
-		}
-		dev_put(dev);
-	}
+	if (dev == NULL)
+		return false;
+	retval = iface_flagtest(dev->flags, info->flags, info->invflags);
+	if (put != NULL)
+		dev_put(put);
 	return retval;
 }
 

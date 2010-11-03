@@ -7,6 +7,7 @@ HEAD
   --with-xtlibdir is no longer needed for ./configure in most cases
   (If I still see a distro using it, I will scold you for not
   reading this changelog.)
+- xt_iface: allow matching against incoming/outgoing interface
 
 
 v1.30 (October 02 2010)
