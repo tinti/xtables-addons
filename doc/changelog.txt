@@ -8,6 +8,8 @@ HEAD
   (If I still see a distro using it, I will scold you for not
   reading this changelog.)
 - xt_iface: allow matching against incoming/outgoing interface
+- libxt_gradm: match packets based on status of grsecurity RBAC
+  (userspace part only - xt_gradm is in the grsec patch)
 
 
 v1.30 (October 02 2010)

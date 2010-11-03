@@ -16,6 +16,7 @@ build_TEE=
 build_condition=m
 build_fuzzy=m
 build_geoip=m
+build_gradm=m
 build_iface=m
 build_ipp2p=m
 build_ipset=m
