@@ -57,12 +57,12 @@ kminor="${krel%%.*}";
 krel="${krel#*.}";
 kmicro="${krel%%.*}";
 if test "$kmicro" = "$krel"; then
+	kmicro="$(($kmicro+0))"; # Get rid of non numbers ("2.6.36+" -> "2.6.36")
 	kstable=0;
 else
+	kmicro="$(($kmicro+0))";
 	kstable="${krel#*.}";
-	if test -z "$kstable"; then
-		kstable=0;
-	fi;
+	kstable="$(($kstable+0))";
 fi;
 if test -z "$kmajor" -o -z "$kminor" -o -z "$kmicro"; then
 	echo "WARNING: Version detection did not succeed. Continue at own luck.";
