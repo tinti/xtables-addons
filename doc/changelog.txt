@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+v1.31 (November 05 2010)
+========================
 - LOGMARK: print remaining lifetime of cts
 - build: improve detection of kernel version and error handling
 - build: automatically derive Xtables module directory, thus
