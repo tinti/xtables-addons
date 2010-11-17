@@ -10,8 +10,14 @@ NOTE:
 The country is inputed by its ISO-3166 code.
 .PP
 The extra files you will need is the binary database files. They are generated
-from a country-subnet database with the geoip_csv_iv0.pl tool that should be
-available in /usr/lib(exec)/xtables-addons/ . The resulting files MUST be moved
-to /usr/share/xt_geoip/
-as the shared library is statically looking for this pathname (e.g.
-/usr/share/xt_geoip/LE/de.iv0).
+from a country-subnet database with the geoip_build_db.pl tool that is shipped
+with the source package, and which should be available in compiled packages in
+/usr/lib(exec)/xtables-addons/. The first command retrieves CSV files from
+MaxMind, while the other two build packed bisectable range files:
+.PP
+cd /tmp; $path/to/geoip_download.sh;
+.PP
+$path/to/geoip_build_db.pl -D /usr/share/xt_geoip/LE
+$path/to/geoip_build_db.pl -D /usr/share/xt_geoip/BE -b
+.PP
+The shared library is hardcoded to look in these paths, so use them.
