@@ -50,20 +50,20 @@ if grep -q "CentOS release 5\." /etc/redhat-release 2>/dev/null ||
 fi;
 AC_MSG_CHECKING([kernel version that we will build against])
 krel="$(make -sC ${kbuilddir} kernelrelease)";
-krel="${krel%%-*}";
-kmajor="${krel%%.*}";
-krel="${krel#*.}";
-kminor="${krel%%.*}";
-krel="${krel#*.}";
-kmicro="${krel%%.*}";
-if test "$kmicro" = "$krel"; then
-	kmicro="$(($kmicro+0))"; # Get rid of non numbers ("2.6.36+" -> "2.6.36")
-	kstable=0;
-else
-	kmicro="$(($kmicro+0))";
-	kstable="${krel#*.}";
-	kstable="$(($kstable+0))";
-fi;
+kmajor="${krel%%[[^0-9]]*}";
+kmajor="$(($kmajor+0))";
+krel="${krel:${#kmajor}}";
+krel="${krel#.}";
+kminor="${krel%%[[^0-9]]*}";
+kminor="$(($kminor+0))";
+krel="${krel:${#kminor}}";
+krel="${krel#.}";
+kmicro="${krel%%[[^0-9]]*}";
+kmicro="$(($kmicro+0))";
+krel="${krel:${#kmicro}}";
+krel="${krel#.}";
+kstable="${krel%%[[^0-9]]*}";
+kstable="$(($kstable+0))";
 if test -z "$kmajor" -o -z "$kminor" -o -z "$kmicro"; then
 	echo "WARNING: Version detection did not succeed. Continue at own luck.";
 else
