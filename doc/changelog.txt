@@ -1,6 +1,9 @@
 
 HEAD
 ====
+Fixes:
+- Update to ipset 4.5
+  * the iptreemap type used wrong gfp flags when deleting entries
 
 
 v1.31 (November 05 2010)
