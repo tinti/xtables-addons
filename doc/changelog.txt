@@ -6,32 +6,37 @@ Fixes:
   * the iptreemap type used wrong gfp flags when deleting entries
 
 
-v1.31 (November 05 2010)
-========================
-- LOGMARK: print remaining lifetime of cts
+v1.31 (2010-11-05)
+==================
+Fixes:
 - build: improve detection of kernel version and error handling
+Changes:
 - build: automatically derive Xtables module directory, thus
   --with-xtlibdir is no longer needed for ./configure in most cases
   (If I still see a distro using it, I will scold you for not
   reading this changelog.)
+Enhancements:
+- LOGMARK: print remaining lifetime of cts
 - xt_iface: allow matching against incoming/outgoing interface
 - libxt_gradm: match packets based on status of grsecurity RBAC
   (userspace part only - xt_gradm is in the grsec patch)
 
 
-v1.30 (October 02 2010)
-=======================
+v1.30 (2010-010-02)
+===================
+Fixes:
 - update to ipset 4.4
   * ipport{,ip,net}hash did not work with mixed "src" and "dst"
     destination parameters
+Changes:
 - deactivate building xt_TEE and xt_CHECKSUM by default, as these have been
   merged upstream in Linux 2.6.35 and 2.6.36, respectively.
   Distros still wishing to build this need to enable it in their build
   script, e.g. perl -i -pe 's{^build_TEE=.*}{build_TEE=m}' mconfig;
 
 
-v1.29 (September 29 2010)
-=========================
+v1.29 (2010-09-29)
+==================
 - compat_xtables: return bool for match_check and target_check in 2.6.23..34
 - ipset: enable building of ip_set_ipport{ip,net}hash.ko
 - support for Linux 2.6.36
@@ -41,8 +46,8 @@ v1.29 (September 29 2010)
   ("implicit declaration of function 'ALIGN'")
 
 
-Xtables-addons 1.28 (July 24 2010)
-==================================
+v1.28 (2010-07-24)
+==================
 - RAWNAT: IPv6 variants erroneously rejected masks /33-/128
 - new target xt_CHECKSUM
 - xt_length2: add support for IPv6 jumbograms
@@ -50,18 +55,18 @@ Xtables-addons 1.28 (July 24 2010)
 - import xt_geoip database scripts
 
 
-Xtables-addons 1.27 (May 16 2010)
-=================================
+v1.27 (2010-05-16)
+==================
 - further updates for the upcoming 2.6.35 changes
 
 
-Xtables-addons 1.26 (April 30 2010)
-===================================
+v1.26 (2010-04-30)
+==================
 - compat_xtables: fix 2.6.34 compile error due to a typo
 
 
-Xtables-addons 1.25 (April 26 2010)
-===================================
+v1.25 (2010-04-26)
+==================
 - TEE: do rechecksumming in PREROUTING too
 - TEE: decrease TTL on cloned packet
 - TEE: set dont-fragment on cloned packets
@@ -73,8 +78,8 @@ Xtables-addons 1.25 (April 26 2010)
 - condition: remove unnecessary RCU protection
 
 
-Xtables-addons 1.24 (March 17 2010)
-===================================
+v1.24 (2010-03-17)
+==================
 - build: fix build of userspace modules against old (pre-2.6.25)
   headers from linux-glibc-devel (/usr/include/linux)
 - ipp2p: updated bittorent command recognition
@@ -82,8 +87,8 @@ Xtables-addons 1.24 (March 17 2010)
 - SYSRQ: allow processing of UDP-Lite
 
 
-Xtables-addons 1.23 (February 24 2010)
-======================================
+v1.23 (2010-02-24)
+==================
 - build: support for Linux 2.6.34
 - build: remove unused --with-ksource option
 - build: remove unneeded --with-xtables option
@@ -92,22 +97,22 @@ Xtables-addons 1.23 (February 24 2010)
 - ECHO: fix compilation w.r.t. skb_dst
 
 
-Xtables-addons 1.22 (January 22 2010)
-=====================================
+v1.22 (2010-01-22)
+==================
 - compat_xtables: support for 2.6.33 skb_iif changes
 - geoip: for FHS compliance use /usr/share/xt_geoip instead of /var/geoip
 - ipset: enable build of ip_set_setlist.ko
 - quota2: add the --no-change mode
 
 
-Xtables-addons 1.21 (December 09 2009)
-======================================
+v1.21 (2009-12-09)
+==================
 - ACCOUNT: avoid collision with arp_tables setsockopt numbers
 - doc: fix option mismatch --gw/--gateway in libxt_TEE.man
 
 
-Xtables-addons 1.20 (November 19 2009)
-======================================
+v1.20 (2009-11-19)
+==================
 - ipp2p: add more boundary checks
 - ipp2p: fix Gnutelle line ending detection
 - LOGMARK: remove unknown options from manpage
@@ -116,8 +121,8 @@ Xtables-addons 1.20 (November 19 2009)
 - ipset: fast forward to v4.1
 
 
-Xtables-addons 1.19 (October 12 2009)
-=====================================
+v1.19 (2009-10-12)
+==================
 - build: compile fixes for 2.6.31-rt
 - build: support for Linux 2.6.32
 - ipp2p: try to address underflows
@@ -139,8 +144,8 @@ Xtables-addons 1.19 (October 12 2009)
   - pknock: add a manpage
 
 
-Xtables-addons 1.18 (September 09 2009)
-=======================================
+v1.18 (2009-09-09)
+==================
 - build: support for Linux 2.6.31
 - ipset: fast forward to v3.2
 - quota2: support anonymous counters
@@ -151,21 +156,21 @@ Xtables-addons 1.18 (September 09 2009)
 - merged xt_psd module
 
 
-Xtables-addons 1.17 (June 16 2009)
-==================================
+v1.17 (2009-06-16)
+==================
 - IPMARK: print missing --shift parameter
 - build: use readlink -f in extensions/ipset/
 - build: support for Linux 2.6.30
 
 
-Xtables-addons 1.16 (May 27 2009)
-=================================
+v1.16 (2009-05-27)
+==================
 - RAWNAT: make iptable_rawpost compile with 2.6.30-rc5
 - ipset: fast forward to 3.0
 
 
-Xtables-addons 1.15 (April 30 2009)
-===================================
+v1.15 (2009-04-30)
+==================
 - build: add kernel version check to configure
 - condition: compile fix for 2.6.30-rc
 - condition: fix intrapositional negation sign
@@ -177,8 +182,8 @@ Xtables-addons 1.15 (April 30 2009)
 - added RAWSNAT/RAWDNAT targets
 
 
-Xtables-addons 1.14 (March 31 2009)
-===================================
+v1.14 (2009-03-31)
+==================
 - fuzzy: need to account for kernel-level modified variables in .userspacesize
 - geoip: remove XT_ALIGN from .userspacesize when used with offsetof
 - SYSRQ: ignore non-UDP packets
@@ -188,14 +193,14 @@ Xtables-addons 1.14 (March 31 2009)
 - dhcpmac: rename from dhcpaddr
 
 
-Xtables-addons 1.13 (March 23 2009)
-===================================
+v1.13 (2009-03-23)
+==================
 - added a reworked ipv4options match
 - upgrade to iptables 1.4.3 API
 
 
-Xtables-addons 1.12 (March 07 2009)
-===================================
+v1.12 (2009-03-07)
+==================
 - ipset: fix for compilation with 2.6.29-rt
 - ipset: fast forward to 2.5.0
 - rename xt_portscan to xt_lscan ("low-level scan") because
@@ -206,21 +211,21 @@ Xtables-addons 1.12 (March 07 2009)
 - xt_TEE: enable routing by iif, nfmark and flowlabel
 
 
-Xtables-addons 1.10 (February 18 2009)
-======================================
+v1.10 (2009-02-18)
+==================
 - compat: compile fixes for 2.6.29
 - ipset: upgrade to ipset 2.4.9
 
 
-Xtables-addons 1.9 (January 30 2009)
-====================================
+v1.9 (2009-01-30)
+=================
 - add the xt_length2 extension
 - xt_TEE: remove intrapositional '!' support
 - ipset: upgrade to ipset 2.4.7
 
 
-Xtables-addons 1.8 (January 10 2009)
-====================================
+v1.8 (2009-01-10)
+=================
 - xt_TEE: IPv6 support
 - xt_TEE: do not include TOS value in routing decision
 - xt_TEE: fix switch-case inversion for name/IP display
@@ -229,8 +234,8 @@ Xtables-addons 1.8 (January 10 2009)
 - xt_portscan: update manpage about --grscan option caveats
 
 
-Xtables-addons 1.7 (December 25 2008)
-=====================================
+v1.7 (2008-12-25)
+=================
 - xt_ECHO: compile fix
 - avoid the use of "_init" which led to compile errors on some installations
 - build: do not unconditionally install ipset
@@ -241,16 +246,16 @@ Xtables-addons 1.7 (December 25 2008)
 - xt_SYSRQ: improve security by hashing password
 
 
-Xtables-addons 1.6 (November 18 2008)
-=====================================
+v1.6 (2008-11-18)
+=================
 - build: support for Linux 2.6.17
 - build: compile fixes for 2.6.18 and 2.6.19
 - xt_ECHO: resolve compile errors in xt_ECHO
 - xt_ipp2p: parenthesize unaligned-access macros
 
 
-Xtables-addons 1.5.7 (September 01 2008)
-========================================
+v1.5.7 (2008-09-01)
+===================
 - API layer: fix use of uninitialized 'hotdrop' variable
 - API layer: move to pskb-based signatures
 - xt_SYSRQ: compile fixes for Linux <= 2.6.19
@@ -262,8 +267,8 @@ Xtables-addons 1.5.7 (September 01 2008)
 - xt_SYSRQ: add missing module aliases
 
 
-Xtables-addons 1.5.5 (August 03 2008)
-=====================================
+v1.5.5 (2008-08-03)
+===================
 - manpage updates for xt_CHAOS, xt_IPMARK; README updates
 - build: properly recognize external Kbuild/Mbuild files
 - build: remove dependency on CONFIG_NETWORK_SECMARK
@@ -272,13 +277,13 @@ Xtables-addons 1.5.5 (August 03 2008)
 - import ipset extension group
 
 
-Xtables-addons 1.5.4.1 (April 26 2008)
-======================================
+v1.5.4.1 (2008-04-26)
+=====================
 - build: fix compile error for 2.6.18-stable
 
 
-Xtables-addons 1.5.4 (April 09 2008)
-====================================
+v1.5.4 (2008-04-09)
+===================
 - build: support building multiple files with one config option
 - API layer: add check for pskb relocation
 - doc: generate manpages
@@ -292,28 +297,28 @@ Xtables-addons 1.5.4 (April 09 2008)
 - add reworked xt_IPMARK target
 
 
-Xtables-addons 1.5.3 (March 22 2008)
-====================================
+v1.5.3 (2008-03-22)
+===================
 - support for Linux 2.6.18
 - add xt_ECHO sample target
 - add reworked xt_geoip match
 
 
-Xtables-addons 1.5.2 (March 04 2008)
-====================================
+v1.5.2 (2008-03-04)
+===================
 - build: support for GNU make < 3.81 which does not have $(realpath)
 
 
-Xtables-addons 1.5.1 (February 21 2008)
-=======================================
+v1.5.1 (2008-02-21)
+===================
 - build: allow user to select what extensions to compile and install
 - build: allow external proejcts to be downloaded into the tree
 - xt_LOGMARK: dump classify mark, ctstate and ctstatus
 - add xt_CHAOS, xt_DELUDE and xt_portscan from Chaostables
 
 
-Xtables-addons 1.5.0 (February 11 2008)
-=======================================
+v1.5.0 (2008-02-11)
+===================
 Initial release with:
 - extensions: xt_LOGMARK, xt_TARPIT, xt_TEE
 - support for Linux >= 2.6.19
