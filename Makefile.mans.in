@@ -23,7 +23,7 @@ man_run = \
 		name="$${name\#\#*/libxt_}"; \
 		if [ -f "$$ext" ]; then \
 			echo ".SS $$name"; \
-			cat "$$ext"; \
+			cat "$$ext" || exit $$?; \
 			continue; \
 		fi; \
 	done >$@;

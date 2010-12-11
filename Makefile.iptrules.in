@@ -46,15 +46,15 @@ subdirs_list := $(filter %/,${obj-m})
 .PHONY: all install clean
 
 all: ${targets}
-	@for i in ${subdirs_list}; do ${MAKE} -C $$i; done;
+	@for i in ${subdirs_list}; do ${MAKE} -C $$i || exit $$?; done;
 
 install: ${targets}
-	@for i in ${subdirs_list}; do ${MAKE} -C $$i $@; done;
+	@for i in ${subdirs_list}; do ${MAKE} -C $$i $@ || exit $$?; done;
 	install -dm0755 "${DESTDIR}/${xtlibdir}";
 	@for i in $^; do install -pm0755 $$i "${DESTDIR}/${xtlibdir}"; done;
 
 clean:
-	@for i in ${subdirs_list}; do ${MAKE} -C $$i $@; done;
+	@for i in ${subdirs_list}; do ${MAKE} -C $$i $@ || exit $$?; done;
 	rm -f *.oo *.so;
 
 lib%.so: lib%.oo
