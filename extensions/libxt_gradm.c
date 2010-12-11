@@ -15,6 +15,7 @@
 #include <string.h>
 #include <xtables.h>
 #include "xt_gradm.h"
+#include "compat_user.h"
 
 static void gradm_mt_help(void)
 {
