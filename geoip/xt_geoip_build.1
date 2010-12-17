@@ -4,7 +4,7 @@
 xt_geoip_build \(em convert GeoIP.csv to packed format for xt_geoip
 .SH Syntax
 .PP
-\fI/usr/libexec/xt_geoip/\fP\fBxt_geoip_build\fP [\fB\-b\fP] [\fB\-D\fP
+\fI/usr/libexec/xt_geoip/\fP\fBxt_geoip_build\fP [\fB\-D\fP
 \fItarget_dir\fP] [\fIfile\fP...]
 .SH Description
 .PP
@@ -23,20 +23,13 @@ xtables-addons package and this is outside $PATH (on purpose), invoking the
 script requires it to be called with a path.
 .PP Options
 .TP
-\fB\-b\fP
-The packed database files (file extension .iv0) are normally produced in
-little-endian format. Use \fB\-b\fP to produce big-endian instead, as is needed
-on some CPU families such as MIPS, PPC and SPARC.
-.TP
 \fB\-D\fP \fItarget_dir\fP
 Specify a target directory into which the files are to be put.
 .SH Application
 .PP
 Shell commands to build the databases and put them to where they are expected:
 .PP
-xt_geoip_build -D /usr/share/xt_geoip/LE
-.PP
-xt_geoip_build -bD /usr/share/xt_geoip/BE
+xt_geoip_build -D /usr/share/xt_geoip
 .SH See also
 .PP
 xt_geoip_dl(1)

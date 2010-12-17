@@ -12,18 +12,23 @@ use strict;
 
 my %country;
 my $csv = Text::CSV_XS->new({binary => 0, eol => $/}); # or Text::CSV
-my $mode = "VV";
 my $target_dir = ".";
 
 &Getopt::Long::Configure(qw(bundling));
 &GetOptions(
 	"D=s" => \$target_dir,
-	"b"   => sub { $mode = "NN"; },
 );
 
 if (!-d $target_dir) {
 	print STDERR "Target directory $target_dir does not exist.\n";
 	exit 1;
+}
+foreach (qw(LE BE)) {
+	my $dir = "$target_dir/$_";
+	if (!-e $dir && !mkdir($dir)) {
+		print STDERR "Could not mkdir $dir: $!\n";
+		exit 1;
+	}
 }
 
 while (my $row = $csv->getline(*ARGV)) {
@@ -40,13 +45,26 @@ while (my $row = $csv->getline(*ARGV)) {
 print STDERR "\r\e[2K$. entries total\n";
 
 foreach my $iso_code (sort keys %country) {
+	my($file, $fh_le, $fh_be);
+
 	printf "%5u ranges for %s %s\n",
 		scalar(@{$country{$iso_code}{pool}}),
 		$iso_code, $country{$iso_code}{name};
 
-	open(my $fh, "> $target_dir/".uc($iso_code).".iv0");
-	foreach my $range (@{$country{$iso_code}{pool}}) {
-		print $fh pack($mode, $range->[0], $range->[1]);
+	$file = "$target_dir/LE/".uc($iso_code).".iv0";
+	if (!open($fh_le, "> $file")) {
+		print STDERR "Error opening $file: $!\n";
+		exit 1;
 	}
-	close $fh;
+	$file = "$target_dir/BE/".uc($iso_code).".iv0";
+	if (!open($fh_be, "> $file")) {
+		print STDERR "Error opening $file: $!\n";
+		exit 1;
+	}
+	foreach my $range (@{$country{$iso_code}{pool}}) {
+		print $fh_le pack("VV", $range->[0], $range->[1]);
+		print $fh_be pack("NN", $range->[0], $range->[1]);
+	}
+	close $fh_le;
+	close $fh_be;
 }
