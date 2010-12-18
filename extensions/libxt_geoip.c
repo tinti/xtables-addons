@@ -58,9 +58,9 @@ static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
 
 	/* Use simple integer vector files */
 #if __BYTE_ORDER == _BIG_ENDIAN
-	snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/BE/%s.iv0", code);
+	snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/BE/%s.iv4", code);
 #else
-	snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/LE/%s.iv0", code);
+	snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/LE/%s.iv4", code);
 #endif
 
 	if ((fd = open(buf, O_RDONLY)) < 0) {
