@@ -1,7 +1,8 @@
 # -*- Makefile -*-
 
-AM_CFLAGS = ${regular_CFLAGS} -DIPSET_LIB_DIR=\"${xtlibdir}\" \
+AM_CPPFLAGS = ${regular_CPPFLAGS} -DIPSET_LIB_DIR=\"${xtlibdir}\" \
             -DIP_NF_SET_HASHSIZE=1024
+AM_CFLAGS = ${regular_CFLAGS}
 
 include ../../Makefile.extra
 

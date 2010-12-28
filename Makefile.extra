@@ -1,6 +1,7 @@
 # -*- Makefile -*-
 # AUTOMAKE
 
+export AM_CPPFLAGS
 export AM_CFLAGS
 XA_SRCDIR = ${srcdir}
 XA_TOPSRCDIR = ${top_srcdir}
