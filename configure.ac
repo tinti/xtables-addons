@@ -49,7 +49,7 @@ if grep -q "CentOS release 5\." /etc/redhat-release 2>/dev/null ||
 	echo "WARNING: This distribution's shipped kernel is not supported.";
 fi;
 AC_MSG_CHECKING([kernel version that we will build against])
-krel="$(make -sC ${kbuilddir} kernelrelease)";
+krel="$(make -sC "$kbuilddir" M=. kernelrelease)";
 kmajor="${krel%%[[^0-9]]*}";
 kmajor="$(($kmajor+0))";
 krel="${krel:${#kmajor}}";
