@@ -28,6 +28,12 @@ Extra notes:
 
 	* requires that no vendor backports interfere
 
+For ipset-5 you need:
+
+	* libmnl
+
+	* Linux kernel >= 2.6.35
+
 
 Selecting extensions
 ====================
