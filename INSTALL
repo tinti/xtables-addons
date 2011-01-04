@@ -4,7 +4,7 @@ Installation instructions for Xtables-addons
 Xtables-addons uses the well-known configure(autotools) infrastructure
 in combination with the kernel's Kbuild system.
 
-	$ ./configure --with-xtlibdir=SEE_BELOW
+	$ ./configure
 	$ make
 	# make install
 
@@ -60,11 +60,12 @@ Configuring and compiling
 --with-xtlibdir=
 
 	Specifies the path to where the newly built extensions should
-	be installed when `make install` is run. It uses the same
-	default as the Xtables/iptables package, ${libexecdir}/xtables,
-	but you may need to specify this nevertheless, as autotools
-	defaults to using /usr/local as prefix, and distributions put
-	the files in differing locations.
+	be installed when `make install` is run. The default is to
+	use the same path that Xtables/iptables modules use, as
+	determined by `pkg-config xtables --variable xtlibdir`.
+	Thus, this option normally does NOT need to be specified
+	anymore, even if your distribution put modules in a strange
+	location.
 
 If you want to enable debugging, use
 
