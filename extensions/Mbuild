@@ -19,6 +19,7 @@ obj-${build_geoip}       += libxt_geoip.so
 obj-${build_iface}       += libxt_iface.so
 obj-${build_ipp2p}       += libxt_ipp2p.so
 obj-${build_ipset4}      += ipset-4/
+obj-${build_ipset5}      += ipset-5/
 obj-${build_ipv4options} += libxt_ipv4options.so
 obj-${build_length2}     += libxt_length2.so
 obj-${build_lscan}       += libxt_lscan.so

@@ -4,6 +4,9 @@ HEAD
 Fixes:
 - Update to ipset 4.5
   * the iptreemap type used wrong gfp flags when deleting entries
+- Include ipset 5.2 with genetlink patch (beta)
+  * no kernel patch needed, but requires Linux >= 2.6.35
+    and thus needs to be manually enabled in mconfig
 
 
 v1.31 (2010-11-05)
