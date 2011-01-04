@@ -25,6 +25,7 @@ AC_CHECK_HEADERS([linux/netfilter/x_tables.h], [],
 	[AC_MSG_ERROR([You need to have linux/netfilter/x_tables.h, see INSTALL file for details])])
 PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
 xtlibdir="$(pkg-config --variable=xtlibdir xtables)"
+PKG_CHECK_MODULES([libmnl], [libmnl >= 1])
 
 AC_ARG_WITH([xtlibdir],
 	AS_HELP_STRING([--with-xtlibdir=PATH],
@@ -86,5 +87,6 @@ AC_SUBST([kbuilddir])
 AC_SUBST([xtlibdir])
 AC_CONFIG_FILES([Makefile Makefile.iptrules Makefile.mans geoip/Makefile
 	extensions/Makefile extensions/ACCOUNT/Makefile
-	extensions/ipset/Makefile extensions/pknock/Makefile])
+	extensions/ipset-4/Makefile extensions/ipset-5/Makefile
+	extensions/pknock/Makefile])
 AC_OUTPUT
