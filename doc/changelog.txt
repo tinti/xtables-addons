@@ -2,6 +2,7 @@
 HEAD
 ====
 Fixes:
+- build: restore functionality of `configure --without-kbuild`
 - xt_LOGMARK: fix detection of untracked connection for Linux >= 2.6.36
 
 

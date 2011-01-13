@@ -49,35 +49,37 @@ if grep -q "CentOS release 5\." /etc/redhat-release 2>/dev/null ||
 	# Well, just a warning. Maybe the admin updated the kernel.
 	echo "WARNING: This distribution's shipped kernel is not supported.";
 fi;
-AC_MSG_CHECKING([kernel version that we will build against])
-krel="$(make -sC "$kbuilddir" M=. kernelrelease)";
-kmajor="${krel%%[[^0-9]]*}";
-kmajor="$(($kmajor+0))";
-krel="${krel:${#kmajor}}";
-krel="${krel#.}";
-kminor="${krel%%[[^0-9]]*}";
-kminor="$(($kminor+0))";
-krel="${krel:${#kminor}}";
-krel="${krel#.}";
-kmicro="${krel%%[[^0-9]]*}";
-kmicro="$(($kmicro+0))";
-krel="${krel:${#kmicro}}";
-krel="${krel#.}";
-kstable="${krel%%[[^0-9]]*}";
-kstable="$(($kstable+0))";
-if test -z "$kmajor" -o -z "$kminor" -o -z "$kmicro"; then
-	echo "WARNING: Version detection did not succeed. Continue at own luck.";
-else
-	echo "$kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
-	if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 37; then
-		echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
-	elif test \( "$kmajor" -lt 2 -o \
-	    \( "$kmajor" -eq 2 -a "$kminor" -lt 6 \) -o \
-	    \( "$kmajor" -eq 2 -a "$kminor" -eq 0 -a "$kmicro" -lt 17 \) -o \
-	    \( "$kmajor" -eq 2 -a "$kminor" -eq 6 -a "$kmicro" -eq 18 -a \
-	    "$kstable" -lt 5 \) \); then
-		echo "ERROR: That kernel version is not supported. Please see INSTALL for minimum configuration.";
-		exit 1;
+if test -n "$kbuilddir"; then
+	AC_MSG_CHECKING([kernel version that we will build against])
+	krel="$(make -sC "$kbuilddir" M=. kernelrelease)";
+	kmajor="${krel%%[[^0-9]]*}";
+	kmajor="$(($kmajor+0))";
+	krel="${krel:${#kmajor}}";
+	krel="${krel#.}";
+	kminor="${krel%%[[^0-9]]*}";
+	kminor="$(($kminor+0))";
+	krel="${krel:${#kminor}}";
+	krel="${krel#.}";
+	kmicro="${krel%%[[^0-9]]*}";
+	kmicro="$(($kmicro+0))";
+	krel="${krel:${#kmicro}}";
+	krel="${krel#.}";
+	kstable="${krel%%[[^0-9]]*}";
+	kstable="$(($kstable+0))";
+	if test -z "$kmajor" -o -z "$kminor" -o -z "$kmicro"; then
+		echo "WARNING: Version detection did not succeed. Continue at own luck.";
+	else
+		echo "$kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
+		if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 37; then
+			echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
+		elif test \( "$kmajor" -lt 2 -o \
+		    \( "$kmajor" -eq 2 -a "$kminor" -lt 6 \) -o \
+		    \( "$kmajor" -eq 2 -a "$kminor" -eq 0 -a "$kmicro" -lt 17 \) -o \
+		    \( "$kmajor" -eq 2 -a "$kminor" -eq 6 -a "$kmicro" -eq 18 -a \
+		    "$kstable" -lt 5 \) \); then
+			echo "ERROR: That kernel version is not supported. Please see INSTALL for minimum configuration.";
+			exit 1;
+		fi;
 	fi;
 fi;
 
