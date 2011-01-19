@@ -5,3 +5,7 @@ obj-m += ip_set.o ip_set_bitmap_ip.o ip_set_bitmap_ipmac.o
 obj-m += ip_set_bitmap_port.o ip_set_hash_ip.o ip_set_hash_ipport.o
 obj-m += ip_set_hash_ipportip.o ip_set_hash_ipportnet.o ip_set_hash_net.o
 obj-m += ip_set_hash_netport.o ip_set_list_set.o
+
+ip_set-y := ip_set_core.o pfxlen.o
+
+EXTRA_CFLAGS += -DLCONFIG_IP_SET_MAX=256

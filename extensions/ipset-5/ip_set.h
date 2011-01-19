@@ -4,7 +4,7 @@
 /* Copyright (C) 2000-2002 Joakim Axelsson <gozem@linux.nu>
  *                         Patrick Schaaf <bof@bof.de>
  *                         Martin Josefsson <gandalf@wlug.westbo.se>
- * Copyright (C) 2003-2010 Jozsef Kadlecsik <kadlec@blackhole.kfki.hu>
+ * Copyright (C) 2003-2011 Jozsef Kadlecsik <kadlec@blackhole.kfki.hu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -279,6 +279,7 @@ struct ip_set_type {
 	struct module *me;
 };
 
+/* register and unregister set type */
 extern int ip_set_type_register(struct ip_set_type *set_type);
 extern void ip_set_type_unregister(struct ip_set_type *set_type);
 
@@ -490,15 +491,6 @@ bitmap_bytes(u32 a, u32 b)
 {
 	return 4 * ((((b - a + 8) / 8) + 3) / 4);
 }
-
-/* Prefixlen maps */
-extern const union nf_inet_addr prefixlen_netmask_map[];
-extern const union nf_inet_addr prefixlen_hostmask_map[];
-
-#define NETMASK(n)	prefixlen_netmask_map[n].ip
-#define NETMASK6(n)	prefixlen_netmask_map[n].ip6
-#define HOSTMASK(n)	prefixlen_hostmask_map[n].ip
-#define HOSTMASK6(n)	prefixlen_hostmask_map[n].ip6
 
 /* Interface to iptables/ip6tables */
 
