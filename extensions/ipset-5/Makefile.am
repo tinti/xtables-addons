@@ -1,6 +1,7 @@
 # -*- Makefile -*-
 
-AM_CFLAGS = ${regular_CFLAGS} ${libmnl_CFLAGS} -I${srcdir}/include
+AM_CPPFLAGS = -I${srcdir}/include
+AM_CFLAGS = ${regular_CFLAGS} ${libmnl_CFLAGS}
 
 include ../../Makefile.extra
 
