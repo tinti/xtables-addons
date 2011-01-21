@@ -1,6 +1,7 @@
 # -*- Makefile -*-
 
-AM_CFLAGS = ${regular_CFLAGS} ${libmnl_CFLAGS} -Iinclude
+AM_CPPFLAGS = -I${srcdir}/include -DNDEBUG
+AM_CFLAGS = ${regular_CFLAGS} ${libmnl_CFLAGS}
 
 include ../../Makefile.extra
 

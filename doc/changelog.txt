@@ -3,7 +3,12 @@ HEAD
 ====
 Fixes:
 - build: restore functionality of `configure --without-kbuild`
+- build: fix objdir builds for ipset-5 (xt-a specific)
 - xt_LOGMARK: fix detection of untracked connection for Linux >= 2.6.36
+Enhancements:
+- Update to ipset 5.3
+  * make IPv4 and IPv6 address handling similar
+  * show correct line numbers in restore output for parser errors
 
 
 v1.32 (2011-01-04)

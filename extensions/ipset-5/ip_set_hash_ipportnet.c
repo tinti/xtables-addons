@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2010 Jozsef Kadlecsik <kadlec@blackhole.kfki.hu>
+/* Copyright (C) 2003-2011 Jozsef Kadlecsik <kadlec@blackhole.kfki.hu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -23,6 +23,7 @@
 #include <net/tcp.h>
 
 #include <linux/netfilter.h>
+#include "pfxlen.h"
 #include "ip_set.h"
 #include "ip_set_timeout.h"
 #include "ip_set_getport.h"
