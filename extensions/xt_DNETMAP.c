@@ -27,6 +27,7 @@
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
 #include "xt_DNETMAP.h"
+#include "compat_xtables.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Kierdelewicz <marek@koba.pl>");
@@ -300,8 +301,9 @@ out:
 }
 
 static unsigned int
-dnetmap_tg(struct sk_buff *skb, const struct xt_action_param *par)
+dnetmap_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 {
+	struct sk_buff *skb = *pskb;
 	struct net *net = dev_net(par->in ? par->in : par->out);
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(net);
 	struct nf_conn *ct;
