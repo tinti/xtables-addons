@@ -34,23 +34,23 @@ MODULE_DESCRIPTION(
 	"Xtables: dynamic two-way 1:1 NAT mapping of IPv4 addresses");
 
 static unsigned int default_ttl = 600;
-static unsigned int proc_perms = 0644;
+static unsigned int proc_perms = S_IRUGO | S_IWUSR;
 static unsigned int proc_uid;
 static unsigned int proc_gid;
 static unsigned int default_hash_size = 256;
 static unsigned int hash_size = 256;
 static unsigned int disable_log;
 static unsigned int whole_prefix = 1;
-module_param(default_ttl, uint, 0400);
+module_param(default_ttl, uint, S_IRUSR);
 MODULE_PARM_DESC(default_ttl,
 		 " default ttl value to be used if rule doesn't specify any (default: 600)");
-module_param(hash_size, uint, 0400);
+module_param(hash_size, uint, S_IRUSR);
 MODULE_PARM_DESC(hash_size,
 		 " hash size for ip lists, needs to be power of 2 (default: 256)");
-module_param(disable_log, uint, 0400);
+module_param(disable_log, uint, S_IRUSR);
 MODULE_PARM_DESC(disable_log,
 		 " disables logging of bind/timeout events (default: 0)");
-module_param(whole_prefix, uint, 0400);
+module_param(whole_prefix, uint, S_IRUSR);
 MODULE_PARM_DESC(whole_prefix,
 		 " use network and broadcast addresses of specified prefix for bindings (default: 1)");
 
