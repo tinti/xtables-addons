@@ -13,7 +13,6 @@
 #define GROUP 1
 
 static struct sockaddr_nl src_addr, dest_addr;
-static struct msghdr msg;
 static int sock_fd;
 
 static unsigned char *buf;
@@ -25,9 +24,8 @@ int main(void)
 	socklen_t addrlen;
 	int status;
 	int group = GROUP;
-	struct cn_msg *cnmsg;
 
-	int i, buf_size;
+	int buf_size;
 
 	const char *ip;
 	char ipbuf[48];
