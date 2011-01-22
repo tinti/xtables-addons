@@ -7,7 +7,6 @@
 
 /* Kernel module implementing an IP set type: the hash:ip,port,net type */
 
-#include "ip_set_kernel.h"
 #include "jhash.h"
 #include <linux/module.h>
 #include <linux/ip.h>
@@ -47,18 +46,18 @@ hash_ipportnet_same_set(const struct ip_set *a, const struct ip_set *b);
 
 /* Member elements without timeout */
 struct hash_ipportnet4_elem {
-	u32 ip;
-	u32 ip2;
-	u16 port;
+	__be32 ip;
+	__be32 ip2;
+	__be16 port;
 	u8 cidr;
 	u8 proto;
 };
 
 /* Member elements with timeout support */
 struct hash_ipportnet4_telem {
-	u32 ip;
-	u32 ip2;
-	u16 port;
+	__be32 ip;
+	__be32 ip2;
+	__be16 port;
 	u8 cidr;
 	u8 proto;
 	unsigned long timeout;
@@ -68,11 +67,11 @@ static inline bool
 hash_ipportnet4_data_equal(const struct hash_ipportnet4_elem *ip1,
 			   const struct hash_ipportnet4_elem *ip2)
 {
-	return ip1->ip == ip2->ip
-	       && ip1->ip2 == ip2->ip2
-	       && ip1->cidr == ip2->cidr
-	       && ip1->port == ip2->port
-	       && ip1->proto == ip2->proto;
+	return ip1->ip == ip2->ip &&
+	       ip1->ip2 == ip2->ip2 &&
+	       ip1->cidr == ip2->cidr &&
+	       ip1->port == ip2->port &&
+	       ip1->proto == ip2->proto;
 }
 
 static inline bool
@@ -89,20 +88,9 @@ hash_ipportnet4_data_copy(struct hash_ipportnet4_elem *dst,
 }
 
 static inline void
-hash_ipportnet4_data_swap(struct hash_ipportnet4_elem *dst,
-			  struct hash_ipportnet4_elem *src)
-{
-	struct hash_ipportnet4_elem tmp;
-
-	memcpy(&tmp, dst, sizeof(tmp));
-	memcpy(dst, src, sizeof(tmp));
-	memcpy(src, &tmp, sizeof(tmp));
-}
-
-static inline void
 hash_ipportnet4_data_netmask(struct hash_ipportnet4_elem *elem, u8 cidr)
 {
-	elem->ip2 &= NETMASK(cidr);
+	elem->ip2 &= ip_set_netmask(cidr);
 	elem->cidr = cidr;
 }
 
@@ -112,7 +100,7 @@ hash_ipportnet4_data_zero_out(struct hash_ipportnet4_elem *elem)
 	elem->proto = 0;
 }
 
-static inline bool
+static bool
 hash_ipportnet4_data_list(struct sk_buff *skb,
 			  const struct hash_ipportnet4_elem *data)
 {
@@ -127,7 +115,7 @@ nla_put_failure:
 	return 1;
 }
 
-static inline bool
+static bool
 hash_ipportnet4_data_tlist(struct sk_buff *skb,
 			   const struct hash_ipportnet4_elem *data)
 {
@@ -169,13 +157,13 @@ hash_ipportnet4_kadt(struct ip_set *set, const struct sk_buff *skb,
 	if (adt == IPSET_TEST)
 		data.cidr = HOST_MASK;
 
-	if (!get_ip4_port(skb, flags & IPSET_DIM_TWO_SRC,
-			  &data.port, &data.proto))
+	if (!ip_set_get_ip4_port(skb, flags & IPSET_DIM_TWO_SRC,
+				 &data.port, &data.proto))
 		return -EINVAL;
 
 	ip4addrptr(skb, flags & IPSET_DIM_ONE_SRC, &data.ip);
 	ip4addrptr(skb, flags & IPSET_DIM_THREE_SRC, &data.ip2);
-	data.ip2 &= NETMASK(data.cidr);
+	data.ip2 &= ip_set_netmask(data.cidr);
 
 	return adtfn(set, &data, h->timeout);
 }
@@ -210,14 +198,20 @@ hash_ipportnet4_uadt(struct ip_set *set, struct nlattr *head, int len,
 		      hash_ipportnet_adt_policy))
 		return -IPSET_ERR_PROTOCOL;
 
+	if (unlikely(!tb[IPSET_ATTR_IP] || !tb[IPSET_ATTR_IP2] ||
+		     !ip_set_attr_netorder(tb, IPSET_ATTR_PORT) ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_PORT_TO) ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
+		return -IPSET_ERR_PROTOCOL;
+
 	if (tb[IPSET_ATTR_LINENO])
 		*lineno = nla_get_u32(tb[IPSET_ATTR_LINENO]);
 
-	ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP, &data.ip);
+	ret = ip_set_get_ipaddr4(tb[IPSET_ATTR_IP], &data.ip);
 	if (ret)
 		return ret;
 
-	ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP2, &data.ip2);
+	ret = ip_set_get_ipaddr4(tb[IPSET_ATTR_IP2], &data.ip2);
 	if (ret)
 		return ret;
 
@@ -227,16 +221,16 @@ hash_ipportnet4_uadt(struct ip_set *set, struct nlattr *head, int len,
 	if (!data.cidr)
 		return -IPSET_ERR_INVALID_CIDR;
 
-	data.ip2 &= NETMASK(data.cidr);
+	data.ip2 &= ip_set_netmask(data.cidr);
 
 	if (tb[IPSET_ATTR_PORT])
-		data.port = ip_set_get_n16(tb[IPSET_ATTR_PORT]);
+		data.port = nla_get_be16(tb[IPSET_ATTR_PORT]);
 	else
 		return -IPSET_ERR_PROTOCOL;
 
 	if (tb[IPSET_ATTR_PROTO]) {
 		data.proto = nla_get_u8(tb[IPSET_ATTR_PROTO]);
-		
+
 		if (data.proto == 0)
 			return -IPSET_ERR_INVALID_PROTO;
 	} else
@@ -258,20 +252,19 @@ hash_ipportnet4_uadt(struct ip_set *set, struct nlattr *head, int len,
 		timeout = ip_set_timeout_uget(tb[IPSET_ATTR_TIMEOUT]);
 	}
 
-	if (adt == IPSET_TEST
-	    || !(data.proto == IPPROTO_TCP || data.proto == IPPROTO_UDP)
-	    || !(tb[IPSET_ATTR_IP_TO] || tb[IPSET_ATTR_CIDR]
-	    	 || tb[IPSET_ATTR_PORT_TO])) {
+	if (adt == IPSET_TEST ||
+	    !(data.proto == IPPROTO_TCP || data.proto == IPPROTO_UDP) ||
+	    !(tb[IPSET_ATTR_IP_TO] || tb[IPSET_ATTR_CIDR] ||
+	      tb[IPSET_ATTR_PORT_TO])) {
 		ret = adtfn(set, &data, timeout);
 		return ip_set_eexist(ret, flags) ? 0 : ret;
 	}
 
 	ip = ntohl(data.ip);
 	if (tb[IPSET_ATTR_IP_TO]) {
-		ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP_TO, &ip_to);
+		ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP_TO], &ip_to);
 		if (ret)
 			return ret;
-		ip_to = ntohl(ip_to);
 		if (ip > ip_to)
 			swap(ip, ip_to);
 	} else if (tb[IPSET_ATTR_CIDR]) {
@@ -279,8 +272,8 @@ hash_ipportnet4_uadt(struct ip_set *set, struct nlattr *head, int len,
 
 		if (cidr > 32)
 			return -IPSET_ERR_INVALID_CIDR;
-		ip &= HOSTMASK(cidr);
-		ip_to = ip | ~HOSTMASK(cidr);
+		ip &= ip_set_hostmask(cidr);
+		ip_to = ip | ~ip_set_hostmask(cidr);
 	} else
 		ip_to = ip;
 
@@ -311,10 +304,10 @@ hash_ipportnet_same_set(const struct ip_set *a, const struct ip_set *b)
 {
 	const struct ip_set_hash *x = a->data;
 	const struct ip_set_hash *y = b->data;
-	
+
 	/* Resizing changes htable_bits, so we ignore it */
-	return x->maxelem == y->maxelem
-	       && x->timeout == y->timeout;
+	return x->maxelem == y->maxelem &&
+	       x->timeout == y->timeout;
 }
 
 /* The type variant functions: IPv6 */
@@ -322,7 +315,7 @@ hash_ipportnet_same_set(const struct ip_set *a, const struct ip_set *b)
 struct hash_ipportnet6_elem {
 	union nf_inet_addr ip;
 	union nf_inet_addr ip2;
-	u16 port;
+	__be16 port;
 	u8 cidr;
 	u8 proto;
 };
@@ -330,7 +323,7 @@ struct hash_ipportnet6_elem {
 struct hash_ipportnet6_telem {
 	union nf_inet_addr ip;
 	union nf_inet_addr ip2;
-	u16 port;
+	__be16 port;
 	u8 cidr;
 	u8 proto;
 	unsigned long timeout;
@@ -340,11 +333,11 @@ static inline bool
 hash_ipportnet6_data_equal(const struct hash_ipportnet6_elem *ip1,
 			   const struct hash_ipportnet6_elem *ip2)
 {
-	return ipv6_addr_cmp(&ip1->ip.in6, &ip2->ip.in6) == 0
-	       && ipv6_addr_cmp(&ip1->ip2.in6, &ip2->ip2.in6) == 0
-	       && ip1->cidr == ip2->cidr
-	       && ip1->port == ip2->port
-	       && ip1->proto == ip2->proto;
+	return ipv6_addr_cmp(&ip1->ip.in6, &ip2->ip.in6) == 0 &&
+	       ipv6_addr_cmp(&ip1->ip2.in6, &ip2->ip2.in6) == 0 &&
+	       ip1->cidr == ip2->cidr &&
+	       ip1->port == ip2->port &&
+	       ip1->proto == ip2->proto;
 }
 
 static inline bool
@@ -361,17 +354,6 @@ hash_ipportnet6_data_copy(struct hash_ipportnet6_elem *dst,
 }
 
 static inline void
-hash_ipportnet6_data_swap(struct hash_ipportnet6_elem *dst,
-			 struct hash_ipportnet6_elem *src)
-{
-	struct hash_ipportnet6_elem tmp;
-	
-	memcpy(&tmp, dst, sizeof(tmp));
-	memcpy(dst, src, sizeof(tmp));
-	memcpy(src, &tmp, sizeof(tmp));
-}
-
-static inline void
 hash_ipportnet6_data_zero_out(struct hash_ipportnet6_elem *elem)
 {
 	elem->proto = 0;
@@ -380,10 +362,10 @@ hash_ipportnet6_data_zero_out(struct hash_ipportnet6_elem *elem)
 static inline void
 ip6_netmask(union nf_inet_addr *ip, u8 prefix)
 {
-	ip->ip6[0] &= NETMASK6(prefix)[0];
-	ip->ip6[1] &= NETMASK6(prefix)[1];
-	ip->ip6[2] &= NETMASK6(prefix)[2];
-	ip->ip6[3] &= NETMASK6(prefix)[3];
+	ip->ip6[0] &= ip_set_netmask6(prefix)[0];
+	ip->ip6[1] &= ip_set_netmask6(prefix)[1];
+	ip->ip6[2] &= ip_set_netmask6(prefix)[2];
+	ip->ip6[3] &= ip_set_netmask6(prefix)[3];
 }
 
 static inline void
@@ -393,7 +375,7 @@ hash_ipportnet6_data_netmask(struct hash_ipportnet6_elem *elem, u8 cidr)
 	elem->cidr = cidr;
 }
 
-static inline bool
+static bool
 hash_ipportnet6_data_list(struct sk_buff *skb,
 			  const struct hash_ipportnet6_elem *data)
 {
@@ -408,13 +390,13 @@ nla_put_failure:
 	return 1;
 }
 
-static inline bool
+static bool
 hash_ipportnet6_data_tlist(struct sk_buff *skb,
 			   const struct hash_ipportnet6_elem *data)
 {
-	const struct hash_ipportnet6_telem *e = 
+	const struct hash_ipportnet6_telem *e =
 		(const struct hash_ipportnet6_telem *)data;
-	
+
 	NLA_PUT_IPADDR6(skb, IPSET_ATTR_IP, &e->ip);
 	NLA_PUT_IPADDR6(skb, IPSET_ATTR_IP2, &data->ip2);
 	NLA_PUT_NET16(skb, IPSET_ATTR_PORT, data->port);
@@ -449,8 +431,8 @@ hash_ipportnet6_kadt(struct ip_set *set, const struct sk_buff *skb,
 	if (adt == IPSET_TEST)
 		data.cidr = HOST_MASK;
 
-	if (!get_ip6_port(skb, flags & IPSET_DIM_TWO_SRC,
-			  &data.port, &data.proto))
+	if (!ip_set_get_ip6_port(skb, flags & IPSET_DIM_TWO_SRC,
+				 &data.port, &data.proto))
 		return -EINVAL;
 
 	ip6addrptr(skb, flags & IPSET_DIM_ONE_SRC, &data.ip.in6);
@@ -476,14 +458,20 @@ hash_ipportnet6_uadt(struct ip_set *set, struct nlattr *head, int len,
 		      hash_ipportnet_adt_policy))
 		return -IPSET_ERR_PROTOCOL;
 
+	if (unlikely(!tb[IPSET_ATTR_IP] || !tb[IPSET_ATTR_IP2] ||
+		     !ip_set_attr_netorder(tb, IPSET_ATTR_PORT) ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_PORT_TO) ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
+		return -IPSET_ERR_PROTOCOL;
+
 	if (tb[IPSET_ATTR_LINENO])
 		*lineno = nla_get_u32(tb[IPSET_ATTR_LINENO]);
 
-	ret = ip_set_get_ipaddr6(tb, IPSET_ATTR_IP, &data.ip);
+	ret = ip_set_get_ipaddr6(tb[IPSET_ATTR_IP], &data.ip);
 	if (ret)
 		return ret;
 
-	ret = ip_set_get_ipaddr6(tb, IPSET_ATTR_IP2, &data.ip2);
+	ret = ip_set_get_ipaddr6(tb[IPSET_ATTR_IP2], &data.ip2);
 	if (ret)
 		return ret;
 
@@ -496,7 +484,7 @@ hash_ipportnet6_uadt(struct ip_set *set, struct nlattr *head, int len,
 	ip6_netmask(&data.ip2, data.cidr);
 
 	if (tb[IPSET_ATTR_PORT])
-		data.port = ip_set_get_n16(tb[IPSET_ATTR_PORT]);
+		data.port = nla_get_be16(tb[IPSET_ATTR_PORT]);
 	else
 		return -IPSET_ERR_PROTOCOL;
 
@@ -524,9 +512,9 @@ hash_ipportnet6_uadt(struct ip_set *set, struct nlattr *head, int len,
 		timeout = ip_set_timeout_uget(tb[IPSET_ATTR_TIMEOUT]);
 	}
 
-	if (adt == IPSET_TEST
-	    || !(data.proto == IPPROTO_TCP || data.proto == IPPROTO_UDP)
-	    || !tb[IPSET_ATTR_PORT_TO]) {
+	if (adt == IPSET_TEST ||
+	    !(data.proto == IPPROTO_TCP || data.proto == IPPROTO_UDP) ||
+	    !tb[IPSET_ATTR_PORT_TO]) {
 		ret = adtfn(set, &data, timeout);
 		return ip_set_eexist(ret, flags) ? 0 : ret;
 	}
@@ -575,6 +563,11 @@ hash_ipportnet_create(struct ip_set *set, struct nlattr *head,
 		      hash_ipportnet_create_policy))
 		return -IPSET_ERR_PROTOCOL;
 
+	if (unlikely(!ip_set_optattr_netorder(tb, IPSET_ATTR_HASHSIZE) ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_MAXELEM) ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
+		return -IPSET_ERR_PROTOCOL;
+
 	if (tb[IPSET_ATTR_HASHSIZE]) {
 		hashsize = ip_set_get_h32(tb[IPSET_ATTR_HASHSIZE]);
 		if (hashsize < IPSET_MIMINAL_HASHSIZE)
@@ -609,7 +602,7 @@ hash_ipportnet_create(struct ip_set *set, struct nlattr *head,
 
 	if (tb[IPSET_ATTR_TIMEOUT]) {
 		h->timeout = ip_set_timeout_uget(tb[IPSET_ATTR_TIMEOUT]);
-		
+
 		set->variant = set->family == AF_INET
 			? &hash_ipportnet4_tvariant
 			: &hash_ipportnet6_tvariant;
@@ -622,11 +615,11 @@ hash_ipportnet_create(struct ip_set *set, struct nlattr *head,
 		set->variant = set->family == AF_INET
 			? &hash_ipportnet4_variant : &hash_ipportnet6_variant;
 	}
-	
-	pr_debug("create %s hashsize %u (%u) maxelem %u: %p(%p)",
+
+	pr_debug("create %s hashsize %u (%u) maxelem %u: %p(%p)\n",
 		 set->name, jhash_size(h->table->htable_bits),
 		 h->table->htable_bits, h->maxelem, set->data, h->table);
-	   
+
 	return 0;
 }
 

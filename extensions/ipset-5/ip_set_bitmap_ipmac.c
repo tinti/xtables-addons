@@ -10,7 +10,6 @@
 
 /* Kernel module implementing an IP set type: the bitmap:ip,mac type */
 
-#include "ip_set_kernel.h"
 #include <linux/module.h>
 #include <linux/ip.h>
 #include <linux/etherdevice.h>
@@ -95,9 +94,9 @@ bitmap_expired(const struct bitmap_ipmac *map, u32 id)
 static inline int
 bitmap_ipmac_exist(const struct ipmac_telem *elem)
 {
-	return elem->match == MAC_UNSET
-		|| (elem->match == MAC_FILLED
-		    && !ip_set_timeout_expired(elem->timeout));
+	return elem->match == MAC_UNSET ||
+	       (elem->match == MAC_FILLED &&
+		!ip_set_timeout_expired(elem->timeout));
 }
 
 /* Base variant */
@@ -114,8 +113,8 @@ bitmap_ipmac_test(struct ip_set *set, void *value, u32 timeout)
 		/* Trigger kernel to fill out the ethernet address */
 		return -EAGAIN;
 	case MAC_FILLED:
-		return data->ether == NULL
-		       || compare_ether_addr(data->ether, elem->ether) == 0;
+		return data->ether == NULL ||
+		       compare_ether_addr(data->ether, elem->ether) == 0;
 	}
 	return 0;
 }
@@ -223,9 +222,9 @@ bitmap_ipmac_ttest(struct ip_set *set, void *value, u32 timeout)
 		/* Trigger kernel to fill out the ethernet address */
 		return -EAGAIN;
 	case MAC_FILLED:
-		return (data->ether == NULL
-			|| compare_ether_addr(data->ether, elem->ether) == 0)
-		       && !bitmap_expired(map, data->id);
+		return (data->ether == NULL ||
+			compare_ether_addr(data->ether, elem->ether) == 0) &&
+		       !bitmap_expired(map, data->id);
 	}
 	return 0;
 }
@@ -348,8 +347,8 @@ bitmap_ipmac_kadt(struct ip_set *set, const struct sk_buff *skb,
 		return -IPSET_ERR_BITMAP_RANGE;
 
 	/* Backward compatibility: we don't check the second flag */
-	if (skb_mac_header(skb) < skb->head
-	    || (skb_mac_header(skb) + ETH_HLEN) > skb->data)
+	if (skb_mac_header(skb) < skb->head ||
+	    (skb_mac_header(skb) + ETH_HLEN) > skb->data)
 		return -EINVAL;
 
 	data.id -= map->first_ip;
@@ -381,13 +380,16 @@ bitmap_ipmac_uadt(struct ip_set *set, struct nlattr *head, int len,
 		      bitmap_ipmac_adt_policy))
 		return -IPSET_ERR_PROTOCOL;
 
+	if (unlikely(!tb[IPSET_ATTR_IP] ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
+		return -IPSET_ERR_PROTOCOL;
+
 	if (tb[IPSET_ATTR_LINENO])
 		*lineno = nla_get_u32(tb[IPSET_ATTR_LINENO]);
 
-	ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP, &data.id);
+	ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP], &data.id);
 	if (ret)
 		return ret;
-	data.id = ntohl(data.id);
 
 	if (data.id < map->first_ip || data.id > map->last_ip)
 		return -IPSET_ERR_BITMAP_RANGE;
@@ -464,12 +466,12 @@ bitmap_ipmac_same_set(const struct ip_set *a, const struct ip_set *b)
 	const struct bitmap_ipmac *x = a->data;
 	const struct bitmap_ipmac *y = b->data;
 
-	return x->first_ip == y->first_ip
-	       && x->last_ip == y->last_ip
-	       && x->timeout == y->timeout;
+	return x->first_ip == y->first_ip &&
+	       x->last_ip == y->last_ip &&
+	       x->timeout == y->timeout;
 }
 
-const struct ip_set_type_variant bitmap_ipmac = {
+static const struct ip_set_type_variant bitmap_ipmac = {
 	.kadt	= bitmap_ipmac_kadt,
 	.uadt	= bitmap_ipmac_uadt,
 	.adt	= {
@@ -484,7 +486,7 @@ const struct ip_set_type_variant bitmap_ipmac = {
 	.same_set = bitmap_ipmac_same_set,
 };
 
-const struct ip_set_type_variant bitmap_tipmac = {
+static const struct ip_set_type_variant bitmap_tipmac = {
 	.kadt	= bitmap_ipmac_kadt,
 	.uadt	= bitmap_ipmac_uadt,
 	.adt	= {
@@ -512,8 +514,8 @@ bitmap_ipmac_gc(unsigned long ul_set)
 	read_lock_bh(&set->lock);
 	for (id = 0; id <= last; id++) {
 		elem = bitmap_ipmac_elem(map, id);
-		if (elem->match == MAC_FILLED
-		    && ip_set_timeout_expired(elem->timeout))
+		if (elem->match == MAC_FILLED &&
+		    ip_set_timeout_expired(elem->timeout))
 			elem->match = MAC_EMPTY;
 	}
 	read_unlock_bh(&set->lock);
@@ -522,7 +524,7 @@ bitmap_ipmac_gc(unsigned long ul_set)
 	add_timer(&map->gc);
 }
 
-static inline void
+static void
 bitmap_ipmac_gc_init(struct ip_set *set)
 {
 	struct bitmap_ipmac *map = set->data;
@@ -540,6 +542,7 @@ static const struct nla_policy
 bitmap_ipmac_create_policy[IPSET_ATTR_CREATE_MAX+1] = {
 	[IPSET_ATTR_IP]		= { .type = NLA_NESTED },
 	[IPSET_ATTR_IP_TO]	= { .type = NLA_NESTED },
+	[IPSET_ATTR_CIDR]	= { .type = NLA_U8 },
 	[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
 };
 
@@ -574,16 +577,18 @@ bitmap_ipmac_create(struct ip_set *set, struct nlattr *head, int len,
 		      bitmap_ipmac_create_policy))
 		return -IPSET_ERR_PROTOCOL;
 
-	ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP, &first_ip);
+	if (unlikely(!tb[IPSET_ATTR_IP] ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
+		return -IPSET_ERR_PROTOCOL;
+
+	ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP], &first_ip);
 	if (ret)
 		return ret;
-	first_ip = ntohl(first_ip);
 
 	if (tb[IPSET_ATTR_IP_TO]) {
-		ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP_TO, &last_ip);
+		ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP_TO], &last_ip);
 		if (ret)
 			return ret;
-		last_ip = ntohl(last_ip);
 		if (first_ip > last_ip) {
 			u32 tmp = first_ip;
 
@@ -595,7 +600,7 @@ bitmap_ipmac_create(struct ip_set *set, struct nlattr *head, int len,
 
 		if (cidr >= 32)
 			return -IPSET_ERR_INVALID_CIDR;
-		last_ip = first_ip | ~HOSTMASK(cidr);
+		last_ip = first_ip | ~ip_set_hostmask(cidr);
 	} else
 		return -IPSET_ERR_PROTOCOL;
 
@@ -634,7 +639,7 @@ bitmap_ipmac_create(struct ip_set *set, struct nlattr *head, int len,
 	return 0;
 }
 
-struct ip_set_type bitmap_ipmac_type = {
+static struct ip_set_type bitmap_ipmac_type = {
 	.name		= "bitmap:ip,mac",
 	.protocol	= IPSET_PROTOCOL,
 	.features	= IPSET_TYPE_IP | IPSET_TYPE_MAC,
