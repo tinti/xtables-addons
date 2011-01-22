@@ -9,7 +9,6 @@
 
 /* Kernel module implementing an IP set type: the bitmap:ip type */
 
-#include "ip_set_kernel.h"
 #include <linux/module.h>
 #include <linux/ip.h>
 #include <linux/skbuff.h>
@@ -47,9 +46,9 @@ struct bitmap_ip {
 };
 
 static inline u32
-ip_to_id(const struct bitmap_ip *map, u32 ip)
+ip_to_id(const struct bitmap_ip *m, u32 ip)
 {
-	return ((ip & HOSTMASK(map->netmask)) - map->first_ip)/map->hosts;
+	return ((ip & ip_set_hostmask(m->netmask)) - m->first_ip)/m->hosts;
 }
 
 static inline int
@@ -122,13 +121,15 @@ bitmap_ip_uadt(struct ip_set *set, struct nlattr *head, int len,
 		      bitmap_ip_adt_policy))
 		return -IPSET_ERR_PROTOCOL;
 
+	if (unlikely(!tb[IPSET_ATTR_IP]))
+		return -IPSET_ERR_PROTOCOL;
+
 	if (tb[IPSET_ATTR_LINENO])
 		*lineno = nla_get_u32(tb[IPSET_ATTR_LINENO]);
 
-	ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP, &ip);
+	ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP], &ip);
 	if (ret)
 		return ret;
-	ip = ntohl(ip);
 
 	if (ip < map->first_ip || ip > map->last_ip)
 		return -IPSET_ERR_BITMAP_RANGE;
@@ -142,10 +143,9 @@ bitmap_ip_uadt(struct ip_set *set, struct nlattr *head, int len,
 		return bitmap_ip_test(map, ip_to_id(map, ip));
 
 	if (tb[IPSET_ATTR_IP_TO]) {
-		ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP_TO, &ip_to);
+		ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP_TO], &ip_to);
 		if (ret)
 			return ret;
-		ip_to = ntohl(ip_to);
 		if (ip > ip_to) {
 			swap(ip, ip_to);
 			if (ip < map->first_ip)
@@ -156,8 +156,8 @@ bitmap_ip_uadt(struct ip_set *set, struct nlattr *head, int len,
 
 		if (cidr > 32)
 			return -IPSET_ERR_INVALID_CIDR;
-		ip &= HOSTMASK(cidr);
-		ip_to = ip | ~HOSTMASK(cidr);
+		ip &= ip_set_hostmask(cidr);
+		ip_to = ip | ~ip_set_hostmask(cidr);
 	} else
 		ip_to = ip;
 
@@ -264,9 +264,9 @@ bitmap_ip_same_set(const struct ip_set *a, const struct ip_set *b)
 	const struct bitmap_ip *x = a->data;
 	const struct bitmap_ip *y = b->data;
 
-	return x->first_ip == y->first_ip
-	       && x->last_ip == y->last_ip
-	       && x->netmask == y->netmask;
+	return x->first_ip == y->first_ip &&
+	       x->last_ip == y->last_ip &&
+	       x->netmask == y->netmask;
 }
 
 static const struct ip_set_type_variant bitmap_ip = {
@@ -362,13 +362,16 @@ bitmap_ip_timeout_uadt(struct ip_set *set, struct nlattr *head, int len,
 		      bitmap_ip_adt_policy))
 		return -IPSET_ERR_PROTOCOL;
 
+	if (unlikely(!tb[IPSET_ATTR_IP] ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
+		return -IPSET_ERR_PROTOCOL;
+
 	if (tb[IPSET_ATTR_LINENO])
 		*lineno = nla_get_u32(tb[IPSET_ATTR_LINENO]);
 
-	ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP, &ip);
+	ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP], &ip);
 	if (ret)
 		return ret;
-	ip = ntohl(ip);
 
 	if (ip < map->first_ip || ip > map->last_ip)
 		return -IPSET_ERR_BITMAP_RANGE;
@@ -378,10 +381,9 @@ bitmap_ip_timeout_uadt(struct ip_set *set, struct nlattr *head, int len,
 				ip_to_id((const struct bitmap_ip *)map, ip));
 
 	if (tb[IPSET_ATTR_IP_TO]) {
-		ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP_TO, &ip_to);
+		ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP_TO], &ip_to);
 		if (ret)
 			return ret;
-		ip_to = ntohl(ip_to);
 		if (ip > ip_to) {
 			swap(ip, ip_to);
 			if (ip < map->first_ip)
@@ -392,8 +394,8 @@ bitmap_ip_timeout_uadt(struct ip_set *set, struct nlattr *head, int len,
 
 		if (cidr > 32)
 			return -IPSET_ERR_INVALID_CIDR;
-		ip &= HOSTMASK(cidr);
-		ip_to = ip | ~HOSTMASK(cidr);
+		ip &= ip_set_hostmask(cidr);
+		ip_to = ip | ~ip_set_hostmask(cidr);
 	} else
 		ip_to = ip;
 
@@ -511,10 +513,10 @@ bitmap_ip_timeout_same_set(const struct ip_set *a, const struct ip_set *b)
 	const struct bitmap_ip_timeout *x = a->data;
 	const struct bitmap_ip_timeout *y = b->data;
 
-	return x->first_ip == y->first_ip
-	       && x->last_ip == y->last_ip
-	       && x->netmask == y->netmask
-	       && x->timeout == y->timeout;
+	return x->first_ip == y->first_ip &&
+	       x->last_ip == y->last_ip &&
+	       x->netmask == y->netmask &&
+	       x->timeout == y->timeout;
 }
 
 static const struct ip_set_type_variant bitmap_ip_timeout = {
@@ -547,7 +549,7 @@ bitmap_ip_gc(unsigned long ul_set)
 	add_timer(&map->gc);
 }
 
-static inline void
+static void
 bitmap_ip_gc_init(struct ip_set *set)
 {
 	struct bitmap_ip_timeout *map = set->data;
@@ -603,16 +605,18 @@ bitmap_ip_create(struct ip_set *set, struct nlattr *head, int len,
 		      bitmap_ip_create_policy))
 		return -IPSET_ERR_PROTOCOL;
 
-	ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP, &first_ip);
+	if (unlikely(!tb[IPSET_ATTR_IP] ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
+		return -IPSET_ERR_PROTOCOL;
+
+	ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP], &first_ip);
 	if (ret)
 		return ret;
-	first_ip = ntohl(first_ip);
 
 	if (tb[IPSET_ATTR_IP_TO]) {
-		ret = ip_set_get_ipaddr4(tb, IPSET_ATTR_IP_TO, &last_ip);
+		ret = ip_set_get_hostipaddr4(tb[IPSET_ATTR_IP_TO], &last_ip);
 		if (ret)
 			return ret;
-		last_ip = htonl(last_ip);
 		if (first_ip > last_ip) {
 			u32 tmp = first_ip;
 
@@ -624,7 +628,7 @@ bitmap_ip_create(struct ip_set *set, struct nlattr *head, int len,
 
 		if (cidr >= 32)
 			return -IPSET_ERR_INVALID_CIDR;
-		last_ip = first_ip | ~HOSTMASK(cidr);
+		last_ip = first_ip | ~ip_set_hostmask(cidr);
 	} else
 		return -IPSET_ERR_PROTOCOL;
 
@@ -634,8 +638,8 @@ bitmap_ip_create(struct ip_set *set, struct nlattr *head, int len,
 		if (netmask > 32)
 			return -IPSET_ERR_INVALID_NETMASK;
 
-		first_ip &= HOSTMASK(netmask);
-		last_ip |= ~HOSTMASK(netmask);
+		first_ip &= ip_set_hostmask(netmask);
+		last_ip |= ~ip_set_hostmask(netmask);
 	}
 
 	if (netmask == 32) {
@@ -647,18 +651,18 @@ bitmap_ip_create(struct ip_set *set, struct nlattr *head, int len,
 
 		mask = range_to_mask(first_ip, last_ip, &mask_bits);
 
-		if ((!mask && (first_ip || last_ip != 0xFFFFFFFF))
-		    || netmask <= mask_bits)
+		if ((!mask && (first_ip || last_ip != 0xFFFFFFFF)) ||
+		    netmask <= mask_bits)
 			return -IPSET_ERR_BITMAP_RANGE;
 
-		pr_debug("mask_bits %u, netmask %u", mask_bits, netmask);
+		pr_debug("mask_bits %u, netmask %u\n", mask_bits, netmask);
 		hosts = 2 << (32 - netmask - 1);
 		elements = 2 << (netmask - mask_bits - 1);
 	}
 	if (elements > IPSET_BITMAP_MAX_RANGE + 1)
 		return -IPSET_ERR_BITMAP_RANGE_SIZE;
 
-	pr_debug("hosts %u, elements %u", hosts, elements);
+	pr_debug("hosts %u, elements %u\n", hosts, elements);
 
 	if (tb[IPSET_ATTR_TIMEOUT]) {
 		struct bitmap_ip_timeout *map;

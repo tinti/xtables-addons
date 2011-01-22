@@ -11,6 +11,8 @@
  * published by the Free Software Foundation.
  */
 
+#include <linux/netlink.h>
+
 /* The protocol version */
 #define IPSET_PROTOCOL		5
 
@@ -292,7 +294,7 @@ struct ip_set {
 	/* References to the set */
 	atomic_t ref;
 	/* The core set type */
-	const struct ip_set_type *type;
+	struct ip_set_type *type;
 	/* The type variant doing the real job */
 	const struct ip_set_type_variant *variant;
 	/* The actual INET family of the set */
@@ -317,37 +319,22 @@ extern int ip_set_del(ip_set_id_t id, const struct sk_buff *skb,
 extern int ip_set_test(ip_set_id_t id, const struct sk_buff *skb,
 		       u8 family, u8 dim, u8 flags);
 
-/* Allocate members */
-static inline void *
-ip_set_alloc(size_t size, gfp_t gfp_mask)
+/* Utility functions */
+extern void * ip_set_alloc(size_t size, gfp_t gfp_mask);
+extern void ip_set_free(void *members);
+extern int ip_set_get_ipaddr4(struct nlattr *nla,  __be32 *ipaddr);
+extern int ip_set_get_ipaddr6(struct nlattr *nla, union nf_inet_addr *ipaddr);
+
+static inline int
+ip_set_get_hostipaddr4(struct nlattr *nla, u32 *ipaddr)
 {
-	void *members = NULL;
-
-	if (size < KMALLOC_MAX_SIZE)
-		members = kzalloc(size, gfp_mask | __GFP_NOWARN);
-
-	if (members) {
-		pr_debug("%p: allocated with kmalloc", members);
-		return members;
-	}
-
-	members = __vmalloc(size, gfp_mask | __GFP_ZERO, PAGE_KERNEL);
-	if (!members)
-		return NULL;
-	pr_debug("%p: allocated with vmalloc", members);
-
-	return members;
-}
-
-static inline void
-ip_set_free(void *members)
-{
-	pr_debug("%p: free with %s", members,
-		 is_vmalloc_addr(members) ? "vfree" : "kfree");
-	if (is_vmalloc_addr(members))
-		vfree(members);
-	else
-		kfree(members);
+	__be32 ip;
+	int ret = ip_set_get_ipaddr4(nla, &ip);
+	
+	if (ret)
+		return ret;
+	*ipaddr = ntohl(ip);
+	return 0;
 }
 
 /* Ignore IPSET_ERR_EXIST errors if asked to do so? */
@@ -357,92 +344,47 @@ ip_set_eexist(int ret, u32 flags)
 	return ret == -IPSET_ERR_EXIST && (flags & IPSET_FLAG_EXIST);
 }
 
+/* Check the NLA_F_NET_BYTEORDER flag */
+static inline bool
+ip_set_attr_netorder(struct nlattr *tb[], int type)
+{
+	return tb[type] && (tb[type]->nla_type & NLA_F_NET_BYTEORDER);
+}
+
+static inline bool
+ip_set_optattr_netorder(struct nlattr *tb[], int type)
+{
+	return !tb[type] || (tb[type]->nla_type & NLA_F_NET_BYTEORDER);
+}
+
 /* Useful converters */
 static inline u32
 ip_set_get_h32(const struct nlattr *attr)
 {
-	u32 value = nla_get_u32(attr);
-
-	return attr->nla_type & NLA_F_NET_BYTEORDER ? ntohl(value) : value;
+	return ntohl(nla_get_be32(attr));
 }
 
 static inline u16
 ip_set_get_h16(const struct nlattr *attr)
 {
-	u16 value = nla_get_u16(attr);
-
-	return attr->nla_type & NLA_F_NET_BYTEORDER ? ntohs(value) : value;
-}
-
-static inline u32
-ip_set_get_n32(const struct nlattr *attr)
-{
-	u32 value = nla_get_u32(attr);
-
-	return attr->nla_type & NLA_F_NET_BYTEORDER ? value : htonl(value);
-}
-
-static inline u16
-ip_set_get_n16(const struct nlattr *attr)
-{
-	u16 value = nla_get_u16(attr);
-
-	return attr->nla_type & NLA_F_NET_BYTEORDER ? value : htons(value);
-}
-
-static const struct nla_policy ipaddr_policy[IPSET_ATTR_IPADDR_MAX + 1] = {
-	[IPSET_ATTR_IPADDR_IPV4]	= { .type = NLA_U32 },
-	[IPSET_ATTR_IPADDR_IPV6]	= { .type = NLA_BINARY,
-					    .len = sizeof(struct in6_addr) },
-};
-
-static inline int
-ip_set_get_ipaddr4(struct nlattr *attr[], int type, u32 *ipaddr)
-{
-	struct nlattr *tb[IPSET_ATTR_IPADDR_MAX+1] = {};
-
-	if (!attr[type])
-		return -IPSET_ERR_PROTOCOL;
-
-	if (nla_parse(tb, IPSET_ATTR_IPADDR_MAX,
-		      nla_data(attr[type]), nla_len(attr[type]),
-		      ipaddr_policy))
-		return -IPSET_ERR_PROTOCOL;
-	if (!tb[IPSET_ATTR_IPADDR_IPV4])
-		return -IPSET_ERR_IPADDR_IPV4;
-
-	*ipaddr = ip_set_get_n32(tb[IPSET_ATTR_IPADDR_IPV4]);
-	return 0;
-}
-
-static inline int
-ip_set_get_ipaddr6(struct nlattr *attr[], int type, union nf_inet_addr *ipaddr)
-{
-	struct nlattr *tb[IPSET_ATTR_IPADDR_MAX+1] = {};
-
-	if (!attr[type])
-		return -IPSET_ERR_PROTOCOL;
-
-	if (nla_parse(tb, IPSET_ATTR_IPADDR_MAX,
-		      nla_data(attr[type]), nla_len(attr[type]),
-		      ipaddr_policy))
-		return -IPSET_ERR_PROTOCOL;
-	if (!tb[IPSET_ATTR_IPADDR_IPV6])
-		return -IPSET_ERR_IPADDR_IPV6;
-
-	memcpy(ipaddr, nla_data(tb[IPSET_ATTR_IPADDR_IPV6]),
-		sizeof(struct in6_addr));
-	return 0;
+	return ntohs(nla_get_be16(attr));
 }
 
 #define ipset_nest_start(skb, attr) nla_nest_start(skb, attr | NLA_F_NESTED)
 #define ipset_nest_end(skb, start)  nla_nest_end(skb, start)
 
-#define NLA_PUT_NET32(skb, type, value)	\
-	NLA_PUT_BE32(skb, type | NLA_F_NET_BYTEORDER, value)
-
-#define NLA_PUT_NET16(skb, type, value)	\
-	NLA_PUT_BE16(skb, type | NLA_F_NET_BYTEORDER, value)
+#ifndef NLA_PUT_NET16
+#define NLA_PUT_NET16(skb, attrtype, value) \
+	NLA_PUT_BE16(skb, attrtype | NLA_F_NET_BYTEORDER, value)
+#endif
+#ifndef NLA_PUT_NET32
+#define NLA_PUT_NET32(skb, attrtype, value) \
+	NLA_PUT_BE32(skb, attrtype | NLA_F_NET_BYTEORDER, value)
+#endif
+#ifndef NLA_PUT_NET64
+#define NLA_PUT_NET64(skb, attrtype, value) \
+	NLA_PUT_BE64(skb, attrtype | NLA_F_NET_BYTEORDER, value)
+#endif
 
 #define NLA_PUT_IPADDR4(skb, type, ipaddr)			\
 do {								\
@@ -466,14 +408,14 @@ do {								\
 } while (0)
 
 /* Get address from skbuff */
-static inline u32
+static inline __be32
 ip4addr(const struct sk_buff *skb, bool src)
 {
 	return src ? ip_hdr(skb)->saddr : ip_hdr(skb)->daddr;
 }
 
 static inline void
-ip4addrptr(const struct sk_buff *skb, bool src, u32 *addr)
+ip4addrptr(const struct sk_buff *skb, bool src, __be32 *addr)
 {
 	*addr = src ? ip_hdr(skb)->saddr : ip_hdr(skb)->daddr;
 }

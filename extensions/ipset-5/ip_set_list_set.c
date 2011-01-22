@@ -7,7 +7,6 @@
 
 /* Kernel module implementing an IP set type: the list:set type */
 
-#include "ip_set_kernel.h"
 #include <linux/module.h>
 #include <linux/ip.h>
 #include <linux/skbuff.h>
@@ -68,8 +67,8 @@ list_set_expired(const struct list_set *map, u32 id)
 static inline int
 list_set_exist(const struct set_telem *elem)
 {
-	return elem->id != IPSET_INVALID_ID
-	       && !ip_set_timeout_expired(elem->timeout);
+	return elem->id != IPSET_INVALID_ID &&
+	       !ip_set_timeout_expired(elem->timeout);
 }
 
 /* Set list without and with timeout */
@@ -122,22 +121,22 @@ static const struct nla_policy list_set_adt_policy[IPSET_ATTR_ADT_MAX+1] = {
 	[IPSET_ATTR_CADT_FLAGS]	= { .type = NLA_U32 },
 };
 
-static inline bool
+static bool
 next_id_eq(const struct list_set *map, u32 i, ip_set_id_t id)
 {
 	const struct set_elem *elem;
 
 	if (i + 1 < map->size) {
 		elem = list_set_elem(map, i + 1);
-		return !!(elem->id == id
-			  && !(with_timeout(map->timeout)
-			       && list_set_expired(map, i + 1)));
+		return !!(elem->id == id &&
+			  !(with_timeout(map->timeout) &&
+			    list_set_expired(map, i + 1)));
 	}
 
 	return 0;
 }
 
-static inline void
+static void
 list_elem_add(struct list_set *map, u32 i, ip_set_id_t id)
 {
 	struct set_elem *e;
@@ -150,7 +149,7 @@ list_elem_add(struct list_set *map, u32 i, ip_set_id_t id)
 	}
 }
 
-static inline void
+static void
 list_elem_tadd(struct list_set *map, u32 i, ip_set_id_t id,
 	       unsigned long timeout)
 {
@@ -223,20 +222,22 @@ list_set_uadt(struct ip_set *set, struct nlattr *head, int len,
 		      list_set_adt_policy))
 		return -IPSET_ERR_PROTOCOL;
 
+	if (unlikely(!tb[IPSET_ATTR_NAME] ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT) ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_CADT_FLAGS)))
+		return -IPSET_ERR_PROTOCOL;
+
 	if (tb[IPSET_ATTR_LINENO])
 		*lineno = nla_get_u32(tb[IPSET_ATTR_LINENO]);
 
-	if (tb[IPSET_ATTR_NAME]) {
-		id = ip_set_get_byname(nla_data(tb[IPSET_ATTR_NAME]), &s);
-		if (id == IPSET_INVALID_ID)
-			return -IPSET_ERR_NAME;
-		/* "Loop detection" */
-		if (s->type->features & IPSET_TYPE_NAME) {
-			ret = -IPSET_ERR_LOOP;
-			goto finish;
-		}
-	} else
-		return -IPSET_ERR_PROTOCOL;
+	id = ip_set_get_byname(nla_data(tb[IPSET_ATTR_NAME]), &s);
+	if (id == IPSET_INVALID_ID)
+		return -IPSET_ERR_NAME;
+	/* "Loop detection" */
+	if (s->type->features & IPSET_TYPE_NAME) {
+		ret = -IPSET_ERR_LOOP;
+		goto finish;
+	}
 
 	if (tb[IPSET_ATTR_CADT_FLAGS]) {
 		u32 f = ip_set_get_h32(tb[IPSET_ATTR_CADT_FLAGS]);
@@ -270,8 +271,8 @@ list_set_uadt(struct ip_set *set, struct nlattr *head, int len,
 	case IPSET_TEST:
 		for (i = 0; i < map->size && !ret; i++) {
 			elem = list_set_elem(map, i);
-			if (elem->id == IPSET_INVALID_ID
-			    || (before != 0 && i + 1 >= map->size))
+			if (elem->id == IPSET_INVALID_ID ||
+			    (before != 0 && i + 1 >= map->size))
 				break;
 			else if (with_timeout && list_set_expired(map, i))
 				continue;
@@ -286,8 +287,8 @@ list_set_uadt(struct ip_set *set, struct nlattr *head, int len,
 	case IPSET_ADD:
 		for (i = 0; i < map->size && !ret; i++) {
 			elem = list_set_elem(map, i);
-			if (elem->id == id
-			    && !(with_timeout && list_set_expired(map, i)))
+			if (elem->id == id &&
+			    !(with_timeout && list_set_expired(map, i)))
 				ret = -IPSET_ERR_EXIST;
 		}
 		if (ret == -IPSET_ERR_EXIST)
@@ -318,14 +319,14 @@ list_set_uadt(struct ip_set *set, struct nlattr *head, int len,
 				break;
 			} else if (with_timeout && list_set_expired(map, i))
 				continue;
-			else if (elem->id == id
-				 && (before == 0
-				     || (before > 0
-					 && next_id_eq(map, i, refid))))
+			else if (elem->id == id &&
+				 (before == 0 ||
+				  (before > 0 &&
+				   next_id_eq(map, i, refid))))
 				ret = list_set_del(map, id, i);
-			else if (before < 0
-				 && elem->id == refid
-				 && next_id_eq(map, i, id))
+			else if (before < 0 &&
+				 elem->id == refid &&
+				 next_id_eq(map, i, id))
 				ret = list_set_del(map, id, i + 1);
 		}
 		break;
@@ -449,8 +450,8 @@ list_set_same_set(const struct ip_set *a, const struct ip_set *b)
 	const struct list_set *x = a->data;
 	const struct list_set *y = b->data;
 
-	return x->size == y->size
-	       && x->timeout == y->timeout;
+	return x->size == y->size &&
+	       x->timeout == y->timeout;
 }
 
 static const struct ip_set_type_variant list_set = {
@@ -476,8 +477,8 @@ list_set_gc(unsigned long ul_set)
 	read_lock_bh(&set->lock);
 	for (i = map->size - 1; i >= 0; i--) {
 		e = (struct set_telem *) list_set_elem(map, i);
-		if (e->id != IPSET_INVALID_ID
-		    && list_set_expired(map, i))
+		if (e->id != IPSET_INVALID_ID &&
+		    list_set_expired(map, i))
 			list_set_del(map, e->id, i);
 	}
 	read_unlock_bh(&set->lock);
@@ -486,7 +487,7 @@ list_set_gc(unsigned long ul_set)
 	add_timer(&map->gc);
 }
 
-static inline void
+static void
 list_set_gc_init(struct ip_set *set)
 {
 	struct list_set *map = set->data;
@@ -506,7 +507,7 @@ list_set_create_policy[IPSET_ATTR_CREATE_MAX+1] = {
 	[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
 };
 
-static inline bool
+static bool
 init_list_set(struct ip_set *set, u32 size, size_t dsize,
 	      unsigned long timeout)
 {
@@ -540,6 +541,10 @@ list_set_create(struct ip_set *set, struct nlattr *head, int len,
 
 	if (nla_parse(tb, IPSET_ATTR_CREATE_MAX, head, len,
 		      list_set_create_policy))
+		return -IPSET_ERR_PROTOCOL;
+
+	if (unlikely(!ip_set_optattr_netorder(tb, IPSET_ATTR_SIZE) ||
+		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
 		return -IPSET_ERR_PROTOCOL;
 
 	if (tb[IPSET_ATTR_SIZE])

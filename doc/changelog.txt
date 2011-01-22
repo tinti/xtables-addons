@@ -9,6 +9,10 @@ Enhancements:
 - Update to ipset 5.3
   * make IPv4 and IPv6 address handling similar
   * show correct line numbers in restore output for parser errors
+- Update to ipset 5.4
+  * fixed ICMP and ICMPv6 handling
+  * fixed trailing whitespaces and pr_* messages
+  * fixed module loading at create/header commands
 
 
 v1.32 (2011-01-04)
