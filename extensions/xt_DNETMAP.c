@@ -239,12 +239,12 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 	ip_min = ntohl(mr->range[0].min_ip) + (whole_prefix == 0);
 	ip_max = ntohl(mr->range[0].max_ip) - (whole_prefix == 0);
 
-	sprintf(p->prefix_str, "%pI4/%i", &mr->range[0].min_ip,
+	sprintf(p->prefix_str, "%pI4/%u", &mr->range[0].min_ip,
 		33 - ffs(~(ip_min ^ ip_max)));
 #ifdef CONFIG_PROC_FS
-	sprintf(proc_str_data, "%pI4_%i", &mr->range[0].min_ip,
+	sprintf(proc_str_data, "%pI4_%u", &mr->range[0].min_ip,
 		33 - ffs(~(ip_min ^ ip_max)));
-	sprintf(proc_str_stat, "%pI4_%i_stat", &mr->range[0].min_ip,
+	sprintf(proc_str_stat, "%pI4_%u_stat", &mr->range[0].min_ip,
 		33 - ffs(~(ip_min ^ ip_max)));
 #endif
 	printk(KERN_INFO KBUILD_MODNAME ": new prefix %s\n", p->prefix_str);
@@ -469,11 +469,11 @@ static void dnetmap_tg_destroy(const struct xt_tgdtor_param *par)
 		list_del(&p->list);
 		spin_unlock_bh(&dnetmap_lock);
 #ifdef CONFIG_PROC_FS
-		sprintf(str, "%pI4_%i", &mr->range[0].min_ip,
+		sprintf(str, "%pI4_%u", &mr->range[0].min_ip,
 			33 - ffs(~(ntohl(mr->range[0].min_ip ^
 			mr->range[0].max_ip))));
 		remove_proc_entry(str, dnetmap_net->xt_dnetmap);
-		sprintf(str, "%pI4_%i_stat", &mr->range[0].min_ip,
+		sprintf(str, "%pI4_%u_stat", &mr->range[0].min_ip,
 			33 - ffs(~(ntohl(mr->range[0].min_ip ^
 			mr->range[0].max_ip))));
 		remove_proc_entry(str, dnetmap_net->xt_dnetmap);
@@ -530,7 +530,7 @@ static int dnetmap_seq_show(struct seq_file *seq, void *v)
 {
 	const struct dnetmap_entry *e = v;
 
-	seq_printf(seq, "%pI4 -> %pI4 --- ttl: %i lasthit: %lu\n",
+	seq_printf(seq, "%pI4 -> %pI4 --- ttl: %d lasthit: %lu\n",
 		   &e->prenat_addr, &e->postnat_addr,
 		   (int)(e->stamp - jiffies) / HZ, (e->stamp - jtimeout) / HZ);
 	return 0;
@@ -590,7 +590,7 @@ static int dnetmap_stat_proc_read(char __user *buffer, char **start,
 	}
 
 	sum_ttl = used > 0 ? sum_ttl / (used * HZ) : 0;
-	sprintf(buffer, "%u %u %li\n", used, all, sum_ttl);
+	sprintf(buffer, "%u %u %ld\n", used, all, sum_ttl);
 
 	if (length >= strlen(buffer))
 		*eof = true;
