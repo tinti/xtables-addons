@@ -35,29 +35,44 @@ foreach (qw(LE BE)) {
 	}
 }
 
-while (my $row = $csv->getline(*ARGV)) {
-	if (!defined($country{$row->[4]})) {
-		$country{$row->[4]} = {
-			name => $row->[5],
-			pool_v4 => [],
-			pool_v6 => [],
-		};
+&collect();
+&dump();
+
+sub collect
+{
+	while (my $row = $csv->getline(*ARGV)) {
+		if (!defined($country{$row->[4]})) {
+			$country{$row->[4]} = {
+				name => $row->[5],
+				pool_v4 => [],
+				pool_v6 => [],
+			};
+		}
+		my $c = $country{$row->[4]};
+		if ($row->[0] =~ /:/) {
+			push(@{$c->{pool_v6}},
+			     [&ip6_pack($row->[0]), &ip6_pack($row->[1])]);
+		} else {
+			push(@{$c->{pool_v4}}, [$row->[2], $row->[3]]);
+		}
+		if ($. % 4096 == 0) {
+			print STDERR "\r\e[2K$. entries";
+		}
 	}
-	my $c = $country{$row->[4]};
-	if ($row->[0] =~ /:/) {
-		push(@{$c->{pool_v6}},
-		     [&ip6_pack($row->[0]), &ip6_pack($row->[1])]);
-	} else {
-		push(@{$c->{pool_v4}}, [$row->[2], $row->[3]]);
-	}
-	if ($. % 4096 == 0) {
-		print STDERR "\r\e[2K$. entries";
+
+	print STDERR "\r\e[2K$. entries total\n";
+}
+
+sub dump
+{
+	foreach my $iso_code (sort keys %country) {
+		&dump_one($iso_code);
 	}
 }
 
-print STDERR "\r\e[2K$. entries total\n";
-
-foreach my $iso_code (sort keys %country) {
+sub dump_one
+{
+	my $iso_code = shift @_;
 	my($file, $fh_le, $fh_be);
 
 	printf "%5u IPv6 ranges for %s %s\n",
