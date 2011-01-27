@@ -64,7 +64,7 @@ static int netmask2bits(u_int32_t netmask)
 
 static void DNETMAP_init(struct xt_entry_target *t)
 {
-	struct xt_DNETMAP_tginfo *tginfo = (struct xt_DNETMAP_tginfo *)&t->data;
+	struct xt_DNETMAP_tginfo *tginfo = (void *)&t->data;
 	struct nf_nat_multi_range *mr = &tginfo->prefix;
 
 	/* Actually, it's 0, but it's ignored at the moment. */
@@ -87,14 +87,14 @@ static void parse_prefix(char *arg, struct nf_nat_range *range)
 		*slash = '\0';
 
 	ip = xtables_numeric_to_ipaddr(arg);
-	if (!ip)
+	if (ip == NULL)
 		xtables_error(PARAMETER_PROBLEM, "Bad IP address \"%s\"\n",
 			      arg);
 	range->min_ip = ip->s_addr;
 	if (slash) {
 		if (strchr(slash + 1, '.')) {
 			ip = xtables_numeric_to_ipmask(slash + 1);
-			if (!ip)
+			if (ip == NULL)
 				xtables_error(PARAMETER_PROBLEM,
 					      "Bad netmask \"%s\"\n",
 					      slash + 1);
@@ -128,8 +128,7 @@ static void parse_prefix(char *arg, struct nf_nat_range *range)
 static int DNETMAP_parse(int c, char **argv, int invert, unsigned int *flags,
 			 const void *entry, struct xt_entry_target **target)
 {
-	struct xt_DNETMAP_tginfo *tginfo =
-	    (struct xt_DNETMAP_tginfo *)(*target)->data;
+	struct xt_DNETMAP_tginfo *tginfo = (void *)(*target)->data;
 	struct nf_nat_multi_range *mr = &tginfo->prefix;
 	char *end;
 
@@ -171,8 +170,7 @@ static void DNETMAP_print_addr(const void *ip,
 			       const struct xt_entry_target *target,
 			       int numeric)
 {
-	struct xt_DNETMAP_tginfo *tginfo =
-	    (struct xt_DNETMAP_tginfo *)&target->data;
+	struct xt_DNETMAP_tginfo *tginfo = (void *)&target->data;
 	const struct nf_nat_multi_range *mr = &tginfo->prefix;
 	const struct nf_nat_range *r = &mr->range[0];
 	struct in_addr a;
@@ -191,8 +189,7 @@ static void DNETMAP_print_addr(const void *ip,
 static void DNETMAP_print(const void *ip, const struct xt_entry_target *target,
 			  int numeric)
 {
-	struct xt_DNETMAP_tginfo *tginfo =
-	    (struct xt_DNETMAP_tginfo *)&target->data;
+	struct xt_DNETMAP_tginfo *tginfo = (void *)&target->data;
 	const __u8 *flags = &tginfo->flags;
 
 	printf("prefix ");
@@ -210,8 +207,7 @@ static void DNETMAP_print(const void *ip, const struct xt_entry_target *target,
 
 static void DNETMAP_save(const void *ip, const struct xt_entry_target *target)
 {
-	struct xt_DNETMAP_tginfo *tginfo =
-	    (struct xt_DNETMAP_tginfo *)&target->data;
+	struct xt_DNETMAP_tginfo *tginfo = (void *)&target->data;
 	const __u8 *flags = &tginfo->flags;
 
 	if (*flags & XT_DNETMAP_PREFIX) {

@@ -112,9 +112,8 @@ static inline unsigned int dnetmap_entry_hash(const __be32 addr)
 	return ntohl(addr) & (hash_size - 1);
 }
 
-static struct dnetmap_entry *dnetmap_entry_lookup(struct dnetmap_net
-						  *dnetmap_net,
-						  const __be32 addr)
+static struct dnetmap_entry *
+dnetmap_entry_lookup(struct dnetmap_net *dnetmap_net, const __be32 addr)
 {
 	struct dnetmap_entry *e;
 	unsigned int h;
@@ -122,14 +121,13 @@ static struct dnetmap_entry *dnetmap_entry_lookup(struct dnetmap_net
 	h = dnetmap_entry_hash(addr);
 
 	list_for_each_entry(e, &dnetmap_net->dnetmap_iphash[h], glist)
-	    if (memcmp(&e->prenat_addr, &addr, sizeof(e->prenat_addr)) == 0)
-		return e;
+		if (memcmp(&e->prenat_addr, &addr, sizeof(addr)) == 0)
+			return e;
 	return NULL;
 }
 
-static struct dnetmap_entry *dnetmap_entry_rlookup(struct dnetmap_net
-						   *dnetmap_net,
-						   const __be32 addr)
+static struct dnetmap_entry *
+dnetmap_entry_rlookup(struct dnetmap_net *dnetmap_net, const __be32 addr)
 {
 	struct dnetmap_entry *e;
 	unsigned int h;
@@ -137,23 +135,21 @@ static struct dnetmap_entry *dnetmap_entry_rlookup(struct dnetmap_net
 	h = dnetmap_entry_hash(addr);
 
 	list_for_each_entry(e, &dnetmap_net->dnetmap_iphash[hash_size + h],
-			    grlist)
-	    if (memcmp(&e->postnat_addr, &addr, sizeof(e->postnat_addr)) == 0)
-		return e;
+	    grlist)
+		if (memcmp(&e->postnat_addr, &addr, sizeof(addr)) == 0)
+			return e;
 	return NULL;
 }
 
-static struct dnetmap_prefix *dnetmap_prefix_lookup(struct dnetmap_net
-						    *dnetmap_net,
-						    const struct
-						    nf_nat_multi_range_compat
-						    *mr)
+static struct dnetmap_prefix *
+dnetmap_prefix_lookup(struct dnetmap_net *dnetmap_net,
+		      const struct nf_nat_multi_range_compat *mr)
 {
 	struct dnetmap_prefix *p;
 
 	list_for_each_entry(p, &dnetmap_net->prefixes, list)
-	    if (!memcmp(&p->prefix, mr, sizeof(*mr)))
-		return p;
+		if (memcmp(&p->prefix, mr, sizeof(*mr)) == 0)
+			return p;
 	return NULL;
 }
 
@@ -166,14 +162,14 @@ static void dnetmap_prefix_flush(struct dnetmap_net *dnetmap_net,
 	for (i = 0; i < hash_size; i++) {
 		list_for_each_entry_safe(e, next,
 					 &dnetmap_net->dnetmap_iphash[i], glist)
-		    if (e->prefix == p)
-			list_del(&e->glist);
+			if (e->prefix == p)
+				list_del(&e->glist);
 
 		list_for_each_entry_safe(e, next,
 					 &dnetmap_net->
 					 dnetmap_iphash[hash_size + i], grlist)
-		    if (e->prefix == p)
-			list_del(&e->grlist);
+			if (e->prefix == p)
+				list_del(&e->grlist);
 
 		list_for_each_entry_safe(e, next, &p->iphash[i], list) {
 			list_del(&e->list);
@@ -264,9 +260,9 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 
 #ifdef CONFIG_PROC_FS
 	/* data */
-	pde_data =
-	    proc_create_data(proc_str_data, proc_perms, dnetmap_net->xt_dnetmap,
-			     &dnetmap_tg_fops, p);
+	pde_data = proc_create_data(proc_str_data, proc_perms,
+				    dnetmap_net->xt_dnetmap,
+				    &dnetmap_tg_fops, p);
 	if (pde_data == NULL) {
 		kfree(p);
 		ret = -ENOMEM;
@@ -276,9 +272,8 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 	pde_data->gid = proc_gid;
 
 	/* statistics */
-	pde_stat =
-	    create_proc_entry(proc_str_stat, proc_perms,
-			      dnetmap_net->xt_dnetmap);
+	pde_stat = create_proc_entry(proc_str_stat, proc_perms,
+				     dnetmap_net->xt_dnetmap);
 	if (pde_stat == NULL) {
 		kfree(p);
 		ret = -ENOMEM;
@@ -336,10 +331,9 @@ dnetmap_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 
 		/* if prefix is specified, we check if
 		it matches lookedup entry */
-		if (tginfo->flags & XT_DNETMAP_PREFIX) {
+		if (tginfo->flags & XT_DNETMAP_PREFIX)
 			if (memcmp(mr, &e->prefix, sizeof(*mr)))
 				goto no_rev_map;
-		}
 		/* don't reset ttl if flag is set */
 		if (jttl >= 0) {
 			p = e->prefix;
@@ -411,7 +405,7 @@ bind_new_prefix:
 
 	} else {
 
-		if (!(tginfo->flags & XT_DNETMAP_REUSE)) {
+		if (!(tginfo->flags & XT_DNETMAP_REUSE))
 			if (time_before(e->stamp, jiffies) && p != e->prefix) {
 				if (!disable_log)
 					printk(KERN_INFO KBUILD_MODNAME
@@ -424,7 +418,6 @@ bind_new_prefix:
 				e->prenat_addr = 0;
 				goto bind_new_prefix;
 			}
-		}
 		/* don't reset ttl if flag is set */
 		if (jttl >= 0) {
 			e->stamp = jiffies + jttl;
@@ -503,8 +496,8 @@ __acquires(dnetmap_lock)
 	spin_lock_bh(&dnetmap_lock);
 
 	list_for_each_entry(e, &prefix->lru_list, lru_list)
-	    if (p-- == 0)
-		return e;
+		if (p-- == 0)
+			return e;
 	return NULL;
 }
 
@@ -518,7 +511,7 @@ static void *dnetmap_seq_next(struct seq_file *seq, void *v, loff_t * pos)
 	if (head == &prefix->lru_list)
 		return NULL;
 
-	(*pos)++;
+	++*pos;
 	return list_entry(head, struct dnetmap_entry, lru_list);
 }
 
@@ -607,7 +600,7 @@ static int __net_init dnetmap_proc_net_init(struct net *net)
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(net);
 
 	dnetmap_net->xt_dnetmap = proc_mkdir("xt_DNETMAP", net->proc_net);
-	if (!dnetmap_net->xt_dnetmap)
+	if (dnetmap_net->xt_dnetmap == NULL)
 		return -ENOMEM;
 	return 0;
 }
@@ -633,8 +626,8 @@ static int __net_init dnetmap_net_init(struct net *net)
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(net);
 	int i;
 
-	dnetmap_net->dnetmap_iphash =
-	    kmalloc(sizeof(struct list_head) * hash_size * 2, GFP_ATOMIC);
+	dnetmap_net->dnetmap_iphash = kmalloc(sizeof(struct list_head) *
+					      hash_size * 2, GFP_ATOMIC);
 	if (dnetmap_net->dnetmap_iphash == NULL)
 		return -ENOMEM;
 
