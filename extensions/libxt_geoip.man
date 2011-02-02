@@ -15,9 +15,8 @@ with the source package, and which should be available in compiled packages in
 /usr/lib(exec)/xtables-addons/. The first command retrieves CSV files from
 MaxMind, while the other two build packed bisectable range files:
 .PP
-cd /tmp; $path/to/geoip_download.sh;
+mkdir -p /usr/share/xt_geoip; cd /tmp; $path/to/xt_geoip_dl;
 .PP
-$path/to/geoip_build_db.pl -D /usr/share/xt_geoip/LE
-$path/to/geoip_build_db.pl -D /usr/share/xt_geoip/BE -b
+$path/to/xt_geoip_build -D /usr/share/xt_geoip GeoIP*.csv;
 .PP
 The shared library is hardcoded to look in these paths, so use them.
