@@ -4,6 +4,8 @@ HEAD
 Fixes:
 - Update to ipset 4.5
   * the iptreemap type used wrong gfp flags when deleting entries
+Enhancements:
+- IPv6 support for xt_geoip
 
 
 v1.31 (2010-11-05)

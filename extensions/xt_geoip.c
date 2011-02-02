@@ -9,6 +9,7 @@
  * Samuel Jean & Nicolas Bouliane
  */
 #include <linux/ip.h>
+#include <linux/ipv6.h>
 #include <linux/kernel.h>
 #include <linux/list.h>
 #include <linux/module.h>
@@ -27,31 +28,49 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Nicolas Bouliane");
 MODULE_AUTHOR("Samuel Jean");
 MODULE_DESCRIPTION("xtables module for geoip match");
+MODULE_ALIAS("ip6t_geoip");
 MODULE_ALIAS("ipt_geoip");
+
+enum geoip_proto {
+	GEOIPROTO_IPV6,
+	GEOIPROTO_IPV4,
+	__GEOIPROTO_MAX,
+};
 
 /**
  * @list:	anchor point for geoip_head
- * @subnets:	packed ordered list of ranges
+ * @subnets:	packed ordered list of ranges (either v6 or v4)
  * @count:	number of ranges
  * @cc:		country code
  */
 struct geoip_country_kernel {
 	struct list_head list;
-	struct geoip_subnet4 *subnets;
+	void *subnets;
 	atomic_t ref;
 	unsigned int count;
 	unsigned short cc;
 };
 
-static LIST_HEAD(geoip_head);
+static struct list_head geoip_head[__GEOIPROTO_MAX];
 static DEFINE_SPINLOCK(geoip_lock);
 
+static const enum geoip_proto nfp2geo[] = {
+	[NFPROTO_IPV6] = GEOIPROTO_IPV6,
+	[NFPROTO_IPV4] = GEOIPROTO_IPV4,
+};
+static const size_t geoproto_size[] = {
+	[GEOIPROTO_IPV6] = sizeof(struct geoip_subnet6),
+	[GEOIPROTO_IPV4] = sizeof(struct geoip_subnet4),
+};
+
 static struct geoip_country_kernel *
-geoip_add_node(const struct geoip_country_user __user *umem_ptr)
+geoip_add_node(const struct geoip_country_user __user *umem_ptr,
+               enum geoip_proto proto)
 {
 	struct geoip_country_user umem;
 	struct geoip_country_kernel *p;
-	struct geoip_subnet4 *subnet;
+	size_t size;
+	void *subnet;
 	int ret;
 
 	if (copy_from_user(&umem, umem_ptr, sizeof(umem)) != 0)
@@ -63,15 +82,14 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 
 	p->count   = umem.count;
 	p->cc      = umem.cc;
-
-	subnet = vmalloc(p->count * sizeof(struct geoip_subnet4));
+	size = p->count * geoproto_size[proto];
+	subnet = vmalloc(size);
 	if (subnet == NULL) {
 		ret = -ENOMEM;
 		goto free_p;
 	}
 	if (copy_from_user(subnet,
-	    (const void __user *)(unsigned long)umem.subnets,
-	    p->count * sizeof(struct geoip_subnet4)) != 0) {
+	    (const void __user *)(unsigned long)umem.subnets, size) != 0) {
 		ret = -EFAULT;
 		goto free_s;
 	}
@@ -81,7 +99,7 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	INIT_LIST_HEAD(&p->list);
 
 	spin_lock(&geoip_lock);
-	list_add_tail_rcu(&p->list, &geoip_head);
+	list_add_tail_rcu(&p->list, &geoip_head[proto]);
 	spin_unlock(&geoip_lock);
 
 	return p;
@@ -112,12 +130,13 @@ static void geoip_try_remove_node(struct geoip_country_kernel *p)
 	kfree(p);
 }
 
-static struct geoip_country_kernel *find_node(unsigned short cc)
+static struct geoip_country_kernel *find_node(unsigned short cc,
+    enum geoip_proto proto)
 {
 	struct geoip_country_kernel *p;
 	spin_lock(&geoip_lock);
 
-	list_for_each_entry_rcu(p, &geoip_head, list)
+	list_for_each_entry_rcu(p, &geoip_head[proto], list)
 		if (p->cc == cc) {
 			atomic_inc(&p->ref);
 			spin_unlock(&geoip_lock);
@@ -126,6 +145,72 @@ static struct geoip_country_kernel *find_node(unsigned short cc)
 
 	spin_unlock(&geoip_lock);
 	return NULL;
+}
+
+static inline int
+ipv6_cmp(const struct in6_addr *p, const struct in6_addr *q)
+{
+	unsigned int i;
+
+	for (i = 0; i < 4; ++i) {
+		if (p->s6_addr32[i] < q->s6_addr32[i])
+			return -1;
+		else if (p->s6_addr32[i] > q->s6_addr32[i])
+			return 1;
+	}
+
+	return 0;
+}
+
+static bool geoip_bsearch6(const struct geoip_subnet6 *range,
+    const struct in6_addr *addr, int lo, int hi)
+{
+	int mid;
+
+	if (hi <= lo)
+		return false;
+	mid = (lo + hi) / 2;
+	if (ipv6_cmp(&range[mid].begin, addr) <= 0 &&
+	    ipv6_cmp(addr, &range[mid].end) <= 0)
+		return true;
+	if (ipv6_cmp(&range[mid].begin, addr) > 0)
+		return geoip_bsearch6(range, addr, lo, mid);
+	else if (ipv6_cmp(&range[mid].end, addr) < 0)
+		return geoip_bsearch6(range, addr, mid + 1, hi);
+
+	WARN_ON(true);
+	return false;
+}
+
+static bool
+xt_geoip_mt6(const struct sk_buff *skb, struct xt_action_param *par)
+{
+	const struct xt_geoip_match_info *info = par->matchinfo;
+	const struct geoip_country_kernel *node;
+	const struct ipv6hdr *iph = ipv6_hdr(skb);
+	unsigned int i;
+	struct in6_addr ip;
+
+	memcpy(&ip, (info->flags & XT_GEOIP_SRC) ? &iph->saddr : &iph->daddr,
+	       sizeof(ip));
+	for (i = 0; i < 4; ++i)
+		ip.s6_addr32[i] = ntohl(ip.s6_addr32[i]);
+
+	rcu_read_lock();
+	for (i = 0; i < info->count; i++) {
+		if ((node = info->mem[i].kernel) == NULL) {
+			pr_err("'%c%c' is not loaded into memory... skip it!\n",
+			       COUNTRY(info->cc[i]));
+			continue;
+		}
+		if (geoip_bsearch6(node->subnets, &ip, 0, node->count)) {
+			rcu_read_unlock();
+			return !(info->flags & XT_GEOIP_INV);
+		}
+	}
+
+	rcu_read_unlock();
+	return info->flags & XT_GEOIP_INV;
 }
 
 static bool geoip_bsearch4(const struct geoip_subnet4 *range,
@@ -181,9 +266,10 @@ static int xt_geoip_mt_checkentry(const struct xt_mtchk_param *par)
 	unsigned int i;
 
 	for (i = 0; i < info->count; i++) {
-		node = find_node(info->cc[i]);
+		node = find_node(info->cc[i], nfp2geo[par->family]);
 		if (node == NULL) {
-			node = geoip_add_node((const void __user *)(unsigned long)info->mem[i].user);
+			node = geoip_add_node((const void __user *)(unsigned long)info->mem[i].user,
+			       nfp2geo[par->family]);
 			if (IS_ERR(node)) {
 				printk(KERN_ERR
 						"xt_geoip: unable to load '%c%c' into memory: %ld\n",
@@ -228,25 +314,41 @@ static void xt_geoip_mt_destroy(const struct xt_mtdtor_param *par)
 					"xt_geoip: please report this bug to the maintainers\n");
 }
 
-static struct xt_match xt_geoip_match __read_mostly = {
-	.name       = "geoip",
-	.revision   = 1,
-	.family     = NFPROTO_IPV4,
-	.match      = xt_geoip_mt4,
-	.checkentry = xt_geoip_mt_checkentry,
-	.destroy    = xt_geoip_mt_destroy,
-	.matchsize  = sizeof(struct xt_geoip_match_info),
-	.me         = THIS_MODULE,
+static struct xt_match xt_geoip_match[] __read_mostly = {
+	{
+		.name       = "geoip",
+		.revision   = 1,
+		.family     = NFPROTO_IPV6,
+		.match      = xt_geoip_mt6,
+		.checkentry = xt_geoip_mt_checkentry,
+		.destroy    = xt_geoip_mt_destroy,
+		.matchsize  = sizeof(struct xt_geoip_match_info),
+		.me         = THIS_MODULE,
+	},
+	{
+		.name       = "geoip",
+		.revision   = 1,
+		.family     = NFPROTO_IPV4,
+		.match      = xt_geoip_mt4,
+		.checkentry = xt_geoip_mt_checkentry,
+		.destroy    = xt_geoip_mt_destroy,
+		.matchsize  = sizeof(struct xt_geoip_match_info),
+		.me         = THIS_MODULE,
+	},
 };
 
 static int __init xt_geoip_mt_init(void)
 {
-	return xt_register_match(&xt_geoip_match);
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(geoip_head); ++i)
+		INIT_LIST_HEAD(&geoip_head[i]);
+	return xt_register_matches(xt_geoip_match, ARRAY_SIZE(xt_geoip_match));
 }
 
 static void __exit xt_geoip_mt_fini(void)
 {
-	xt_unregister_match(&xt_geoip_match);
+	xt_unregister_matches(xt_geoip_match, ARRAY_SIZE(xt_geoip_match));
 }
 
 module_init(xt_geoip_mt_init);

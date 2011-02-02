@@ -27,6 +27,10 @@ struct geoip_subnet4 {
 	__u32 end;
 };
 
+struct geoip_subnet6 {
+	struct in6_addr begin, end;
+};
+
 struct geoip_country_user {
 	aligned_u64 subnets;
 	__u32 count;
