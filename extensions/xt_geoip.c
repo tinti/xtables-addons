@@ -37,7 +37,7 @@ MODULE_ALIAS("ipt_geoip");
  */
 struct geoip_country_kernel {
 	struct list_head list;
-	struct geoip_subnet *subnets;
+	struct geoip_subnet4 *subnets;
 	atomic_t ref;
 	unsigned int count;
 	unsigned short cc;
@@ -51,7 +51,7 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 {
 	struct geoip_country_user umem;
 	struct geoip_country_kernel *p;
-	struct geoip_subnet *subnet;
+	struct geoip_subnet4 *subnet;
 	int ret;
 
 	if (copy_from_user(&umem, umem_ptr, sizeof(umem)) != 0)
@@ -64,14 +64,14 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	p->count   = umem.count;
 	p->cc      = umem.cc;
 
-	subnet = vmalloc(p->count * sizeof(struct geoip_subnet));
+	subnet = vmalloc(p->count * sizeof(struct geoip_subnet4));
 	if (subnet == NULL) {
 		ret = -ENOMEM;
 		goto free_p;
 	}
 	if (copy_from_user(subnet,
 	    (const void __user *)(unsigned long)umem.subnets,
-	    p->count * sizeof(struct geoip_subnet)) != 0) {
+	    p->count * sizeof(struct geoip_subnet4)) != 0) {
 		ret = -EFAULT;
 		goto free_s;
 	}
@@ -128,7 +128,7 @@ static struct geoip_country_kernel *find_node(unsigned short cc)
 	return NULL;
 }
 
-static bool geoip_bsearch(const struct geoip_subnet *range,
+static bool geoip_bsearch4(const struct geoip_subnet4 *range,
     uint32_t addr, int lo, int hi)
 {
 	int mid;
@@ -139,16 +139,16 @@ static bool geoip_bsearch(const struct geoip_subnet *range,
 	if (range[mid].begin <= addr && addr <= range[mid].end)
 		return true;
 	if (range[mid].begin > addr)
-		return geoip_bsearch(range, addr, lo, mid);
+		return geoip_bsearch4(range, addr, lo, mid);
 	else if (range[mid].end < addr)
-		return geoip_bsearch(range, addr, mid + 1, hi);
+		return geoip_bsearch4(range, addr, mid + 1, hi);
 
 	WARN_ON(true);
 	return false;
 }
 
 static bool
-xt_geoip_mt(const struct sk_buff *skb, struct xt_action_param *par)
+xt_geoip_mt4(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct xt_geoip_match_info *info = par->matchinfo;
 	const struct geoip_country_kernel *node;
@@ -164,7 +164,7 @@ xt_geoip_mt(const struct sk_buff *skb, struct xt_action_param *par)
 					COUNTRY(info->cc[i]));
 			continue;
 		}
-		if (geoip_bsearch(node->subnets, ip, 0, node->count)) {
+		if (geoip_bsearch4(node->subnets, ip, 0, node->count)) {
 			rcu_read_unlock();
 			return !(info->flags & XT_GEOIP_INV);
 		}
@@ -232,7 +232,7 @@ static struct xt_match xt_geoip_match __read_mostly = {
 	.name       = "geoip",
 	.revision   = 1,
 	.family     = NFPROTO_IPV4,
-	.match      = xt_geoip_mt,
+	.match      = xt_geoip_mt4,
 	.checkentry = xt_geoip_mt_checkentry,
 	.destroy    = xt_geoip_mt_destroy,
 	.matchsize  = sizeof(struct xt_geoip_match_info),

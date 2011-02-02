@@ -22,7 +22,7 @@ enum {
 };
 
 /* Yup, an address range will be passed in with host-order */
-struct geoip_subnet {
+struct geoip_subnet4 {
 	__u32 begin;
 	__u32 end;
 };

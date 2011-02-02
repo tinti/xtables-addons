@@ -49,9 +49,10 @@ static struct option geoip_opts[] = {
 	{NULL},
 };
 
-static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
+static struct geoip_subnet4 *
+geoip_get_subnets(const char *code, uint32_t *count)
 {
-	struct geoip_subnet *subnets;
+	struct geoip_subnet4 *subnets;
 	struct stat sb;
 	char buf[256];
 	int fd;
@@ -69,7 +70,7 @@ static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
 	}
 
 	fstat(fd, &sb);
-	if (sb.st_size % sizeof(struct geoip_subnet) != 0)
+	if (sb.st_size % sizeof(struct geoip_subnet4) != 0)
 		xtables_error(OTHER_PROBLEM, "Database file %s seems to be "
 		           "corrupted", buf);
 	subnets = malloc(sb.st_size);
@@ -77,7 +78,7 @@ static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
 		xtables_error(OTHER_PROBLEM, "geoip: insufficient memory");
 	read(fd, subnets, sb.st_size);
 	close(fd);
-	*count = sb.st_size / sizeof(struct geoip_subnet);
+	*count = sb.st_size / sizeof(struct geoip_subnet4);
 	return subnets;
 }
  
