@@ -2,7 +2,7 @@
  *	"geoip" match extension for iptables
  *	Copyright © Samuel Jean <peejix [at] people netfilter org>, 2004 - 2008
  *	Copyright © Nicolas Bouliane <acidfu [at] people netfilter org>, 2004 - 2008
- *	Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *	Jan Engelhardt <jengelh [at] medozas de>, 2008-2011
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -49,19 +49,28 @@ static struct option geoip_opts[] = {
 	{NULL},
 };
 
-static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
+static void *
+geoip_get_subnets(const char *code, uint32_t *count, uint8_t nfproto)
 {
-	struct geoip_subnet *subnets;
+	void *subnets;
 	struct stat sb;
 	char buf[256];
 	int fd;
 
 	/* Use simple integer vector files */
+	if (nfproto == NFPROTO_IPV6) {
 #if __BYTE_ORDER == _BIG_ENDIAN
-	snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/BE/%s.iv0", code);
+		snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/BE/%s.iv6", code);
 #else
-	snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/LE/%s.iv0", code);
+		snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/LE/%s.iv6", code);
 #endif
+	} else {
+#if __BYTE_ORDER == _BIG_ENDIAN
+		snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/BE/%s.iv4", code);
+#else
+		snprintf(buf, sizeof(buf), GEOIP_DB_DIR "/LE/%s.iv4", code);
+#endif
+	}
 
 	if ((fd = open(buf, O_RDONLY)) < 0) {
 		fprintf(stderr, "Could not open %s: %s\n", buf, strerror(errno));
@@ -69,20 +78,31 @@ static struct geoip_subnet *geoip_get_subnets(const char *code, uint32_t *count)
 	}
 
 	fstat(fd, &sb);
-	if (sb.st_size % sizeof(struct geoip_subnet) != 0)
-		xtables_error(OTHER_PROBLEM, "Database file %s seems to be "
-		           "corrupted", buf);
+	*count = sb.st_size;
+	switch (nfproto) {
+	case NFPROTO_IPV6:
+		if (sb.st_size % sizeof(struct geoip_subnet6) != 0)
+			xtables_error(OTHER_PROBLEM,
+				"Database file %s seems to be corrupted", buf);
+		*count /= sizeof(struct geoip_subnet6);
+		break;
+	case NFPROTO_IPV4:
+		if (sb.st_size % sizeof(struct geoip_subnet4) != 0)
+			xtables_error(OTHER_PROBLEM,
+				"Database file %s seems to be corrupted", buf);
+		*count /= sizeof(struct geoip_subnet4);
+		break;
+	}
 	subnets = malloc(sb.st_size);
 	if (subnets == NULL)
 		xtables_error(OTHER_PROBLEM, "geoip: insufficient memory");
 	read(fd, subnets, sb.st_size);
 	close(fd);
-	*count = sb.st_size / sizeof(struct geoip_subnet);
 	return subnets;
 }
  
 static struct geoip_country_user *geoip_load_cc(const char *code,
-    unsigned short cc)
+    unsigned short cc, uint8_t nfproto)
 {
 	struct geoip_country_user *ginfo;
 	ginfo = malloc(sizeof(struct geoip_country_user));
@@ -90,7 +110,8 @@ static struct geoip_country_user *geoip_load_cc(const char *code,
 	if (!ginfo)
 		return NULL;
 
-	ginfo->subnets = (unsigned long)geoip_get_subnets(code, &ginfo->count);
+	ginfo->subnets = (unsigned long)geoip_get_subnets(code,
+	                 &ginfo->count, nfproto);
 	ginfo->cc = cc;
 
 	return ginfo;
@@ -133,7 +154,7 @@ check_geoip_cc(char *cc, u_int16_t cc_used[], u_int8_t count)
 }
 
 static unsigned int parse_geoip_cc(const char *ccstr, uint16_t *cc,
-    union geoip_country_group *mem)
+    union geoip_country_group *mem, uint8_t nfproto)
 {
 	char *buffer, *cp, *next;
 	u_int8_t i, count = 0;
@@ -150,7 +171,8 @@ static unsigned int parse_geoip_cc(const char *ccstr, uint16_t *cc,
 		if (next) *next++ = '\0';
 
 		if ((cctmp = check_geoip_cc(cp, cc, count)) != 0) {
-			if ((mem[count++].user = (unsigned long)geoip_load_cc(cp, cctmp)) == 0)
+			if ((mem[count++].user =
+			    (unsigned long)geoip_load_cc(cp, cctmp, nfproto)) == 0)
 				xtables_error(OTHER_PROBLEM,
 					"geoip: insufficient memory available");
 			cc[count-1] = cctmp;
@@ -169,11 +191,9 @@ static unsigned int parse_geoip_cc(const char *ccstr, uint16_t *cc,
 	return count;
 }
 
-static int geoip_parse(int c, char **argv, int invert, unsigned int *flags,
-    const void *entry, struct xt_entry_match **match)
+static int geoip_parse(int c, bool invert, unsigned int *flags,
+    const char *arg, struct xt_geoip_match_info *info, uint8_t nfproto)
 {
-	struct xt_geoip_match_info *info = (void *)(*match)->data;
-
 	switch (c) {
 	case '1':
 		if (*flags & (XT_GEOIP_SRC | XT_GEOIP_DST))
@@ -185,7 +205,8 @@ static int geoip_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (invert)
 			*flags |= XT_GEOIP_INV;
 
-		info->count = parse_geoip_cc(argv[optind-1], info->cc, info->mem);
+		info->count = parse_geoip_cc(arg, info->cc, info->mem,
+		              nfproto);
 		info->flags = *flags;
 		return true;
 
@@ -199,12 +220,27 @@ static int geoip_parse(int c, char **argv, int invert, unsigned int *flags,
 		if (invert)
 			*flags |= XT_GEOIP_INV;
 
-		info->count = parse_geoip_cc(argv[optind-1], info->cc, info->mem);
+		info->count = parse_geoip_cc(arg, info->cc, info->mem,
+		              nfproto);
 		info->flags = *flags;
 		return true;
 	}
 
 	return false;
+}
+
+static int geoip_parse6(int c, char **argv, int invert, unsigned int *flags,
+    const void *entry, struct xt_entry_match **match)
+{
+	return geoip_parse(c, invert, flags, optarg,
+	       (void *)(*match)->data, NFPROTO_IPV6);
+}
+
+static int geoip_parse4(int c, char **argv, int invert, unsigned int *flags,
+    const void *entry, struct xt_entry_match **match)
+{
+	return geoip_parse(c, invert, flags, optarg,
+	       (void *)(*match)->data, NFPROTO_IPV4);
 }
 
 static void
@@ -259,22 +295,39 @@ geoip_save(const void *ip, const struct xt_entry_match *match)
 	printf(" ");
 }
 
-static struct xtables_match geoip_match = {
-	 .family        = NFPROTO_IPV4,
-	 .name          = "geoip",
-	 .revision      = 1,
-	 .version       = XTABLES_VERSION,
-	 .size          = XT_ALIGN(sizeof(struct xt_geoip_match_info)),
-	 .userspacesize = offsetof(struct xt_geoip_match_info, mem),
-	 .help          = geoip_help,
-	 .parse	        = geoip_parse,
-	 .final_check   = geoip_final_check,
-	 .print         = geoip_print,
-	 .save          = geoip_save,
-	 .extra_opts    = geoip_opts,
+static struct xtables_match geoip_match[] = {
+	{
+		.family        = NFPROTO_IPV6,
+		.name          = "geoip",
+		.revision      = 1,
+		.version       = XTABLES_VERSION,
+		.size          = XT_ALIGN(sizeof(struct xt_geoip_match_info)),
+		.userspacesize = offsetof(struct xt_geoip_match_info, mem),
+		.help          = geoip_help,
+		.parse         = geoip_parse6,
+		.final_check   = geoip_final_check,
+		.print         = geoip_print,
+		.save          = geoip_save,
+		.extra_opts    = geoip_opts,
+	},
+	{
+		.family        = NFPROTO_IPV4,
+		.name          = "geoip",
+		.revision      = 1,
+		.version       = XTABLES_VERSION,
+		.size          = XT_ALIGN(sizeof(struct xt_geoip_match_info)),
+		.userspacesize = offsetof(struct xt_geoip_match_info, mem),
+		.help          = geoip_help,
+		.parse         = geoip_parse4,
+		.final_check   = geoip_final_check,
+		.print         = geoip_print,
+		.save          = geoip_save,
+		.extra_opts    = geoip_opts,
+	},
 };
 
 static __attribute__((constructor)) void geoip_mt_ldr(void)
 {
-	xtables_register_match(&geoip_match);
+	xtables_register_matches(geoip_match,
+		sizeof(geoip_match) / sizeof(*geoip_match));
 }

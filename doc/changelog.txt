@@ -6,6 +6,7 @@ Fixes:
 - build: fix objdir builds for ipset-5 (xt-a specific)
 - xt_LOGMARK: fix detection of untracked connection for Linux >= 2.6.36
 Enhancements:
+- IPv6 support for xt_geoip
 - Update to ipset 5.3
   * make IPv4 and IPv6 address handling similar
   * show correct line numbers in restore output for parser errors
