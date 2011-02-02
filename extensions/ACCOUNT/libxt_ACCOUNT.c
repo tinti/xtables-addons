@@ -105,11 +105,11 @@ static void account_tg_print_it(const void *ip,
 	struct in_addr a;
 
 	if (!do_prefix)
-		printf("ACCOUNT ");
+		printf(" ACCOUNT ");
 
 	// Network information
 	if (do_prefix)
-		printf("--");
+		printf(" --");
 	printf("%s ", account_tg_opts[0].name);
 
 	a.s_addr = accountinfo->net_ip;
@@ -119,7 +119,7 @@ static void account_tg_print_it(const void *ip,
 
 	printf(" ");
 	if (do_prefix)
-		printf("--");
+		printf(" --");
 
 	printf("%s %s", account_tg_opts[1].name, accountinfo->table_name);
 }

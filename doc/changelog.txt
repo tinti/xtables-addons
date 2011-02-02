@@ -16,6 +16,7 @@ Enhancements:
   * fixed trailing whitespaces and pr_* messages
   * fixed module loading at create/header commands
 - build: support for Linux up to 2.6.38
+- build: preliminary support for iptables 1.4.11
 
 
 v1.32 (2011-01-04)

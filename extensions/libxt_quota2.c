@@ -99,16 +99,16 @@ quota_mt2_save(const void *ip, const struct xt_entry_match *match)
 	const struct xt_quota_mtinfo2 *q = (void *)match->data;
 
 	if (q->flags & XT_QUOTA_INVERT)
-		printf("! ");
+		printf(" !");
 	if (q->flags & XT_QUOTA_GROW)
-		printf("--grow ");
+		printf(" --grow ");
 	if (q->flags & XT_QUOTA_NO_CHANGE)
-		printf("--no-change ");
+		printf(" --no-change ");
 	if (q->flags & XT_QUOTA_PACKET)
-		printf("--packets ");
+		printf(" --packets ");
 	if (*q->name != '\0')
-		printf("--name %s ", q->name);
-	printf("--quota %llu ", (unsigned long long)q->quota);
+		printf(" --name %s ", q->name);
+	printf(" --quota %llu ", (unsigned long long)q->quota);
 }
 
 static void quota_mt2_print(const void *ip, const struct xt_entry_match *match,
@@ -117,11 +117,11 @@ static void quota_mt2_print(const void *ip, const struct xt_entry_match *match,
 	const struct xt_quota_mtinfo2 *q = (const void *)match->data;
 
 	if (q->flags & XT_QUOTA_INVERT)
-		printf("! ");
+		printf(" !");
 	if (q->flags & XT_QUOTA_GROW)
-		printf("counter");
+		printf(" counter");
 	else
-		printf("quota");
+		printf(" quota");
 	if (*q->name != '\0')
 		printf(" %s:", q->name);
 	printf(" %llu ", (unsigned long long)q->quota);

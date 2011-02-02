@@ -62,7 +62,7 @@ static void CHECKSUM_print(const void *ip, const struct xt_entry_target *target,
 	printf("CHECKSUM ");
 
 	if (einfo->operation & XT_CHECKSUM_OP_FILL)
-		printf("fill ");
+		printf(" fill ");
 }
 
 static void CHECKSUM_save(const void *ip, const struct xt_entry_target *target)
@@ -71,7 +71,7 @@ static void CHECKSUM_save(const void *ip, const struct xt_entry_target *target)
 		(const struct xt_CHECKSUM_info *)target->data;
 
 	if (einfo->operation & XT_CHECKSUM_OP_FILL)
-		printf("--checksum-fill ");
+		printf(" --checksum-fill ");
 }
 
 static struct xtables_target checksum_tg_reg = {

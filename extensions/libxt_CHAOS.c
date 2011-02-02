@@ -71,10 +71,10 @@ static void chaos_tg_print(const void *ip,
 
 	switch (info->variant) {
 	case XTCHAOS_DELUDE:
-		printf("DELUDE ");
+		printf(" DELUDE ");
 		break;
 	case XTCHAOS_TARPIT:
-		printf("TARPIT ");
+		printf(" TARPIT ");
 		break;
 	}
 }
@@ -85,10 +85,10 @@ static void chaos_tg_save(const void *ip, const struct xt_entry_target *target)
 
 	switch (info->variant) {
 	case XTCHAOS_DELUDE:
-		printf("--delude ");
+		printf(" --delude ");
 		break;
 	case XTCHAOS_TARPIT:
-		printf("--tarpit ");
+		printf(" --tarpit ");
 		break;
 	}
 }

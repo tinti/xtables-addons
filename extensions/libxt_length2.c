@@ -113,14 +113,14 @@ static void length_mt_print(const void *ip, const struct xt_entry_match *match,
 	const struct xt_length_mtinfo2 *info = (const void *)match->data;
 
 	if (info->flags & XT_LENGTH_LAYER3)
-		printf("layer3 ");
+		printf(" layer3 ");
 	else if (info->flags & XT_LENGTH_LAYER4)
-		printf("layer4 ");
+		printf(" layer4 ");
 	else if (info->flags & XT_LENGTH_LAYER5)
-		printf("layer5 ");
+		printf(" layer5 ");
 	else if (info->flags & XT_LENGTH_LAYER7)
-		printf("layer7 ");
-	printf("length ");
+		printf(" layer7 ");
+	printf(" length ");
 	if (info->flags & XT_LENGTH_INVERT)
 		printf("! ");
 	if (info->min == info->max)
@@ -135,16 +135,16 @@ static void length_mt_save(const void *ip, const struct xt_entry_match *match)
 	const struct xt_length_mtinfo2 *info = (const void *)match->data;
 
 	if (info->flags & XT_LENGTH_LAYER3)
-		printf("--layer3 ");
+		printf(" --layer3 ");
 	else if (info->flags & XT_LENGTH_LAYER4)
-		printf("--layer4 ");
+		printf(" --layer4 ");
 	else if (info->flags & XT_LENGTH_LAYER5)
-		printf("--layer5 ");
+		printf(" --layer5 ");
 	else if (info->flags & XT_LENGTH_LAYER7)
-		printf("--layer7 ");
+		printf(" --layer7 ");
 	if (info->flags & XT_LENGTH_INVERT)
-		printf("! ");
-	printf("--length ");
+		printf(" !");
+	printf(" --length ");
 	if (info->min == info->max)
 		printf("%u ", (unsigned int)info->min);
 	else

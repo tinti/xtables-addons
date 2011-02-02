@@ -1,6 +1,6 @@
 /*
  *	"ipv4options" match extension for iptables
- *	Coprygith © Jan Engelhardt, 2009
+ *	Copyright © Jan Engelhardt, 2009
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -138,7 +138,7 @@ static void ipv4options_mt_print(const void *ip,
 {
 	const struct xt_ipv4options_mtinfo1 *info = (void *)match->data;
 
-	printf("ipv4options %s ",
+	printf(" ipv4options %s ",
 	       (info->flags & XT_V4OPTS_ANY) ? "any-of" : "all-of");
 	ipv4options_print_flags(info, numeric);
 	printf(" ");
@@ -150,7 +150,7 @@ static void ipv4options_mt_save(const void *ip,
 	const struct xt_ipv4options_mtinfo1 *info = (void *)match->data;
 
 	if (info->map != 0) {
-		printf("--flags ");
+		printf(" --flags ");
 		ipv4options_print_flags(info, true);
 	}
 	if (info->flags & XT_V4OPTS_ANY)

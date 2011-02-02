@@ -110,10 +110,10 @@ rawdnat_tg4_print(const void *entry, const struct xt_entry_target *target,
 	const struct xt_rawnat_tginfo *info = (const void *)target->data;
 
 	if (!numeric && info->mask == 32)
-		printf("to-destination %s ",
+		printf(" to-destination %s ",
 		       xtables_ipaddr_to_anyname(&info->addr.in));
 	else
-		printf("to-destination %s/%u ",
+		printf(" to-destination %s/%u ",
 		       xtables_ipaddr_to_numeric(&info->addr.in), info->mask);
 }
 
@@ -124,10 +124,10 @@ rawdnat_tg6_print(const void *entry, const struct xt_entry_target *target,
 	const struct xt_rawnat_tginfo *info = (const void *)target->data;
 
 	if (!numeric && info->mask == 128)
-		printf("to-destination %s ",
+		printf(" to-destination %s ",
 		       xtables_ip6addr_to_anyname(&info->addr.in6));
 	else
-		printf("to-destination %s/%u ",
+		printf(" to-destination %s/%u ",
 		       xtables_ip6addr_to_numeric(&info->addr.in6), info->mask);
 }
 
@@ -136,7 +136,7 @@ rawdnat_tg4_save(const void *entry, const struct xt_entry_target *target)
 {
 	const struct xt_rawnat_tginfo *info = (const void *)target->data;
 
-	printf("--to-destination %s/%u ",
+	printf(" --to-destination %s/%u ",
 	       xtables_ipaddr_to_numeric(&info->addr.in),
 	       info->mask);
 }
@@ -146,7 +146,7 @@ rawdnat_tg6_save(const void *entry, const struct xt_entry_target *target)
 {
 	const struct xt_rawnat_tginfo *info = (const void *)target->data;
 
-	printf("--to-destination %s/%u ",
+	printf(" --to-destination %s/%u ",
 	       xtables_ip6addr_to_numeric(&info->addr.in6),
 	       info->mask);
 }

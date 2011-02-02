@@ -73,9 +73,9 @@ static void gradm_mt_save(const void *ip, const struct xt_entry_match *match)
 	const struct xt_gradm_mtinfo *info = (const void *)match->data;
 
 	if (info->invflags)
-		printf("--disabled ");
+		printf(" --disabled ");
 	else
-		printf("--enabled ");
+		printf(" --enabled ");
 }
 
 static struct xtables_match gradm_mt_reg = { 

@@ -208,16 +208,16 @@ ipp2p_mt_print1(const void *entry, const struct xt_entry_match *match,
 
 	for (i = IPP2N_EDK; i <= IPP2N_XDCC; ++i)
 		if (info->cmd & (1 << i))
-			printf("%s ", ipp2p_cmds[i]);
+			printf(" %s ", ipp2p_cmds[i]);
 
 	if (info->debug != 0)
-		printf("--debug ");
+		printf(" --debug ");
 }
 
 static void ipp2p_mt_print(const void *entry,
     const struct xt_entry_match *match, int numeric)
 {
-	printf("ipp2p ");
+	printf(" ipp2p ");
 	ipp2p_mt_print1(entry, match, true);
 }
 

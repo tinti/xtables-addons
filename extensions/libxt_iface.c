@@ -180,7 +180,7 @@ static void iface_mt_print(const void *ip, const struct xt_entry_match *match,
 {
 	const struct xt_iface_mtinfo *info = (const void *)match->data;
 
-	printf("iface: ");
+	printf(" iface: ");
 	if (info->flags & XT_IFACE_DEV_IN)
 		printf("(in)");
 	else if (info->flags & XT_IFACE_DEV_OUT)
@@ -207,11 +207,11 @@ static void iface_mt_save(const void *ip, const struct xt_entry_match *match)
 	const struct xt_iface_mtinfo *info = (const void *)match->data;
 
 	if (info->flags & XT_IFACE_DEV_IN)
-		printf("--dev-in");
+		printf(" --dev-in");
 	else if (info->flags & XT_IFACE_DEV_OUT)
-		printf("--dev-out");
+		printf(" --dev-out");
 	else
-		printf("--iface %s", info->ifname);
+		printf(" --iface %s", info->ifname);
 	iface_print_opt(info, XT_IFACE_UP,          "--up");
 	iface_print_opt(info, XT_IFACE_BROADCAST,   "--broadcast");
 	iface_print_opt(info, XT_IFACE_LOOPBACK,    "--loopback");

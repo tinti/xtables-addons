@@ -67,7 +67,7 @@ static void dhcpmac_mt_print(const void *ip,
 {
 	const struct dhcpmac_info *info = (void *)match->data;
 
-	printf("dhcpmac %s" DH_MAC_FMT "/%u ",
+	printf(" dhcpmac %s" DH_MAC_FMT "/%u ",
 	       info->invert ? "!" : "", DH_MAC_HEX(info->addr), info->mask);
 }
 
@@ -77,8 +77,8 @@ static void dhcpmac_mt_save(const void *ip,
 	const struct dhcpmac_info *info = (void *)match->data;
 
 	if (info->invert)
-		printf("! ");
-	printf("--mac " DH_MAC_FMT "/%u ",
+		printf(" !");
+	printf(" --mac " DH_MAC_FMT "/%u ",
 	       DH_MAC_HEX(info->addr), info->mask);
 }
 

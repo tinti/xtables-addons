@@ -272,7 +272,7 @@ static void pknock_mt_print(const void *ip,
 	const struct xt_pknock_mtinfo *info = (void *)match->data;
 	int i;
 
-	printf("pknock ");
+	printf(" pknock ");
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		printf("knockports ");
 		for (i = 0; i < info->ports_count; ++i)
@@ -301,26 +301,26 @@ static void pknock_mt_save(const void *ip, const struct xt_entry_match *match)
 	const struct xt_pknock_mtinfo *info = (void *)match->data;
 
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
-		printf("--knockports ");
+		printf(" --knockports ");
 		for (i = 0; i < info->ports_count; ++i)
 			printf("%s%d", i ? "," : "", info->port[i]);
 		printf(" ");
 	}
 	if (info->option & XT_PKNOCK_TIME)
-		printf("--time %ld ", (long)info->max_time);
+		printf(" --time %ld ", (long)info->max_time);
 	if (info->option & XT_PKNOCK_AUTOCLOSE)
-		printf("--autoclose %lu ",
+		printf(" --autoclose %lu ",
 		       (unsigned long)info->autoclose_time);
 	if (info->option & XT_PKNOCK_NAME)
-		printf("--name %s ", info->rule_name);
+		printf(" --name %s ", info->rule_name);
 	if (info->option & XT_PKNOCK_OPENSECRET)
-		printf("--opensecret ");
+		printf(" --opensecret ");
 	if (info->option & XT_PKNOCK_CLOSESECRET)
-		printf("--closesecret ");
+		printf(" --closesecret ");
 	if (info->option & XT_PKNOCK_STRICT)
-		printf("--strict ");
+		printf(" --strict ");
 	if (info->option & XT_PKNOCK_CHECKIP)
-		printf("--checkip ");
+		printf(" --checkip ");
 }
 
 static struct xtables_match pknock_mt_reg = {

@@ -119,16 +119,16 @@ ipmark_tg_print(const void *entry, const struct xt_entry_target *target,
 	const struct xt_ipmark_tginfo *info = (const void *)target->data;
 
 	if (info->selector == XT_IPMARK_SRC)
-		printf("IPMARK src ip ");
+		printf(" IPMARK src ip ");
 	else
-		printf("IPMARK dst ip ");
+		printf(" IPMARK dst ip ");
 
 	if (info->shift != 0)
-		printf("shift %u ", (unsigned int)info->shift);
+		printf(" shift %u ", (unsigned int)info->shift);
 	if (info->andmask != ~0U)
-		printf("and 0x%x ", (unsigned int)info->andmask);
+		printf(" and 0x%x ", (unsigned int)info->andmask);
 	if (info->ormask != 0)
-		printf("or 0x%x ", (unsigned int)info->ormask);
+		printf(" or 0x%x ", (unsigned int)info->ormask);
 }
 
 static void
@@ -137,16 +137,16 @@ ipmark_tg_save(const void *entry, const struct xt_entry_target *target)
 	const struct xt_ipmark_tginfo *info = (const void *)target->data;
 
 	if (info->selector == XT_IPMARK_SRC)
-		printf("--addr src ");
+		printf(" --addr src ");
 	else
-		printf("--addr dst ");
+		printf(" --addr dst ");
 
 	if (info->shift != 0)
-		printf("--shift %u ", (unsigned int)info->shift);
+		printf(" --shift %u ", (unsigned int)info->shift);
 	if (info->andmask != ~0U)
-		printf("--and-mask 0x%x ", (unsigned int)info->andmask);
+		printf(" --and-mask 0x%x ", (unsigned int)info->andmask);
 	if (info->ormask != 0)
-		printf("--or-mask 0x%x ", (unsigned int)info->ormask);
+		printf(" --or-mask 0x%x ", (unsigned int)info->ormask);
 }
 
 static struct xtables_target ipmark_tg_reg = {

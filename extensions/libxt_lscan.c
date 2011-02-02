@@ -70,7 +70,7 @@ static void lscan_mt_print(const void *ip,
 	const struct xt_lscan_mtinfo *info = (const void *)(match->data);
 	const char *s = "";
 
-	printf("lscan ");
+	printf(" lscan ");
 	if (info->match_stealth) {
 		printf("STEALTH");
 		s = ",";
@@ -93,13 +93,13 @@ static void lscan_mt_save(const void *ip, const struct xt_entry_match *match)
 	const struct xt_lscan_mtinfo *info = (const void *)(match->data);
 
 	if (info->match_stealth)
-		printf("--stealth ");
+		printf(" --stealth ");
 	if (info->match_syn)
-		printf("--synscan ");
+		printf(" --synscan ");
 	if (info->match_cn)
-		printf("--cnscan ");
+		printf(" --cnscan ");
 	if (info->match_gr)
-		printf("--grscan ");
+		printf(" --grscan ");
 }
 
 static struct xtables_match lscan_mt_reg = {

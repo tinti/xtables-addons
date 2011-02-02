@@ -259,9 +259,9 @@ geoip_print(const void *ip, const struct xt_entry_match *match, int numeric)
 	u_int8_t i;
 
 	if (info->flags & XT_GEOIP_SRC)
-		printf("Source ");
+		printf(" Source ");
 	else
-		printf("Destination ");
+		printf(" Destination ");
 
 	if (info->count > 1)
 		printf("countries: ");
@@ -283,12 +283,12 @@ geoip_save(const void *ip, const struct xt_entry_match *match)
 	u_int8_t i;
 
 	if (info->flags & XT_GEOIP_INV)
-		printf("! ");
+		printf(" !");
 
 	if (info->flags & XT_GEOIP_SRC)
-		printf("--source-country ");
+		printf(" --source-country ");
 	else
-		printf("--destination-country ");
+		printf(" --destination-country ");
 
 	for (i = 0; i < info->count; i++)
 		printf("%s%c%c", i ? "," : "", COUNTRY(info->cc[i]));

@@ -119,7 +119,7 @@ static void psd_mt_final_check(unsigned int flags) {}
 static void psd_mt_print(const void *ip, const struct xt_entry_match *match, int numeric)
 {
 	const struct xt_psd_info *psdinfo = (const struct xt_psd_info *)match->data;
-	printf("psd ");
+	printf(" psd ");
 	printf("weight-threshold: %u ", psdinfo->weight_threshold);
 	printf("delay-threshold: %u ", psdinfo->delay_threshold);
 	printf("lo-ports-weight: %u ", psdinfo->lo_ports_weight);
@@ -130,7 +130,7 @@ static void psd_mt_print(const void *ip, const struct xt_entry_match *match, int
 static void psd_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_psd_info *psdinfo = (const struct xt_psd_info *)match->data;
-	printf("--psd-weight-threshold %u ", psdinfo->weight_threshold);
+	printf(" --psd-weight-threshold %u ", psdinfo->weight_threshold);
 	printf("--psd-delay-threshold %u ", psdinfo->delay_threshold);
 	printf("--psd-lo-ports-weight %u ", psdinfo->lo_ports_weight);
 	printf("--psd-hi-ports-weight %u ", psdinfo->hi_ports_weight);

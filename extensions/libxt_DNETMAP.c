@@ -192,7 +192,7 @@ static void DNETMAP_print(const void *ip, const struct xt_entry_target *target,
 	struct xt_DNETMAP_tginfo *tginfo = (void *)&target->data;
 	const __u8 *flags = &tginfo->flags;
 
-	printf("prefix ");
+	printf(" prefix ");
 	if (*flags & XT_DNETMAP_PREFIX)
 		DNETMAP_print_addr(ip, target, numeric);
 	else
@@ -211,14 +211,14 @@ static void DNETMAP_save(const void *ip, const struct xt_entry_target *target)
 	const __u8 *flags = &tginfo->flags;
 
 	if (*flags & XT_DNETMAP_PREFIX) {
-		printf("--%s", DNETMAP_opts[0].name);
+		printf(" --%s ", DNETMAP_opts[0].name);
 		DNETMAP_print_addr(ip, target, 0);
 	}
-	printf(" --reuse %i", *flags & XT_DNETMAP_REUSE);
+	printf(" --reuse %i ", *flags & XT_DNETMAP_REUSE);
 
 	/* ommited because default value can change as kernel mod param */
 	if (*flags & XT_DNETMAP_TTL)
-		printf(" --ttl %i", tginfo->ttl);
+		printf(" --ttl %i ", tginfo->ttl);
 }
 
 static struct xtables_target dnetmap_tg_reg = {
