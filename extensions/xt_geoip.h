@@ -36,7 +36,7 @@ struct geoip_country_user {
 struct geoip_country_kernel;
 
 union geoip_country_group {
-	aligned_u64 user;
+	aligned_u64 user; /* struct geoip_country_user * */
 	struct geoip_country_kernel *kernel;
 };
 
@@ -49,6 +49,6 @@ struct xt_geoip_match_info {
 	union geoip_country_group mem[XT_GEOIP_MAX];
 };
 
-#define COUNTRY(cc) (cc >> 8), (cc & 0x00FF)
+#define COUNTRY(cc) ((cc) >> 8), ((cc) & 0x00FF)
 
 #endif /* _LINUX_NETFILTER_XT_GEOIP_H */

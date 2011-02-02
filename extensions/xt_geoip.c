@@ -29,6 +29,12 @@ MODULE_AUTHOR("Samuel Jean");
 MODULE_DESCRIPTION("xtables module for geoip match");
 MODULE_ALIAS("ipt_geoip");
 
+/**
+ * @list:	anchor point for geoip_head
+ * @subnets:	packed ordered list of ranges
+ * @count:	number of ranges
+ * @cc:		country code
+ */
 struct geoip_country_kernel {
 	struct list_head list;
 	struct geoip_subnet *subnets;
@@ -45,7 +51,7 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 {
 	struct geoip_country_user umem;
 	struct geoip_country_kernel *p;
-	struct geoip_subnet *s;
+	struct geoip_subnet *subnet;
 	int ret;
 
 	if (copy_from_user(&umem, umem_ptr, sizeof(umem)) != 0)
@@ -58,18 +64,19 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	p->count   = umem.count;
 	p->cc      = umem.cc;
 
-	s = vmalloc(p->count * sizeof(struct geoip_subnet));
-	if (s == NULL) {
+	subnet = vmalloc(p->count * sizeof(struct geoip_subnet));
+	if (subnet == NULL) {
 		ret = -ENOMEM;
 		goto free_p;
 	}
-	if (copy_from_user(s, (const void __user *)(unsigned long)umem.subnets,
+	if (copy_from_user(subnet,
+	    (const void __user *)(unsigned long)umem.subnets,
 	    p->count * sizeof(struct geoip_subnet)) != 0) {
 		ret = -EFAULT;
 		goto free_s;
 	}
 
-	p->subnets = s;
+	p->subnets = subnet;
 	atomic_set(&p->ref, 1);
 	INIT_LIST_HEAD(&p->list);
 
@@ -80,7 +87,7 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr)
 	return p;
 
  free_s:
-	vfree(s);
+	vfree(subnet);
  free_p:
 	kfree(p);
 	return ERR_PTR(ret);
@@ -149,20 +156,14 @@ xt_geoip_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	unsigned int i;
 	uint32_t ip;
 
-	if (info->flags & XT_GEOIP_SRC)
-		ip = ntohl(iph->saddr);
-	else
-		ip = ntohl(iph->daddr);
-
+	ip = ntohl((info->flags & XT_GEOIP_SRC) ? iph->saddr : iph->daddr);
 	rcu_read_lock();
 	for (i = 0; i < info->count; i++) {
 		if ((node = info->mem[i].kernel) == NULL) {
 			printk(KERN_ERR "xt_geoip: what the hell ?? '%c%c' isn't loaded into memory... skip it!\n",
 					COUNTRY(info->cc[i]));
-
 			continue;
 		}
-
 		if (geoip_bsearch(node->subnets, ip, 0, node->count)) {
 			rcu_read_unlock();
 			return !(info->flags & XT_GEOIP_INV);
