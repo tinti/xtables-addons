@@ -1,0 +1,91 @@
+The \fBDNETMAP\fR target allows dynamic two-way 1:1 mapping of IPv4 subnets.
+Single rule can map private subnet to shorter public subnet creating and
+maintaining unambigeous private-public ip bindings. Second rule can be used to
+map new flows to private subnet according to maintained bindings. Target allows
+efficient public IPv4 space usage and unambigeous NAT at the same time.
+
+Target can be used only in \fBnat\fR table in \fBPOSTROUTING\fR or \fBOUTPUT\fR
+chains for SNAT and in \fBPREROUTING\fR for DNAT. Only flows directed to bound
+IPs will be DNATed. Packet continues chain traversal if there is no free
+postnat-ip to be assigned to prenat-ip. Default binding \fBttl\fR is \fI10
+minutes\fR and can be changed using \fBdefault_ttl\fR module option. Default ip
+hash size is 256 and can be changed using \fBhash_size\fR module option.
+
+.TP
+\fB\-\-prefix\fR \fIaddr\fR\fB/\fR\fImask\fR
+Network subnet to map to. If not specified, all existing prefixes are used.
+.TP
+\fB\-\-reuse\fR
+Reuse entry for given prenat-ip from any prefix despite bindings ttl < 0.
+.TP
+\fB\-\-ttl\fR \fIseconds\fR
+Regenerate bindings ttl value to \fIseconds\fR. If negative value is specified,
+bindings ttl is kept unchanged. If not specified then default ttl value (600s)
+is used.
+.PP
+\fB* /proc interface\fR
+
+Module creates following entries for each new specified subnet:
+.TP
+\fB/proc/net/xt_DNETMAP/\fR\fIsubnet\fR\fB_\fR\fImask\fR
+Contains binding table for subnet/mask. Each line contains \fBprenat-ip\fR,
+\fBpostnat-ip\fR,\fBttl\fR (seconds till entry times out), \fBlasthit\fR (last
+entry hit in seconds relative to system boot time).
+.TP
+\fB/proc/net/xt_DNETMAP/\fR\fIsubnet\fR\fB_\fR\fImask\fR\fB_stat\fR
+Contains statistics for given subnet/mask. Line contains contains three
+numerical values separated by spaces. First one is number of currently used
+addresses (bindings with negative ttl excluded), second one is number of all
+usable addresses in subnet and third one is mean \fBttl\fR value for all active
+entries.
+.PP
+Entries are removed if the last iptables rule for a specific subnet is deleted.
+
+\fB* Logging\fR
+
+Module logs binding add/timeout events to klog. This behaviour can be disabled
+using \fBdisable_log\fR module parameter.
+
+\fB* Examples\fR
+
+\fB1.\fR Map subnet 192.168.0.0/24 to subnets 20.0.0.0/26. SNAT only:
+
+iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26
+
+Active hosts from 192.168.0.0/24 subnet are mapped to 20.0.0.0/26. If packet
+from not yet bound prenat-ip hits the rule and there are no free or timed-out
+(ttl<0) entries in prefix 20.0.0.0/28, then notice is logged to klog and chain
+traversal continues. If packet from already bound prenat-ip hits the rule,
+bindings ttl value is regenerated to default_ttl and SNAT is performed.
+
+\fB2.\fR Use of \fB\-\-reuse\fR and \fB\-\-ttl\fR switches, multiple rule
+interaction:
+
+iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix
+20.0.0.0/26 --reuse --ttl 200
+
+iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 30.0.0.0/26
+
+Active hosts from 192.168.0.0/24 subnet are mapped to 20.0.0.0/26 with ttl =
+200 seconds. If there are no free addresses in first prefix the next one
+(30.0.0.0/26) is used with default ttl. It's important to note that the first
+rule SNATs all flows whose source IP is already actively (ttl>0) bound to ANY
+prefix. Parameter \fB\-\-reuse\fR makes this functionality work even for
+inactive (ttl<0) entries.
+
+If both subnets are exhaused, then chain traversal continues.
+
+\fB3.\fR Map 192.168.0.0/24 to subnets 20.0.0.0/26 bidirectional way:
+
+iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26
+
+iptables -t nat -A PREROUTING -j DNETMAP
+
+If host 192.168.0.10 generates some traffic, it gets bound to first free IP in
+subnet - 20.0.0.0. Now any traffic directed to 20.0.0.0 gets DNATed to
+192.168.0.10 as long as there's an active (ttl>0) binding. There's no need to
+specify \fB\-\-prefix\fR parameter in PREROUTING rule, because this way it DNATs
+traffic to all active prefixes. You could specify prefix it you'd like to make
+DNAT work for specific prefix only.
+
+.

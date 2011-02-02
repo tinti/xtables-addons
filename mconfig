@@ -5,6 +5,7 @@ build_CHAOS=m
 build_CHECKSUM=
 build_DELUDE=m
 build_DHCPMAC=m
+build_DNETMAP=m
 build_ECHO=
 build_IPMARK=m
 build_LOGMARK=m
