@@ -4,6 +4,7 @@ HEAD
 Fixes:
 - build: restore functionality of `configure --without-kbuild`
 - build: fix objdir builds for ipset-5 (xt-a specific)
+- build: fix missing inclusion of dependency rules
 - xt_LOGMARK: fix detection of untracked connection for Linux >= 2.6.36
 Enhancements:
 - IPv6 support for xt_geoip
