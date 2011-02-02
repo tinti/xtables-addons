@@ -199,8 +199,8 @@ xt_geoip_mt6(const struct sk_buff *skb, struct xt_action_param *par)
 	rcu_read_lock();
 	for (i = 0; i < info->count; i++) {
 		if ((node = info->mem[i].kernel) == NULL) {
-			pr_err("'%c%c' is not loaded into memory... skip it!\n",
-			       COUNTRY(info->cc[i]));
+			printk(KERN_ERR "xt_geoip: what the hell ?? '%c%c' isn't loaded into memory... skip it!\n",
+					COUNTRY(info->cc[i]));
 			continue;
 		}
 		if (geoip_bsearch6(node->subnets, &ip, 0, node->count)) {
