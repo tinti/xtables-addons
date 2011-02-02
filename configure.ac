@@ -1,9 +1,9 @@
 
-AC_INIT([xtables-addons], [1.32])
+AC_INIT([xtables-addons], [1.33])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_INSTALL
-AM_INIT_AUTOMAKE([1.10.2 -Wall foreign subdir-objects])
+AM_INIT_AUTOMAKE([1.10b -Wall foreign subdir-objects])
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_DISABLE_STATIC
