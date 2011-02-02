@@ -70,7 +70,7 @@ if test -n "$kbuilddir"; then
 		echo "WARNING: Version detection did not succeed. Continue at own luck.";
 	else
 		echo "$kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
-		if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 37; then
+		if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 38; then
 			echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
 		elif test \( "$kmajor" -lt 2 -o \
 		    \( "$kmajor" -eq 2 -a "$kminor" -lt 6 \) -o \

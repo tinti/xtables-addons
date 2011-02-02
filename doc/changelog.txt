@@ -15,6 +15,7 @@ Enhancements:
   * fixed ICMP and ICMPv6 handling
   * fixed trailing whitespaces and pr_* messages
   * fixed module loading at create/header commands
+- build: support for Linux up to 2.6.38
 
 
 v1.32 (2011-01-04)
