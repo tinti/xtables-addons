@@ -311,8 +311,7 @@ retry:
 		/* In case we have plenty of memory :-) */
 		return -IPSET_ERR_HASH_FULL;
 	t = ip_set_alloc(sizeof(*t)
-			 + jhash_size(htable_bits) * sizeof(struct hbucket),
-			 GFP_KERNEL);
+			 + jhash_size(htable_bits) * sizeof(struct hbucket));
 	if (!t)
 		return -ENOMEM;
 	t->htable_bits = htable_bits;
@@ -525,7 +524,7 @@ type_pf_head(struct ip_set *set, struct sk_buff *skb)
 
 	return 0;
 nla_put_failure:
-	return -EFAULT;
+	return -EMSGSIZE;
 }
 
 /* Reply a LIST/SAVE request: dump the elements of the specified set */
@@ -545,7 +544,7 @@ type_pf_list(const struct ip_set *set,
 
 	atd = ipset_nest_start(skb, IPSET_ATTR_ADT);
 	if (!atd)
-		return -EFAULT;
+		return -EMSGSIZE;
 	pr_debug("list hash set %s\n", set->name);
 	for (; cb->args[2] < jhash_size(t->htable_bits); cb->args[2]++) {
 		incomplete = skb_tail_pointer(skb);
@@ -559,7 +558,7 @@ type_pf_list(const struct ip_set *set,
 			if (!nested) {
 				if (cb->args[2] == first) {
 					nla_nest_cancel(skb, atd);
-					return -EFAULT;
+					return -EMSGSIZE;
 				} else
 					goto nla_put_failure;
 			}
@@ -581,6 +580,7 @@ nla_put_failure:
 		pr_warning("Can't list set %s: one bucket does not fit into "
 			   "a message. Please report it!\n", set->name);
 		cb->args[2] = 0;
+		return -EMSGSIZE;
 	}
 	return 0;
 }
@@ -589,7 +589,7 @@ static int
 type_pf_kadt(struct ip_set *set, const struct sk_buff * skb,
 	     enum ipset_adt adt, u8 pf, u8 dim, u8 flags);
 static int
-type_pf_uadt(struct ip_set *set, struct nlattr *head, int len,
+type_pf_uadt(struct ip_set *set, struct nlattr *tb[],
 	     enum ipset_adt adt, u32 *lineno, u32 flags);
 
 static const struct ip_set_type_variant type_pf_variant = {
@@ -742,8 +742,7 @@ retry:
 		/* In case we have plenty of memory :-) */
 		return -IPSET_ERR_HASH_FULL;
 	t = ip_set_alloc(sizeof(*t)
-			 + jhash_size(htable_bits) * sizeof(struct hbucket),
-			 GFP_KERNEL);
+			 + jhash_size(htable_bits) * sizeof(struct hbucket));
 	if (!t)
 		return -ENOMEM;
 	t->htable_bits = htable_bits;
@@ -946,7 +945,7 @@ type_pf_tlist(const struct ip_set *set,
 
 	atd = ipset_nest_start(skb, IPSET_ATTR_ADT);
 	if (!atd)
-		return -EFAULT;
+		return -EMSGSIZE;
 	for (; cb->args[2] < jhash_size(t->htable_bits); cb->args[2]++) {
 		incomplete = skb_tail_pointer(skb);
 		n = hbucket(t, cb->args[2]);
@@ -960,7 +959,7 @@ type_pf_tlist(const struct ip_set *set,
 			if (!nested) {
 				if (cb->args[2] == first) {
 					nla_nest_cancel(skb, atd);
-					return -EFAULT;
+					return -EMSGSIZE;
 				} else
 					goto nla_put_failure;
 			}
@@ -982,6 +981,7 @@ nla_put_failure:
 		pr_warning("Can't list set %s: one bucket does not fit into "
 			   "a message. Please report it!\n", set->name);
 		cb->args[2] = 0;
+		return -EMSGSIZE;
 	}
 	return 0;
 }

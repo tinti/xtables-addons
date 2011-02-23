@@ -15,9 +15,6 @@
 #include <linux/etherdevice.h>
 #include <linux/skbuff.h>
 #include <linux/errno.h>
-#include <linux/uaccess.h>
-#include <linux/bitops.h>
-#include <linux/spinlock.h>
 #include <linux/if_ether.h>
 #include <linux/netlink.h>
 #include <linux/jiffies.h>
@@ -175,7 +172,7 @@ bitmap_ipmac_list(const struct ip_set *set,
 
 	atd = ipset_nest_start(skb, IPSET_ATTR_ADT);
 	if (!atd)
-		return -EFAULT;
+		return -EMSGSIZE;
 	for (; cb->args[2] <= last; cb->args[2]++) {
 		id = cb->args[2];
 		elem = bitmap_ipmac_elem(map, id);
@@ -185,7 +182,7 @@ bitmap_ipmac_list(const struct ip_set *set,
 		if (!nested) {
 			if (id == first) {
 				nla_nest_cancel(skb, atd);
-				return -EFAULT;
+				return -EMSGSIZE;
 			} else
 				goto nla_put_failure;
 		}
@@ -205,6 +202,10 @@ bitmap_ipmac_list(const struct ip_set *set,
 nla_put_failure:
 	nla_nest_cancel(skb, nested);
 	ipset_nest_end(skb, atd);
+	if (unlikely(id == first)) {
+		cb->args[2] = 0;
+		return -EMSGSIZE;
+	}
 	return 0;
 }
 
@@ -298,7 +299,7 @@ bitmap_ipmac_tlist(const struct ip_set *set,
 
 	atd = ipset_nest_start(skb, IPSET_ATTR_ADT);
 	if (!atd)
-		return -EFAULT;
+		return -EMSGSIZE;
 	for (; cb->args[2] <= last; cb->args[2]++) {
 		id = cb->args[2];
 		elem = bitmap_ipmac_elem(map, id);
@@ -308,7 +309,7 @@ bitmap_ipmac_tlist(const struct ip_set *set,
 		if (!nested) {
 			if (id == first) {
 				nla_nest_cancel(skb, atd);
-				return -EFAULT;
+				return -EMSGSIZE;
 			} else
 				goto nla_put_failure;
 		}
@@ -331,7 +332,7 @@ bitmap_ipmac_tlist(const struct ip_set *set,
 nla_put_failure:
 	nla_nest_cancel(skb, nested);
 	ipset_nest_end(skb, atd);
-	return 0;
+	return -EMSGSIZE;
 }
 
 static int
@@ -357,28 +358,15 @@ bitmap_ipmac_kadt(struct ip_set *set, const struct sk_buff *skb,
 	return adtfn(set, &data, map->timeout);
 }
 
-static const struct nla_policy
-bitmap_ipmac_adt_policy[IPSET_ATTR_ADT_MAX + 1] = {
-	[IPSET_ATTR_IP]		= { .type = NLA_NESTED },
-	[IPSET_ATTR_ETHER]	= { .type = NLA_BINARY, .len  = ETH_ALEN },
-	[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
-	[IPSET_ATTR_LINENO]	= { .type = NLA_U32 },
-};
-
 static int
-bitmap_ipmac_uadt(struct ip_set *set, struct nlattr *head, int len,
+bitmap_ipmac_uadt(struct ip_set *set, struct nlattr *tb[],
 		  enum ipset_adt adt, u32 *lineno, u32 flags)
 {
 	const struct bitmap_ipmac *map = set->data;
-	struct nlattr *tb[IPSET_ATTR_ADT_MAX+1];
 	ipset_adtfn adtfn = set->variant->adt[adt];
 	struct ipmac data;
 	u32 timeout = map->timeout;
 	int ret = 0;
-
-	if (nla_parse(tb, IPSET_ATTR_ADT_MAX, head, len,
-		      bitmap_ipmac_adt_policy))
-		return -IPSET_ERR_PROTOCOL;
 
 	if (unlikely(!tb[IPSET_ATTR_IP] ||
 		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
@@ -457,7 +445,7 @@ bitmap_ipmac_head(struct ip_set *set, struct sk_buff *skb)
 
 	return 0;
 nla_put_failure:
-	return -EFAULT;
+	return -EMSGSIZE;
 }
 
 static bool
@@ -538,20 +526,11 @@ bitmap_ipmac_gc_init(struct ip_set *set)
 
 /* Create bitmap:ip,mac type of sets */
 
-static const struct nla_policy
-bitmap_ipmac_create_policy[IPSET_ATTR_CREATE_MAX+1] = {
-	[IPSET_ATTR_IP]		= { .type = NLA_NESTED },
-	[IPSET_ATTR_IP_TO]	= { .type = NLA_NESTED },
-	[IPSET_ATTR_CIDR]	= { .type = NLA_U8 },
-	[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
-};
-
 static bool
 init_map_ipmac(struct ip_set *set, struct bitmap_ipmac *map,
 	       u32 first_ip, u32 last_ip)
 {
-	map->members = ip_set_alloc((last_ip - first_ip + 1) * map->dsize,
-				    GFP_KERNEL);
+	map->members = ip_set_alloc((last_ip - first_ip + 1) * map->dsize);
 	if (!map->members)
 		return false;
 	map->first_ip = first_ip;
@@ -565,17 +544,12 @@ init_map_ipmac(struct ip_set *set, struct bitmap_ipmac *map,
 }
 
 static int
-bitmap_ipmac_create(struct ip_set *set, struct nlattr *head, int len,
+bitmap_ipmac_create(struct ip_set *set, struct nlattr *tb[],
 		    u32 flags)
 {
-	struct nlattr *tb[IPSET_ATTR_CREATE_MAX+1];
 	u32 first_ip, last_ip, elements;
 	struct bitmap_ipmac *map;
 	int ret;
-
-	if (nla_parse(tb, IPSET_ATTR_CREATE_MAX, head, len,
-		      bitmap_ipmac_create_policy))
-		return -IPSET_ERR_PROTOCOL;
 
 	if (unlikely(!tb[IPSET_ATTR_IP] ||
 		     !ip_set_optattr_netorder(tb, IPSET_ATTR_TIMEOUT)))
@@ -647,6 +621,18 @@ static struct ip_set_type bitmap_ipmac_type = {
 	.family		= AF_INET,
 	.revision	= 0,
 	.create		= bitmap_ipmac_create,
+	.create_policy	= {
+		[IPSET_ATTR_IP]		= { .type = NLA_NESTED },
+		[IPSET_ATTR_IP_TO]	= { .type = NLA_NESTED },
+		[IPSET_ATTR_CIDR]	= { .type = NLA_U8 },
+		[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
+	},
+	.adt_policy	= {
+		[IPSET_ATTR_IP]		= { .type = NLA_NESTED },
+		[IPSET_ATTR_ETHER]	= { .type = NLA_BINARY, .len  = ETH_ALEN },
+		[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
+		[IPSET_ATTR_LINENO]	= { .type = NLA_U32 },
+	},
 	.me		= THIS_MODULE,
 };
 

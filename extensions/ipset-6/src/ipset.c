@@ -206,62 +206,54 @@ restore(char *argv0)
 static int
 call_parser(int *argc, char *argv[], const struct ipset_arg *args)
 {
-	int i = 1, ret = 0;
+	int ret = 0;
 	const struct ipset_arg *arg;
 	const char *optstr;
 	
 	/* Currently CREATE and ADT may have got additional arguments */
-	if (!args)
-		goto done;
-	for (arg = args; arg->opt; arg++) {
-		for (i = 1; i < *argc; ) {
-			D("argc: %u, i: %u: %s vs %s",
-			  *argc, i, argv[i], arg->name[0]);
-			if (!(ipset_match_option(argv[i], arg->name))) {
-				i++;
+	if (!args && *argc > 1)
+		goto err_unknown;
+	while (*argc > 1) {
+		for (arg = args; arg->opt; arg++) {
+			D("argc: %u, %s vs %s", *argc, argv[1], arg->name[0]);
+			if (!(ipset_match_option(argv[1], arg->name)))
 				continue;
-			}
-			optstr = argv[i];
+
+			optstr = argv[1];
 			/* Shift off matched option */
 			D("match %s", arg->name[0]);
-			ipset_shift_argv(argc, argv, i);
-			D("argc: %u, i: %u", *argc, i);
+			ipset_shift_argv(argc, argv, 1);
 			switch (arg->has_arg) {
 			case IPSET_MANDATORY_ARG:
-				if (i + 1 > *argc)
+				if (*argc < 2)
 					return exit_error(PARAMETER_PROBLEM,
 						"Missing mandatory argument "
 						"of option `%s'",
 						arg->name[0]);
 				/* Fall through */
 			case IPSET_OPTIONAL_ARG:
-				if (i + 1 <= *argc) {
-					ret = ipset_call_parser(session,
-							arg->parse,
-							optstr, arg->opt,
-							argv[i]);
+				if (*argc >= 2) {
+					ret = ipset_call_parser(session, arg, argv[1]);
 					if (ret < 0)
 						return ret;
-					ipset_shift_argv(argc, argv, i);
+					ipset_shift_argv(argc, argv, 1);
 					break;
 				}
 				/* Fall through */
 			default:
-				ret = ipset_call_parser(session,
-							arg->parse,
-							optstr, arg->opt,
-							optstr);
+				ret = ipset_call_parser(session, arg, optstr);
 				if (ret < 0)
 					return ret;
 			}
+			break;
 		}
+		if (!arg->opt)
+			goto err_unknown;
 	}
-done:
-	if (i < *argc)
-		return exit_error(PARAMETER_PROBLEM,
-				  "Unknown argument: `%s'",
-				  argv[i]);
 	return ret;
+
+err_unknown:
+	return exit_error(PARAMETER_PROBLEM, "Unknown argument: `%s'", argv[1]);
 }
 
 static enum ipset_adt
@@ -476,61 +468,57 @@ parse_commandline(int argc, char *argv[])
 
 	/* Second: parse command */
 	for (command = ipset_commands;
-	     command->cmd && cmd == IPSET_CMD_NONE;
+		 argc > 1 && command->cmd && cmd == IPSET_CMD_NONE;
 	     command++) {
-		for (i = 1; i < argc; ) {
-			if (!ipset_match_cmd(argv[1], command->name)) {
-				i++;
-				continue;
-			}
-			if (restore_line != 0
-			    && (command->cmd == IPSET_CMD_RESTORE
-			    	|| command->cmd == IPSET_CMD_VERSION
-			    	|| command->cmd == IPSET_CMD_HELP))
-				return exit_error(PARAMETER_PROBLEM,
-					"Command `%s' is invalid "
-					"in restore mode.",
-					command->name[0]);
-				if (interactive
-				    && command->cmd == IPSET_CMD_RESTORE) {
-					printf("Restore command ignored "
-					       "in interactive mode\n");
-				return 0;
-			}
+		if (!ipset_match_cmd(argv[1], command->name))
+			continue;
 
-			/* Shift off matched command arg */
-			ipset_shift_argv(&argc, argv, i);
-			cmd = command->cmd;
-			switch (command->has_arg) {
-			case IPSET_MANDATORY_ARG:
-			case IPSET_MANDATORY_ARG2:
-				if (i + 1 > argc)
-					return exit_error(PARAMETER_PROBLEM,
-						"Missing mandatory argument "
-						"to command %s",
-						command->name[0]);
-				/* Fall through */
-			case IPSET_OPTIONAL_ARG:
-				arg0 = argv[i];
-				if (i + 1 <= argc)
-					/* Shift off first arg */
-					ipset_shift_argv(&argc, argv, i);
-				break;
-			default:
-				break;
-			}
-			if (command->has_arg == IPSET_MANDATORY_ARG2) {
-				if (i + 1 > argc)
-					return exit_error(PARAMETER_PROBLEM,
-						"Missing second mandatory "
-						"argument to command %s",
-						command->name[0]);
-				arg1 = argv[i];
-				/* Shift off second arg */
-				ipset_shift_argv(&argc, argv, i);
-			}
+		if (restore_line != 0
+		    && (command->cmd == IPSET_CMD_RESTORE
+		    	|| command->cmd == IPSET_CMD_VERSION
+		    	|| command->cmd == IPSET_CMD_HELP))
+			return exit_error(PARAMETER_PROBLEM,
+				"Command `%s' is invalid "
+				"in restore mode.",
+				command->name[0]);
+		if (interactive && command->cmd == IPSET_CMD_RESTORE) {
+			printf("Restore command ignored "
+			       "in interactive mode\n");
+			return 0;
+		}
+
+		/* Shift off matched command arg */
+		ipset_shift_argv(&argc, argv, 1);
+		cmd = command->cmd;
+		switch (command->has_arg) {
+		case IPSET_MANDATORY_ARG:
+		case IPSET_MANDATORY_ARG2:
+			if (argc < 2)
+				return exit_error(PARAMETER_PROBLEM,
+					"Missing mandatory argument "
+					"to command %s",
+					command->name[0]);
+			/* Fall through */
+		case IPSET_OPTIONAL_ARG:
+			arg0 = argv[1];
+			if (argc >= 2)
+				/* Shift off first arg */
+				ipset_shift_argv(&argc, argv, 1);
+			break;
+		default:
 			break;
 		}
+		if (command->has_arg == IPSET_MANDATORY_ARG2) {
+			if (argc < 2)
+				return exit_error(PARAMETER_PROBLEM,
+					"Missing second mandatory "
+					"argument to command %s",
+					command->name[0]);
+			arg1 = argv[1];
+			/* Shift off second arg */
+			ipset_shift_argv(&argc, argv, 1);
+		}
+		break;
 	}
 
 	/* Third: catch interactive mode, handle help, version */
@@ -565,7 +553,8 @@ parse_commandline(int argc, char *argv[])
 				argv[1]);
 		return exit_error(PARAMETER_PROBLEM, "No command specified.");
 	case IPSET_CMD_VERSION:
-		printf("%s v%s.\n", program_name, program_version);
+		printf("%s v%s, protocol version: %u\n",
+		       program_name, program_version, IPSET_PROTOCOL);
 		if (interactive)
 			return 0;
 		return exit_error(NO_PROBLEM, NULL);

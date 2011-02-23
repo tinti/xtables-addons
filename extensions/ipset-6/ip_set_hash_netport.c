@@ -12,9 +12,6 @@
 #include <linux/ip.h>
 #include <linux/skbuff.h>
 #include <linux/errno.h>
-#include <linux/uaccess.h>
-#include <linux/bitops.h>
-#include <linux/spinlock.h>
 #include <linux/random.h>
 #include <net/ip.h>
 #include <net/ipv6.h>
@@ -164,32 +161,16 @@ hash_netport4_kadt(struct ip_set *set, const struct sk_buff *skb,
 	return adtfn(set, &data, h->timeout);
 }
 
-static const struct nla_policy
-hash_netport_adt_policy[IPSET_ATTR_ADT_MAX + 1] = {
-	[IPSET_ATTR_IP]		= { .type = NLA_NESTED },
-	[IPSET_ATTR_PORT]	= { .type = NLA_U16 },
-	[IPSET_ATTR_PORT_TO]	= { .type = NLA_U16 },
-	[IPSET_ATTR_PROTO]	= { .type = NLA_U8 },
-	[IPSET_ATTR_CIDR]	= { .type = NLA_U8 },
-	[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
-	[IPSET_ATTR_LINENO]	= { .type = NLA_U32 },
-};
-
 static int
-hash_netport4_uadt(struct ip_set *set, struct nlattr *head, int len,
+hash_netport4_uadt(struct ip_set *set, struct nlattr *tb[],
 		   enum ipset_adt adt, u32 *lineno, u32 flags)
 {
 	const struct ip_set_hash *h = set->data;
-	struct nlattr *tb[IPSET_ATTR_ADT_MAX+1];
 	ipset_adtfn adtfn = set->variant->adt[adt];
 	struct hash_netport4_elem data = { .cidr = HOST_MASK };
 	u32 port, port_to;
 	u32 timeout = h->timeout;
 	int ret;
-
-	if (nla_parse(tb, IPSET_ATTR_ADT_MAX, head, len,
-		      hash_netport_adt_policy))
-		return -IPSET_ERR_PROTOCOL;
 
 	if (unlikely(!tb[IPSET_ATTR_IP] ||
 		     !ip_set_attr_netorder(tb, IPSET_ATTR_PORT) ||
@@ -401,20 +382,15 @@ hash_netport6_kadt(struct ip_set *set, const struct sk_buff *skb,
 }
 
 static int
-hash_netport6_uadt(struct ip_set *set, struct nlattr *head, int len,
+hash_netport6_uadt(struct ip_set *set, struct nlattr *tb[],
 		   enum ipset_adt adt, u32 *lineno, u32 flags)
 {
 	const struct ip_set_hash *h = set->data;
-	struct nlattr *tb[IPSET_ATTR_ADT_MAX+1];
 	ipset_adtfn adtfn = set->variant->adt[adt];
 	struct hash_netport6_elem data = { .cidr = HOST_MASK };
 	u32 port, port_to;
 	u32 timeout = h->timeout;
 	int ret;
-
-	if (nla_parse(tb, IPSET_ATTR_ADT_MAX, head, len,
-		      hash_netport_adt_policy))
-		return -IPSET_ERR_PROTOCOL;
 
 	if (unlikely(!tb[IPSET_ATTR_IP] ||
 		     !ip_set_attr_netorder(tb, IPSET_ATTR_PORT) ||
@@ -490,30 +466,15 @@ hash_netport6_uadt(struct ip_set *set, struct nlattr *head, int len,
 
 /* Create hash:ip type of sets */
 
-static const struct nla_policy
-hash_netport_create_policy[IPSET_ATTR_CREATE_MAX+1] = {
-	[IPSET_ATTR_HASHSIZE]	= { .type = NLA_U32 },
-	[IPSET_ATTR_MAXELEM]	= { .type = NLA_U32 },
-	[IPSET_ATTR_PROBES]	= { .type = NLA_U8 },
-	[IPSET_ATTR_RESIZE]	= { .type = NLA_U8  },
-	[IPSET_ATTR_PROTO]	= { .type = NLA_U8 },
-	[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
-};
-
 static int
-hash_netport_create(struct ip_set *set, struct nlattr *head, int len, u32 flags)
+hash_netport_create(struct ip_set *set, struct nlattr *tb[], u32 flags)
 {
-	struct nlattr *tb[IPSET_ATTR_CREATE_MAX+1];
 	struct ip_set_hash *h;
 	u32 hashsize = IPSET_DEFAULT_HASHSIZE, maxelem = IPSET_DEFAULT_MAXELEM;
 	u8 hbits;
 
 	if (!(set->family == AF_INET || set->family == AF_INET6))
 		return -IPSET_ERR_INVALID_FAMILY;
-
-	if (nla_parse(tb, IPSET_ATTR_CREATE_MAX, head, len,
-		      hash_netport_create_policy))
-		return -IPSET_ERR_PROTOCOL;
 
 	if (unlikely(!ip_set_optattr_netorder(tb, IPSET_ATTR_HASHSIZE) ||
 		     !ip_set_optattr_netorder(tb, IPSET_ATTR_MAXELEM) ||
@@ -542,8 +503,7 @@ hash_netport_create(struct ip_set *set, struct nlattr *head, int len, u32 flags)
 	hbits = htable_bits(hashsize);
 	h->table = ip_set_alloc(
 			sizeof(struct htable)
-			+ jhash_size(hbits) * sizeof(struct hbucket),
-			GFP_KERNEL);
+			+ jhash_size(hbits) * sizeof(struct hbucket));
 	if (!h->table) {
 		kfree(h);
 		return -ENOMEM;
@@ -582,6 +542,23 @@ static struct ip_set_type hash_netport_type __read_mostly = {
 	.family		= AF_UNSPEC,
 	.revision	= 0,
 	.create		= hash_netport_create,
+	.create_policy	= {
+		[IPSET_ATTR_HASHSIZE]	= { .type = NLA_U32 },
+		[IPSET_ATTR_MAXELEM]	= { .type = NLA_U32 },
+		[IPSET_ATTR_PROBES]	= { .type = NLA_U8 },
+		[IPSET_ATTR_RESIZE]	= { .type = NLA_U8  },
+		[IPSET_ATTR_PROTO]	= { .type = NLA_U8 },
+		[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
+	},
+	.adt_policy	= {
+		[IPSET_ATTR_IP]		= { .type = NLA_NESTED },
+		[IPSET_ATTR_PORT]	= { .type = NLA_U16 },
+		[IPSET_ATTR_PORT_TO]	= { .type = NLA_U16 },
+		[IPSET_ATTR_PROTO]	= { .type = NLA_U8 },
+		[IPSET_ATTR_CIDR]	= { .type = NLA_U8 },
+		[IPSET_ATTR_TIMEOUT]	= { .type = NLA_U32 },
+		[IPSET_ATTR_LINENO]	= { .type = NLA_U32 },
+	},
 	.me		= THIS_MODULE,
 };
 

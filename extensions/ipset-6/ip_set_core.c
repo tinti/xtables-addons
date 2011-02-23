@@ -17,6 +17,7 @@
 #include <linux/spinlock.h>
 #include <linux/netlink.h>
 #include <linux/rculist.h>
+#include <linux/version.h>
 #include <net/netlink.h>
 
 #include <linux/netfilter.h>
@@ -196,20 +197,24 @@ EXPORT_SYMBOL_GPL(ip_set_type_unregister);
 
 /* Utility functions */
 void *
-ip_set_alloc(size_t size, gfp_t gfp_mask)
+ip_set_alloc(size_t size)
 {
 	void *members = NULL;
 
 	if (size < KMALLOC_MAX_SIZE)
-		members = kzalloc(size, gfp_mask | __GFP_NOWARN);
+		members = kzalloc(size, GFP_KERNEL | __GFP_NOWARN);
 
 	if (members) {
 		pr_debug("%p: allocated with kmalloc\n", members);
 		return members;
 	}
 
-	members = __vmalloc(size, gfp_mask | __GFP_ZERO | __GFP_HIGHMEM,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 37)
+	members = __vmalloc(size, GFP_KERNEL | __GFP_ZERO | __GFP_HIGHMEM,
 			    PAGE_KERNEL);
+#else
+	members = vzalloc(size);
+#endif
 	if (!members)
 		return NULL;
 	pr_debug("%p: allocated with vmalloc\n", members);
@@ -249,8 +254,7 @@ ip_set_get_ipaddr4(struct nlattr *nla,  __be32 *ipaddr)
 
 	if (unlikely(!flag_nested(nla)))
 		return -IPSET_ERR_PROTOCOL;
-	if (nla_parse(tb, IPSET_ATTR_IPADDR_MAX, nla_data(nla), nla_len(nla),
-		      ipaddr_policy))
+	if (nla_parse_nested(tb, IPSET_ATTR_IPADDR_MAX, nla, ipaddr_policy))
 		return -IPSET_ERR_PROTOCOL;
 	if (unlikely(!ip_set_attr_netorder(tb, IPSET_ATTR_IPADDR_IPV4)))
 		return -IPSET_ERR_PROTOCOL;
@@ -268,8 +272,7 @@ ip_set_get_ipaddr6(struct nlattr *nla, union nf_inet_addr *ipaddr)
 	if (unlikely(!flag_nested(nla)))
 		return -IPSET_ERR_PROTOCOL;
 
-	if (nla_parse(tb, IPSET_ATTR_IPADDR_MAX, nla_data(nla), nla_len(nla),
-		      ipaddr_policy))
+	if (nla_parse_nested(tb, IPSET_ATTR_IPADDR_MAX, nla, ipaddr_policy))
 		return -IPSET_ERR_PROTOCOL;
 	if (unlikely(!ip_set_attr_netorder(tb, IPSET_ATTR_IPADDR_IPV6)))
 		return -IPSET_ERR_PROTOCOL;
@@ -611,10 +614,11 @@ ip_set_create(struct sk_buff *skb, struct genl_info *info)
 
 	struct ip_set *set, *clash;
 	ip_set_id_t index = IPSET_INVALID_ID;
+	struct nlattr *tb[IPSET_ATTR_CREATE_MAX+1] = {};
 	const char *name, *typename;
 	u8 family, revision;
 	u32 flags = flag_exist(info->genlhdr);
-	int ret = 0, len;
+	int ret = 0;
 
 	if (unlikely(protocol_failed(attr) ||
 		     attr[IPSET_ATTR_SETNAME] == NULL ||
@@ -659,11 +663,14 @@ ip_set_create(struct sk_buff *skb, struct genl_info *info)
 	/*
 	 * Without holding any locks, create private part.
 	 */
-	len = attr[IPSET_ATTR_DATA] ? nla_len(attr[IPSET_ATTR_DATA]) : 0;
-	pr_debug("data len: %u\n", len);
-	ret = set->type->create(set, attr[IPSET_ATTR_DATA] ?
-				nla_data(attr[IPSET_ATTR_DATA]) : NULL, len,
-				flags);
+	if (attr[IPSET_ATTR_DATA] &&
+	    nla_parse_nested(tb, IPSET_ATTR_CREATE_MAX, attr[IPSET_ATTR_DATA],
+			     set->type->create_policy)) {
+	    	ret = -IPSET_ERR_PROTOCOL;
+	    	goto put_out;
+	}
+
+	ret = set->type->create(set, tb, flags);
 	if (ret != 0)
 		goto put_out;
 
@@ -749,7 +756,7 @@ ip_set_destroy(struct sk_buff *skb, struct genl_info *info)
 	} else {
 		i = find_set_id(nla_data(attr[IPSET_ATTR_SETNAME]));
 		if (i == IPSET_INVALID_ID)
-			return -EEXIST;
+			return -ENOENT;
 		else if (atomic_read(&ip_set_list[i]->ref))
 			return -IPSET_ERR_BUSY;
 
@@ -786,7 +793,7 @@ ip_set_flush(struct sk_buff *skb, struct genl_info *info)
 	} else {
 		i = find_set_id(nla_data(attr[IPSET_ATTR_SETNAME]));
 		if (i == IPSET_INVALID_ID)
-			return -EEXIST;
+			return -ENOENT;
 
 		ip_set_flush_set(ip_set_list[i]);
 	}
@@ -820,7 +827,7 @@ ip_set_rename(struct sk_buff *skb, struct genl_info *info)
 
 	set = find_set(nla_data(attr[IPSET_ATTR_SETNAME]));
 	if (set == NULL)
-		return -EEXIST;
+		return -ENOENT;
 	if (atomic_read(&set->ref) != 0)
 		return -IPSET_ERR_REFERENCED;
 
@@ -860,7 +867,7 @@ ip_set_swap(struct sk_buff *skb, struct genl_info *info)
 
 	from_id = find_set_id(nla_data(attr[IPSET_ATTR_SETNAME]));
 	if (from_id == IPSET_INVALID_ID)
-		return -EEXIST;
+		return -ENOENT;
 
 	to_id = find_set_id(nla_data(attr[IPSET_ATTR_SETNAME2]));
 	if (to_id == IPSET_INVALID_ID)
@@ -946,7 +953,7 @@ dump_init(struct netlink_callback *cb)
 
 	index = find_set_id(nla_data(cda[IPSET_ATTR_SETNAME]));
 	if (index == IPSET_INVALID_ID)
-		return -EEXIST;
+		return -ENOENT;
 
 	cb->args[0] = DUMP_ONE;
 	cb->args[1] = index;
@@ -958,16 +965,18 @@ ip_set_dump_start(struct sk_buff *skb, struct netlink_callback *cb)
 {
 	ip_set_id_t index = IPSET_INVALID_ID, max;
 	struct ip_set *set = NULL;
-	void *nlh = NULL;
+	struct nlmsghdr *nlh = NULL;
 	unsigned int flags = NETLINK_CB(cb->skb).pid ? NLM_F_MULTI : 0;
 	int ret = 0;
 
 	if (cb->args[0] == DUMP_INIT) {
 		ret = dump_init(cb);
 		if (ret < 0) {
+			nlh = nlmsg_hdr(cb->skb);
 			/* We have to create and send the error message
 			 * manually :-( */
-			netlink_ack(cb->skb, nlmsg_hdr(cb->skb), ret);
+			if (nlh->nlmsg_flags & NLM_F_ACK)
+				netlink_ack(cb->skb, nlh, ret);
 			return ret;
 		}
 	}
@@ -982,7 +991,7 @@ ip_set_dump_start(struct sk_buff *skb, struct netlink_callback *cb)
 		set = ip_set_list[index];
 		if (set == NULL) {
 			if (cb->args[0] == DUMP_ONE) {
-				ret = -EEXIST;
+				ret = -ENOENT;
 				goto out;
 			}
 			continue;
@@ -1004,7 +1013,7 @@ ip_set_dump_start(struct sk_buff *skb, struct netlink_callback *cb)
 				cb->nlh->nlmsg_seq, flags,
 				IPSET_CMD_LIST);
 		if (!nlh) {
-			ret = -EFAULT;
+			ret = -EMSGSIZE;
 			goto release_refcount;
 		}
 		NLA_PUT_U8(skb, IPSET_ATTR_PROTOCOL, IPSET_PROTOCOL);
@@ -1092,19 +1101,17 @@ static const struct nla_policy ip_set_adt_policy[IPSET_ATTR_CMD_MAX + 1] = {
 };
 
 static int
-call_ad(struct sk_buff *skb, struct nlattr *const attr[],
-	struct ip_set *set, const struct nlattr *nla,
-	enum ipset_adt adt, u32 flags)
+call_ad(struct sock *ctnl, struct sk_buff *skb, struct ip_set *set,
+	struct nlattr *tb[], enum ipset_adt adt,
+	u32 flags, bool use_lineno)
 {
-	struct nlattr *head = nla_data(nla);
-	int ret, len = nla_len(nla), retried = 0;
+	int ret, retried = 0;
 	u32 lineno = 0;
 	bool eexist = flags & IPSET_FLAG_EXIST;
 
 	do {
 		write_lock_bh(&set->lock);
-		ret = set->variant->uadt(set, head, len, adt,
-					 &lineno, flags);
+		ret = set->variant->uadt(set, tb, adt, &lineno, flags);
 		write_unlock_bh(&set->lock);
 	} while (ret == -EAGAIN &&
 		 set->variant->resize &&
@@ -1112,11 +1119,38 @@ call_ad(struct sk_buff *skb, struct nlattr *const attr[],
 
 	if (!ret || (ret == -IPSET_ERR_EXIST && eexist))
 		return 0;
-	if (lineno && attr[IPSET_ATTR_LINENO]) {
+	if (lineno && use_lineno) {
 		/* Error in restore/batch mode: send back lineno */
-		u32 *errline = nla_data(attr[IPSET_ATTR_LINENO]);
+		struct nlmsghdr *rep, *nlh = nlmsg_hdr(skb);
+		struct sk_buff *skb2;
+		struct nlmsgerr *errmsg;
+		size_t payload = sizeof(*errmsg) + nlmsg_len(nlh);
+		int min_len = NLMSG_SPACE(sizeof(struct nfgenmsg));
+		struct nlattr *cda[IPSET_ATTR_CMD_MAX+1];
+		struct nlattr *cmdattr;
+		u32 *errline;
+
+		skb2 = nlmsg_new(payload, GFP_KERNEL);
+		if (skb2 == NULL)
+			return -ENOMEM;
+		rep = __nlmsg_put(skb2, NETLINK_CB(skb).pid,
+				  nlh->nlmsg_seq, NLMSG_ERROR, payload, 0);
+		errmsg = nlmsg_data(rep);
+		errmsg->error = ret;
+		memcpy(&errmsg->msg, nlh, nlh->nlmsg_len);
+		cmdattr = (void *)&errmsg->msg + min_len;
+
+		nla_parse(cda, IPSET_ATTR_CMD_MAX,
+			  cmdattr, nlh->nlmsg_len - min_len,
+			  ip_set_adt_policy);
+
+		errline = nla_data(cda[IPSET_ATTR_LINENO]);
 
 		*errline = lineno;
+
+		netlink_unicast(ctnl, skb2, NETLINK_CB(skb).pid, MSG_DONTWAIT);
+		/* Signal netlink not to send its ACK/errmsg.  */
+		return -EINTR;
 	}
 
 	return ret;
@@ -1126,10 +1160,13 @@ static int
 ip_set_uadd(struct sk_buff *skb, struct genl_info *info)
 {
 	struct nlattr *const *attr = info->attrs;
+	struct sock *ctnl = genl_info_net(info)->genl_sock;
 
 	struct ip_set *set;
+	struct nlattr *tb[IPSET_ATTR_ADT_MAX+1] = {};
 	const struct nlattr *nla;
 	u32 flags = flag_exist(info->genlhdr);
+	bool use_lineno;
 	int ret = 0;
 
 	if (unlikely(protocol_failed(attr) ||
@@ -1145,20 +1182,28 @@ ip_set_uadd(struct sk_buff *skb, struct genl_info *info)
 
 	set = find_set(nla_data(attr[IPSET_ATTR_SETNAME]));
 	if (set == NULL)
-		return -EEXIST;
+		return -ENOENT;
 
+	use_lineno = !!attr[IPSET_ATTR_LINENO];
 	if (attr[IPSET_ATTR_DATA]) {
-		ret = call_ad(skb, attr,
-			      set, attr[IPSET_ATTR_DATA], IPSET_ADD, flags);
+		if (nla_parse_nested(tb, IPSET_ATTR_ADT_MAX,
+				     attr[IPSET_ATTR_DATA],
+				     set->type->adt_policy))
+			return -IPSET_ERR_PROTOCOL;
+		ret = call_ad(ctnl, skb, set, tb, IPSET_ADD, flags,
+			      use_lineno);
 	} else {
 		int nla_rem;
 
 		nla_for_each_nested(nla, attr[IPSET_ATTR_ADT], nla_rem) {
+			memset(tb, 0, sizeof(tb));
 			if (nla_type(nla) != IPSET_ATTR_DATA ||
-			    !flag_nested(nla))
+			    !flag_nested(nla) ||
+			    nla_parse_nested(tb, IPSET_ATTR_ADT_MAX, nla,
+					     set->type->adt_policy))
 				return -IPSET_ERR_PROTOCOL;
-			ret = call_ad(skb, attr,
-				       set, nla, IPSET_ADD, flags);
+			ret = call_ad(ctnl, skb, set, tb, IPSET_ADD,
+				      flags, use_lineno);
 			if (ret < 0)
 				return ret;
 		}
@@ -1170,10 +1215,13 @@ static int
 ip_set_udel(struct sk_buff *skb, struct genl_info *info)
 {
 	struct nlattr *const *attr = info->attrs;
+	struct sock *ctnl = genl_info_net(info)->genl_sock;
 
 	struct ip_set *set;
+	struct nlattr *tb[IPSET_ATTR_ADT_MAX+1] = {};
 	const struct nlattr *nla;
 	u32 flags = flag_exist(info->genlhdr);
+	bool use_lineno;
 	int ret = 0;
 
 	if (unlikely(protocol_failed(attr) ||
@@ -1189,20 +1237,28 @@ ip_set_udel(struct sk_buff *skb, struct genl_info *info)
 
 	set = find_set(nla_data(attr[IPSET_ATTR_SETNAME]));
 	if (set == NULL)
-		return -EEXIST;
+		return -ENOENT;
 
+	use_lineno = !!attr[IPSET_ATTR_LINENO];
 	if (attr[IPSET_ATTR_DATA]) {
-		ret = call_ad(skb, attr,
-			      set, attr[IPSET_ATTR_DATA], IPSET_DEL, flags);
+		if (nla_parse_nested(tb, IPSET_ATTR_ADT_MAX,
+				     attr[IPSET_ATTR_DATA],
+				     set->type->adt_policy))
+			return -IPSET_ERR_PROTOCOL;
+		ret = call_ad(ctnl, skb, set, tb, IPSET_DEL, flags,
+			      use_lineno);
 	} else {
 		int nla_rem;
 
 		nla_for_each_nested(nla, attr[IPSET_ATTR_ADT], nla_rem) {
+			memset(tb, 0, sizeof(*tb));
 			if (nla_type(nla) != IPSET_ATTR_DATA ||
-			    !flag_nested(nla))
+			    !flag_nested(nla) ||
+			    nla_parse_nested(tb, IPSET_ATTR_ADT_MAX, nla,
+					     set->type->adt_policy))
 				return -IPSET_ERR_PROTOCOL;
-			ret = call_ad(skb, attr,
-				       set, nla, IPSET_DEL, flags);
+			ret = call_ad(ctnl, skb, set, tb, IPSET_DEL,
+				      flags, use_lineno);
 			if (ret < 0)
 				return ret;
 		}
@@ -1216,6 +1272,7 @@ ip_set_utest(struct sk_buff *skb, struct genl_info *info)
 	struct nlattr *const *attr = info->attrs;
 
 	struct ip_set *set;
+	struct nlattr *tb[IPSET_ATTR_ADT_MAX+1] = {};
 	int ret = 0;
 
 	if (unlikely(protocol_failed(attr) ||
@@ -1226,13 +1283,14 @@ ip_set_utest(struct sk_buff *skb, struct genl_info *info)
 
 	set = find_set(nla_data(attr[IPSET_ATTR_SETNAME]));
 	if (set == NULL)
-		return -EEXIST;
+		return -ENOENT;
+
+	if (nla_parse_nested(tb, IPSET_ATTR_ADT_MAX, attr[IPSET_ATTR_DATA],
+			     set->type->adt_policy))
+		return -IPSET_ERR_PROTOCOL;
 
 	read_lock_bh(&set->lock);
-	ret = set->variant->uadt(set,
-				 nla_data(attr[IPSET_ATTR_DATA]),
-				 nla_len(attr[IPSET_ATTR_DATA]),
-				 IPSET_TEST, NULL, 0);
+	ret = set->variant->uadt(set, tb, IPSET_TEST, NULL, 0);
 	read_unlock_bh(&set->lock);
 	/* Userspace can't trigger element to be re-added */
 	if (ret == -EAGAIN)
@@ -1260,7 +1318,7 @@ ip_set_header(struct sk_buff *skb, struct genl_info *info)
 
 	index = find_set_id(nla_data(attr[IPSET_ATTR_SETNAME]));
 	if (index == IPSET_INVALID_ID)
-		return -EEXIST;
+		return -ENOENT;
 	set = ip_set_list[index];
 
 	skb2 = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
@@ -1280,7 +1338,7 @@ ip_set_header(struct sk_buff *skb, struct genl_info *info)
 
 	ret = genlmsg_unicast(genl_info_net(info), skb2, NETLINK_CB(skb).pid);
 	if (ret < 0)
-		return -EFAULT;
+		return ret;
 
 	return 0;
 
@@ -1288,7 +1346,7 @@ nla_put_failure:
 	nlmsg_cancel(skb2, nlh2);
 nlmsg_failure:
 	kfree_skb(skb2);
-	return -EFAULT;
+	return -EMSGSIZE;
 }
 
 /* Get type data */
@@ -1341,7 +1399,7 @@ ip_set_type(struct sk_buff *skb, struct genl_info *info)
 	pr_debug("Send TYPE, nlmsg_len: %u\n", skb2->len);
 	ret = genlmsg_unicast(genl_info_net(info), skb2, NETLINK_CB(skb).pid);
 	if (ret < 0)
-		return -EFAULT;
+		return ret;
 
 	return 0;
 
@@ -1349,7 +1407,7 @@ nla_put_failure:
 	genlmsg_cancel(skb2, nlh2);
 nlmsg_failure:
 	kfree_skb(skb2);
-	return -EFAULT;
+	return -EMSGSIZE;
 }
 
 /* Get protocol version */
@@ -1385,7 +1443,7 @@ ip_set_protocol(struct sk_buff *skb, struct genl_info *info)
 
 	ret = genlmsg_unicast(genl_info_net(info), skb2, NETLINK_CB(skb).pid);
 	if (ret < 0)
-		return -EFAULT;
+		return ret;
 
 	return 0;
 
@@ -1393,7 +1451,7 @@ nla_put_failure:
 	genlmsg_cancel(skb2, nlh2);
 nlmsg_failure:
 	kfree_skb(skb2);
-	return -EFAULT;
+	return -EMSGSIZE;
 }
 
 static struct genl_ops ip_set_netlink_subsys_cb[] __read_mostly = {

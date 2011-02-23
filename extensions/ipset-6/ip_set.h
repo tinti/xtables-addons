@@ -14,7 +14,7 @@
 #include <linux/netlink.h>
 
 /* The protocol version */
-#define IPSET_PROTOCOL		5
+#define IPSET_PROTOCOL		60
 
 /* The max length of strings including NUL: set and type identifiers */
 #define IPSET_MAXNAMELEN	32
@@ -120,7 +120,7 @@ enum {
 
 /* Error codes */
 enum ipset_errno {
-	IPSET_ERR_PRIVATE = 128,
+	IPSET_ERR_PRIVATE = 4096,
 	IPSET_ERR_PROTOCOL,
 	IPSET_ERR_FIND_TYPE,
 	IPSET_ERR_MAX_SETS,
@@ -137,7 +137,7 @@ enum ipset_errno {
 	IPSET_ERR_IPADDR_IPV6,
 
 	/* Type specific error codes */
-	IPSET_ERR_TYPE_SPECIFIC = 160,
+	IPSET_ERR_TYPE_SPECIFIC = 4352,
 };
 
 /* Flags at command level */
@@ -231,7 +231,7 @@ struct ip_set_type_variant {
 	 *		returns negative error code,
 	 *			zero for no match/success to add/delete
 	 *			positive for matching element */
-	int (*uadt)(struct ip_set *set, struct nlattr *head, int len,
+	int (*uadt)(struct ip_set *set, struct nlattr *tb[],
 		    enum ipset_adt adt, u32 *lineno, u32 flags);
 
 	/* Low level add/del/test functions */
@@ -274,8 +274,11 @@ struct ip_set_type {
 	u8 revision;
 
 	/* Create set */
-	int (*create)(struct ip_set *set,
-		      struct nlattr *head, int len, u32 flags);
+	int (*create)(struct ip_set *set, struct nlattr *tb[], u32 flags);
+
+	/* Attribute policies */
+	const struct nla_policy create_policy[IPSET_ATTR_CREATE_MAX + 1];
+	const struct nla_policy adt_policy[IPSET_ATTR_ADT_MAX + 1];
 
 	/* Set this to THIS_MODULE if you are a module, otherwise NULL */
 	struct module *me;
@@ -320,7 +323,7 @@ extern int ip_set_test(ip_set_id_t id, const struct sk_buff *skb,
 		       u8 family, u8 dim, u8 flags);
 
 /* Utility functions */
-extern void * ip_set_alloc(size_t size, gfp_t gfp_mask);
+extern void * ip_set_alloc(size_t size);
 extern void ip_set_free(void *members);
 extern int ip_set_get_ipaddr4(struct nlattr *nla,  __be32 *ipaddr);
 extern int ip_set_get_ipaddr6(struct nlattr *nla, union nf_inet_addr *ipaddr);

@@ -43,8 +43,8 @@ static const uint16_t cmdflags[] = {
 	[IPSET_CMD_FLUSH-1]	= NLM_F_REQUEST|NLM_F_ACK,
 	[IPSET_CMD_RENAME-1]	= NLM_F_REQUEST|NLM_F_ACK,
 	[IPSET_CMD_SWAP-1]	= NLM_F_REQUEST|NLM_F_ACK,
-	[IPSET_CMD_LIST-1]	= NLM_F_REQUEST,
-	[IPSET_CMD_SAVE-1]	= NLM_F_REQUEST,
+	[IPSET_CMD_LIST-1]	= NLM_F_REQUEST|NLM_F_ACK,
+	[IPSET_CMD_SAVE-1]	= NLM_F_REQUEST|NLM_F_ACK,
 	[IPSET_CMD_ADD-1]	= NLM_F_REQUEST|NLM_F_ACK|NLM_F_EXCL,
 	[IPSET_CMD_DEL-1]	= NLM_F_REQUEST|NLM_F_ACK|NLM_F_EXCL,
 	[IPSET_CMD_TEST-1]	= NLM_F_REQUEST|NLM_F_ACK,
@@ -83,7 +83,7 @@ ipset_mnl_fill_hdr(struct ipset_handle *handle, enum ipset_cmd cmd,
 	nlh->nlmsg_flags = NLM_F_REQUEST;
 	if (cmdflags[cmd-1] & NLM_F_ACK)
 		nlh->nlmsg_flags |= NLM_F_ACK;
-	nlh->nlmsg_seq = handle->seq = time(NULL);
+	nlh->nlmsg_seq = ++handle->seq;
 
 	ghdr = mnl_nlmsg_put_extra_header(nlh, sizeof(struct genlmsghdr));
 	ghdr->cmd = cmd;
@@ -225,6 +225,7 @@ ipset_mnl_init(mnl_cb_t *cb_ctl, void *data)
 	handle->portid = mnl_socket_get_portid(handle->h);
 	handle->cb_ctl = cb_ctl;
 	handle->data = data;
+	handle->seq = time(NULL);
 	
 	if (ipset_mnl_getid(handle, false) < 0)
 		goto close_nl;

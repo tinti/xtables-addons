@@ -1,6 +1,20 @@
 
 HEAD
 ====
+Enhancements:
+- update to ipset 6.0
+  * allow "new" as a commad alias to "create"
+  * ipset: improve command argument parsing
+  * ipset: avoid the unnecessary argv[] loop
+  * ipset: pass ipset_arg argument pointer
+  * separate ipset errnos completely from system ones and bump protocol version
+  * resolving IP addresses did not work at listing/saving sets, fixed
+  * ipset: fix spelling error
+  * ipset: fix the Netlink sequence number
+  * ipset: turn Set name[] into a const pointer
+  * check ICMP and ICMPv6 with the set match and target in the testsuite
+  * avoid possible syntax clashing at saving hostnames
+  * fix linking with CONFIG_IPV6=n
 
 
 v1.33 (2011-02-02)

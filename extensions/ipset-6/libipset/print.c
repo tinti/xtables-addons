@@ -158,7 +158,8 @@ __getnameinfo##f(char *buf, unsigned int len,				\
 			  sizeof(saddr),				\
 			  buf, len, NULL, 0, flags);			\
 									\
-	if (err == EAI_AGAIN && !(flags & NI_NUMERICHOST))		\
+	if (!(flags & NI_NUMERICHOST) &&				\
+	    (err == EAI_AGAIN || (err == 0 && strchr(buf, '-') != NULL))) \
 		err = getnameinfo((const struct sockaddr *)&saddr, 	\
 				  sizeof(saddr),			\
 				  buf, len, NULL, 0, 			\
@@ -229,7 +230,7 @@ ipset_print_ip(char *buf, unsigned int len,
 		D("CIDR: %u", cidr);
 	} else
 		cidr = family == AF_INET6 ? 128 : 32;
-	flags = env & (1 << IPSET_ENV_RESOLVE) ? 0 : NI_NUMERICHOST;
+	flags = (env & IPSET_ENV_RESOLVE) ? 0 : NI_NUMERICHOST;
 	
 	ip = ipset_data_get(data, opt);
 	assert(ip);
@@ -296,7 +297,7 @@ ipset_print_ipaddr(char *buf, unsigned int len,
 		cidr = *(const uint8_t *) ipset_data_get(data, cidropt);
 	else
 		cidr = family == AF_INET6 ? 128 : 32;
-	flags = env & (1 << IPSET_ENV_RESOLVE) ? 0 : NI_NUMERICHOST;
+	flags = (env & IPSET_ENV_RESOLVE) ? 0 : NI_NUMERICHOST;
 
 	ip = ipset_data_get(data, opt);
 	assert(ip);
