@@ -427,9 +427,9 @@ static struct xt_pknock_rule *search_rule(const struct xt_pknock_mtinfo *info)
 					ipt_pknock_hash_rnd, rule_hashsize);
 
 	list_for_each_safe(pos, n, &rule_hashtable[hash]) {
-			rule = list_entry(pos, struct xt_pknock_rule, head);
-			if (rulecmp(info, rule))
-					return rule;
+		rule = list_entry(pos, struct xt_pknock_rule, head);
+		if (rulecmp(info, rule))
+			return rule;
 	}
 	return NULL;
 }
@@ -451,23 +451,20 @@ add_rule(struct xt_pknock_mtinfo *info)
 	list_for_each_safe(pos, n, &rule_hashtable[hash]) {
 		rule = list_entry(pos, struct xt_pknock_rule, head);
 
-		if (rulecmp(info, rule)) {
-			++rule->ref_count;
+		if (!rulecmp(info, rule))
+			continue;
+		++rule->ref_count;
 
-			if (info->option & XT_PKNOCK_OPENSECRET) {
-				rule->max_time       = info->max_time;
-				rule->autoclose_time = info->autoclose_time;
-			}
-
-			if (info->option & XT_PKNOCK_CHECKIP) {
-				pr_debug("add_rule() (AC)"
-					" rule found: %s - "
-					"ref_count: %d\n",
-					rule->rule_name,
-					rule->ref_count);
-			}
-			return true;
+		if (info->option & XT_PKNOCK_OPENSECRET) {
+			rule->max_time       = info->max_time;
+			rule->autoclose_time = info->autoclose_time;
 		}
+
+		if (info->option & XT_PKNOCK_CHECKIP)
+			pr_debug("add_rule() (AC) rule found: %s - "
+				"ref_count: %d\n",
+				rule->rule_name, rule->ref_count);
+		return true;
 	}
 
 	rule = kmalloc(sizeof(*rule), GFP_KERNEL);
@@ -523,7 +520,8 @@ remove_rule(struct xt_pknock_mtinfo *info)
 	unsigned int hash = pknock_hash(info->rule_name, info->rule_name_len,
                                 ipt_pknock_hash_rnd, rule_hashsize);
 
-	if (list_empty(&rule_hashtable[hash])) return;
+	if (list_empty(&rule_hashtable[hash]))
+		return;
 
 	list_for_each_safe(pos, n, &rule_hashtable[hash]) {
 		rule = list_entry(pos, struct xt_pknock_rule, head);
@@ -576,7 +574,8 @@ static struct peer *get_peer(struct xt_pknock_rule *rule, __be32 ip)
 
 	list_for_each_safe(pos, n, &rule->peer_head[hash]) {
 		peer = list_entry(pos, struct peer, head);
-		if (peer->ip == ip) return peer;
+		if (peer->ip == ip)
+			return peer;
 	}
 	return NULL;
 }
@@ -1043,7 +1042,8 @@ static bool pknock_mt(const struct sk_buff *skb,
 			add_peer(peer, rule);
 		}
 
-		if (peer == NULL) goto out;
+		if (peer == NULL)
+			goto out;
 
 		update_peer(peer, info, rule, &hdr);
 	}
@@ -1087,15 +1087,15 @@ static int pknock_mt_check(const struct xt_mtchk_param *par)
 		RETURN_ERR("No crypto support available; "
 			"cannot use opensecret/closescret\n");
 #endif
-	if ((info->option & XT_PKNOCK_OPENSECRET) && (info->ports_count != 1))
+	if (info->option & XT_PKNOCK_OPENSECRET && info->ports_count != 1)
 		RETURN_ERR("--opensecret must have just one knock port\n");
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		if (info->option & XT_PKNOCK_CHECKIP)
 			RETURN_ERR("Can't specify --knockports with --checkip.\n");
-		if ((info->option & XT_PKNOCK_OPENSECRET) &&
+		if (info->option & XT_PKNOCK_OPENSECRET &&
 				!(info->option & XT_PKNOCK_CLOSESECRET))
 			RETURN_ERR("--opensecret must go with --closesecret.\n");
-		if ((info->option & XT_PKNOCK_CLOSESECRET) &&
+		if (info->option & XT_PKNOCK_CLOSESECRET &&
 				!(info->option & XT_PKNOCK_OPENSECRET))
 			RETURN_ERR("--closesecret must go with --opensecret.\n");
 	}
@@ -1115,13 +1115,11 @@ static int pknock_mt_check(const struct xt_mtchk_param *par)
 		RETURN_ERR("you must specify --time.\n");
 	}
 
-	if (info->option & XT_PKNOCK_OPENSECRET) {
-		if (info->open_secret_len == info->close_secret_len) {
-			if (memcmp(info->open_secret, info->close_secret,
-						info->open_secret_len) == 0)
-				RETURN_ERR("opensecret & closesecret cannot be equal.\n");
-		}
-	}
+	if (info->option & XT_PKNOCK_OPENSECRET &&
+	    info->open_secret_len == info->close_secret_len &&
+	    memcmp(info->open_secret, info->close_secret,
+	    info->open_secret_len) == 0)
+		RETURN_ERR("opensecret & closesecret cannot be equal.\n");
 
 	if (!add_rule(info))
 		/* should ENOMEM here */
@@ -1195,7 +1193,8 @@ static void __exit xt_pknock_mt_exit(void)
 	kfree(rule_hashtable);
 
 #ifdef PK_CRYPTO
-	if (crypto.tfm != NULL) crypto_free_hash(crypto.tfm);
+	if (crypto.tfm != NULL)
+		crypto_free_hash(crypto.tfm);
 #endif
 }
 
