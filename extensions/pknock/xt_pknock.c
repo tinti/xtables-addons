@@ -398,19 +398,15 @@ peer_gc(unsigned long r)
 
 /**
  * Compares length and name equality for the rules.
- *
- * @info
- * @rule
- * @return: 0 equals, 1 otherwise
  */
 static inline bool
 rulecmp(const struct xt_pknock_mtinfo *info, const struct xt_pknock_rule *rule)
 {
 	if (info->rule_name_len != rule->rule_name_len)
-		return true;
+		return false;
 	if (strncmp(info->rule_name, rule->rule_name, info->rule_name_len) != 0)
-		return true;
-	return false;
+		return false;
+	return true;
 }
 
 /**

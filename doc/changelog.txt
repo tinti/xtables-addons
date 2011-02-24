@@ -3,6 +3,7 @@ HEAD
 ====
 Fixes:
 - xt_pknock: avoid crash when hash TFM could not be allocated
+- xt_pknock: avoid inversion of rule lookup that led to warnings
 
 
 v1.33 (2011-02-02)
