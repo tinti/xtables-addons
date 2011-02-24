@@ -1164,11 +1164,10 @@ static int __init xt_pknock_mt_init(void)
 	}
 
 	crypto.tfm = crypto_alloc_hash(crypto.algo, 0, CRYPTO_ALG_ASYNC);
-
-	if (crypto.tfm == NULL) {
+	if (IS_ERR(crypto.tfm)) {
 		printk(KERN_ERR PKNOCK "failed to load transform for %s\n",
 						crypto.algo);
-		return -ENXIO;
+		return PTR_ERR(crypto.tfm);
 	}
 
 	crypto.size = crypto_hash_digestsize(crypto.tfm);
