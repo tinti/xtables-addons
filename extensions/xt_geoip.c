@@ -167,16 +167,20 @@ static bool geoip_bsearch6(const struct geoip_subnet6 *range,
 {
 	int mid;
 
-	if (hi <= lo)
-		return false;
-	mid = (lo + hi) / 2;
-	if (ipv6_cmp(&range[mid].begin, addr) <= 0 &&
-	    ipv6_cmp(addr, &range[mid].end) <= 0)
-		return true;
-	if (ipv6_cmp(&range[mid].begin, addr) > 0)
-		return geoip_bsearch6(range, addr, lo, mid);
-	else if (ipv6_cmp(&range[mid].end, addr) < 0)
-		return geoip_bsearch6(range, addr, mid + 1, hi);
+	while (true) {
+		if (hi <= lo)
+			return false;
+		mid = (lo + hi) / 2;
+		if (ipv6_cmp(&range[mid].begin, addr) <= 0 &&
+		    ipv6_cmp(addr, &range[mid].end) <= 0)
+			return true;
+		if (ipv6_cmp(&range[mid].begin, addr) > 0)
+			hi = mid;
+		else if (ipv6_cmp(&range[mid].end, addr) < 0)
+			lo = mid + 1;
+		else
+			break;
+	}
 
 	WARN_ON(true);
 	return false;
@@ -218,15 +222,19 @@ static bool geoip_bsearch4(const struct geoip_subnet4 *range,
 {
 	int mid;
 
-	if (hi <= lo)
-		return false;
-	mid = (lo + hi) / 2;
-	if (range[mid].begin <= addr && addr <= range[mid].end)
-		return true;
-	if (range[mid].begin > addr)
-		return geoip_bsearch4(range, addr, lo, mid);
-	else if (range[mid].end < addr)
-		return geoip_bsearch4(range, addr, mid + 1, hi);
+	while (true) {
+		if (hi <= lo)
+			return false;
+		mid = (lo + hi) / 2;
+		if (range[mid].begin <= addr && addr <= range[mid].end)
+			return true;
+		if (range[mid].begin > addr)
+			hi = mid;
+		else if (range[mid].end < addr)
+			lo = mid + 1;
+		else
+			break;
+	}
 
 	WARN_ON(true);
 	return false;

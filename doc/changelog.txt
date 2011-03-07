@@ -1,6 +1,8 @@
 
 HEAD
 ====
+Changes:
+- xt_geoip: avoid recursive function calls
 
 
 v1.35 (2011-04-11)
