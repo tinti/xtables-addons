@@ -14,19 +14,13 @@ Supported configurations for this release
 
 	* iptables >= 1.4.3
 
-	* kernel-source >= 2.6.17, no upper bound known
+	* kernel-source >= 2.6.29
 	  with prepared build/output directory
 	  - CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK
 	  - CONFIG_NF_CONNTRACK_MARK or CONFIG_IP_NF_CONNTRACK_MARK
 	    enabled =y or as module (=m)
 	  - CONFIG_CONNECTOR y/m if you wish to receive userspace
 	    notifications from pknock through netlink/connector
-
-Extra notes:
-
-	* in the kernel 2.6.18.x series, >= 2.6.18.5 is required
-
-	* requires that no vendor backports interfere
 
 For ipset-5 you need:
 
