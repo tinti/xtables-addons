@@ -15,6 +15,12 @@ Enhancements:
   * check ICMP and ICMPv6 with the set match and target in the testsuite
   * avoid possible syntax clashing at saving hostnames
   * fix linking with CONFIG_IPV6=n
+- update to ipset 6.1
+  * sctp, udplite support for the hash:*port* types
+  * fix hash:*port* types ignoring the address range for non-{tcp,udp}
+  * revision reporting fixes
+- update to ipset 6.2
+  * list:set timeout variant fixes
 
 
 v1.33 (2011-02-02)

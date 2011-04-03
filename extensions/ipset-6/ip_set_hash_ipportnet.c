@@ -162,7 +162,7 @@ hash_ipportnet4_kadt(struct ip_set *set, const struct sk_buff *skb,
 	ip4addrptr(skb, flags & IPSET_DIM_THREE_SRC, &data.ip2);
 	data.ip2 &= ip_set_netmask(data.cidr);
 
-	return adtfn(set, &data, h->timeout);
+	return adtfn(set, &data, h->timeout, flags);
 }
 
 static int
@@ -174,6 +174,7 @@ hash_ipportnet4_uadt(struct ip_set *set, struct nlattr *tb[],
 	struct hash_ipportnet4_elem data = { .cidr = HOST_MASK };
 	u32 ip, ip_to, p, port, port_to;
 	u32 timeout = h->timeout;
+	bool with_ports = false;
 	int ret;
 
 	if (unlikely(!tb[IPSET_ATTR_IP] || !tb[IPSET_ATTR_IP2] ||
@@ -208,21 +209,15 @@ hash_ipportnet4_uadt(struct ip_set *set, struct nlattr *tb[],
 
 	if (tb[IPSET_ATTR_PROTO]) {
 		data.proto = nla_get_u8(tb[IPSET_ATTR_PROTO]);
+		with_ports = ip_set_proto_with_ports(data.proto);
 
 		if (data.proto == 0)
 			return -IPSET_ERR_INVALID_PROTO;
 	} else
 		return -IPSET_ERR_MISSING_PROTO;
 
-	switch (data.proto) {
-	case IPPROTO_UDP:
-	case IPPROTO_TCP:
-	case IPPROTO_ICMP:
-		break;
-	default:
+	if (!(with_ports || data.proto == IPPROTO_ICMP))
 		data.port = 0;
-		break;
-	}
 
 	if (tb[IPSET_ATTR_TIMEOUT]) {
 		if (!with_timeout(h->timeout))
@@ -231,10 +226,9 @@ hash_ipportnet4_uadt(struct ip_set *set, struct nlattr *tb[],
 	}
 
 	if (adt == IPSET_TEST ||
-	    !(data.proto == IPPROTO_TCP || data.proto == IPPROTO_UDP) ||
 	    !(tb[IPSET_ATTR_IP_TO] || tb[IPSET_ATTR_CIDR] ||
 	      tb[IPSET_ATTR_PORT_TO])) {
-		ret = adtfn(set, &data, timeout);
+		ret = adtfn(set, &data, timeout, flags);
 		return ip_set_eexist(ret, flags) ? 0 : ret;
 	}
 
@@ -255,19 +249,18 @@ hash_ipportnet4_uadt(struct ip_set *set, struct nlattr *tb[],
 	} else
 		ip_to = ip;
 
-	port = ntohs(data.port);
-	if (tb[IPSET_ATTR_PORT_TO]) {
+	port_to = port = ntohs(data.port);
+	if (with_ports && tb[IPSET_ATTR_PORT_TO]) {
 		port_to = ip_set_get_h16(tb[IPSET_ATTR_PORT_TO]);
 		if (port > port_to)
 			swap(port, port_to);
-	} else
-		port_to = port;
+	}
 
 	for (; !before(ip_to, ip); ip++)
 		for (p = port; p <= port_to; p++) {
 			data.ip = htonl(ip);
 			data.port = htons(p);
-			ret = adtfn(set, &data, timeout);
+			ret = adtfn(set, &data, timeout, flags);
 
 			if (ret && !ip_set_eexist(ret, flags))
 				return ret;
@@ -417,7 +410,7 @@ hash_ipportnet6_kadt(struct ip_set *set, const struct sk_buff *skb,
 	ip6addrptr(skb, flags & IPSET_DIM_THREE_SRC, &data.ip2.in6);
 	ip6_netmask(&data.ip2, data.cidr);
 
-	return adtfn(set, &data, h->timeout);
+	return adtfn(set, &data, h->timeout, flags);
 }
 
 static int
@@ -429,6 +422,7 @@ hash_ipportnet6_uadt(struct ip_set *set, struct nlattr *tb[],
 	struct hash_ipportnet6_elem data = { .cidr = HOST_MASK };
 	u32 port, port_to;
 	u32 timeout = h->timeout;
+	bool with_ports = false;
 	int ret;
 
 	if (unlikely(!tb[IPSET_ATTR_IP] || !tb[IPSET_ATTR_IP2] ||
@@ -465,21 +459,15 @@ hash_ipportnet6_uadt(struct ip_set *set, struct nlattr *tb[],
 
 	if (tb[IPSET_ATTR_PROTO]) {
 		data.proto = nla_get_u8(tb[IPSET_ATTR_PROTO]);
+		with_ports = ip_set_proto_with_ports(data.proto);
 
 		if (data.proto == 0)
 			return -IPSET_ERR_INVALID_PROTO;
 	} else
 		return -IPSET_ERR_MISSING_PROTO;
 
-	switch (data.proto) {
-	case IPPROTO_UDP:
-	case IPPROTO_TCP:
-	case IPPROTO_ICMPV6:
-		break;
-	default:
+	if (!(with_ports || data.proto == IPPROTO_ICMPV6))
 		data.port = 0;
-		break;
-	}
 
 	if (tb[IPSET_ATTR_TIMEOUT]) {
 		if (!with_timeout(h->timeout))
@@ -487,10 +475,8 @@ hash_ipportnet6_uadt(struct ip_set *set, struct nlattr *tb[],
 		timeout = ip_set_timeout_uget(tb[IPSET_ATTR_TIMEOUT]);
 	}
 
-	if (adt == IPSET_TEST ||
-	    !(data.proto == IPPROTO_TCP || data.proto == IPPROTO_UDP) ||
-	    !tb[IPSET_ATTR_PORT_TO]) {
-		ret = adtfn(set, &data, timeout);
+	if (adt == IPSET_TEST || !with_ports || !tb[IPSET_ATTR_PORT_TO]) {
+		ret = adtfn(set, &data, timeout, flags);
 		return ip_set_eexist(ret, flags) ? 0 : ret;
 	}
 
@@ -501,7 +487,7 @@ hash_ipportnet6_uadt(struct ip_set *set, struct nlattr *tb[],
 
 	for (; port <= port_to; port++) {
 		data.port = htons(port);
-		ret = adtfn(set, &data, timeout);
+		ret = adtfn(set, &data, timeout, flags);
 
 		if (ret && !ip_set_eexist(ret, flags))
 			return ret;
@@ -588,7 +574,7 @@ static struct ip_set_type hash_ipportnet_type __read_mostly = {
 	.features	= IPSET_TYPE_IP | IPSET_TYPE_PORT | IPSET_TYPE_IP2,
 	.dimension	= IPSET_DIM_THREE,
 	.family		= AF_UNSPEC,
-	.revision	= 0,
+	.revision	= 1,
 	.create		= hash_ipportnet_create,
 	.create_policy	= {
 		[IPSET_ATTR_HASHSIZE]	= { .type = NLA_U32 },

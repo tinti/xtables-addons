@@ -216,7 +216,8 @@ enum ip_set_feature {
 
 struct ip_set;
 
-typedef int (*ipset_adtfn)(struct ip_set *set, void *value, u32 timeout);
+typedef int (*ipset_adtfn)(struct ip_set *set, void *value,
+			   u32 timeout, u32 flags);
 
 /* Set type, variant-specific part */
 struct ip_set_type_variant {
@@ -295,7 +296,7 @@ struct ip_set {
 	/* Lock protecting the set data */
 	rwlock_t lock;
 	/* References to the set */
-	atomic_t ref;
+	u32 ref;
 	/* The core set type */
 	struct ip_set_type *type;
 	/* The type variant doing the real job */
