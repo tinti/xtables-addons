@@ -3,9 +3,11 @@
  * or destination (PREROUTING),
  */
 
-/* (C) 2010 Marek Kierdelewicz <marek@koba.pl>
+/* (C) 2011 Marek Kierdelewicz <marek@koba.pl>
  *
  * module is dedicated to my wife Eliza and my daughters Jula and Ola :* :* :*
+ *
+ * module audited and cleaned-up by Jan Engelhardt
  *
  * module uses some code and ideas from following modules:
  * - "NETMAP" module by Svenning Soerensen <svenning@post5.tele.dk>
@@ -23,9 +25,12 @@
 #include <linux/netfilter.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/netfilter/x_tables.h>
+#include <linux/version.h>
 #include <net/netfilter/nf_nat_rule.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
+#endif
 #include "xt_DNETMAP.h"
 #include "compat_xtables.h"
 
@@ -91,11 +96,16 @@ struct dnetmap_net {
 	struct list_head *dnetmap_iphash;
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 static int dnetmap_net_id;
 static inline struct dnetmap_net *dnetmap_pernet(struct net *net)
 {
 	return net_generic(net, dnetmap_net_id);
 }
+#else
+struct dnetmap_net *dnetmap;
+#define dnetmap_pernet(x) dnetmap
+#endif
 
 static DEFINE_SPINLOCK(dnetmap_lock);
 static DEFINE_MUTEX(dnetmap_mutex);
@@ -237,12 +247,12 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 	ip_min = ntohl(mr->range[0].min_ip) + (whole_prefix == 0);
 	ip_max = ntohl(mr->range[0].max_ip) - (whole_prefix == 0);
 
-	sprintf(p->prefix_str, "%pI4/%u", &mr->range[0].min_ip,
+	sprintf(p->prefix_str, NIPQUAD_FMT "/%u", NIPQUAD(mr->range[0].min_ip),
 		33 - ffs(~(ip_min ^ ip_max)));
 #ifdef CONFIG_PROC_FS
-	sprintf(proc_str_data, "%pI4_%u", &mr->range[0].min_ip,
+	sprintf(proc_str_data, NIPQUAD_FMT "_%u", NIPQUAD(mr->range[0].min_ip),
 		33 - ffs(~(ip_min ^ ip_max)));
-	sprintf(proc_str_stat, "%pI4_%u_stat", &mr->range[0].min_ip,
+	sprintf(proc_str_stat, NIPQUAD_FMT "_%u_stat", NIPQUAD(mr->range[0].min_ip),
 		33 - ffs(~(ip_min ^ ip_max)));
 #endif
 	printk(KERN_INFO KBUILD_MODNAME ": new prefix %s\n", p->prefix_str);
@@ -369,8 +379,8 @@ bind_new_prefix:
 		if (e->prenat_addr != 0 && time_before(jiffies, e->stamp)) {
 			if (!disable_log)
 				printk(KERN_INFO KBUILD_MODNAME
-				       ": ip %pI4 - no free adresses in prefix %s\n",
-				       &prenat_ip, p->prefix_str);
+				       ": ip " NIPQUAD_FMT " - no free adresses in prefix %s\n",
+				       NIPQUAD(prenat_ip), p->prefix_str);
 			goto no_free_ip;
 		}
 
@@ -380,8 +390,8 @@ bind_new_prefix:
 			prenat_ip_prev = e->prenat_addr;
 			if (!disable_log)
 				printk(KERN_INFO KBUILD_MODNAME
-				       ": timeout binding %pI4 -> %pI4\n",
-				       &prenat_ip_prev, &postnat_ip);
+				       ": timeout binding " NIPQUAD_FMT " -> " NIPQUAD_FMT "\n",
+				       NIPQUAD(prenat_ip_prev), NIPQUAD(postnat_ip) );
 			list_del(&e->list);
 			list_del(&e->glist);
 			list_del(&e->grlist);
@@ -401,8 +411,8 @@ bind_new_prefix:
 							   (postnat_ip)]);
 		if (!disable_log)
 			printk(KERN_INFO KBUILD_MODNAME
-			       ": add binding %pI4 -> %pI4\n", &prenat_ip,
-			       &postnat_ip);
+			       ": add binding " NIPQUAD_FMT " -> " NIPQUAD_FMT "\n",
+						 NIPQUAD(prenat_ip),NIPQUAD(postnat_ip));
 
 	} else {
 
@@ -410,9 +420,9 @@ bind_new_prefix:
 			if (time_before(e->stamp, jiffies) && p != e->prefix) {
 				if (!disable_log)
 					printk(KERN_INFO KBUILD_MODNAME
-					       ": timeout binding %pI4 -> %pI4\n",
-					       &e->prenat_addr,
-					       &e->postnat_addr);
+					       ": timeout binding " NIPQUAD_FMT " -> " NIPQUAD_FMT "\n",
+					       NIPQUAD(e->prenat_addr),
+					       NIPQUAD(e->postnat_addr));
 				list_del(&e->list);
 				list_del(&e->glist);
 				list_del(&e->grlist);
@@ -465,11 +475,11 @@ static void dnetmap_tg_destroy(const struct xt_tgdtor_param *par)
 		list_del(&p->list);
 		spin_unlock_bh(&dnetmap_lock);
 #ifdef CONFIG_PROC_FS
-		sprintf(str, "%pI4_%u", &mr->range[0].min_ip,
+		sprintf(str, NIPQUAD_FMT "_%u", NIPQUAD(mr->range[0].min_ip),
 			33 - ffs(~(ntohl(mr->range[0].min_ip ^
 			mr->range[0].max_ip))));
 		remove_proc_entry(str, dnetmap_net->xt_dnetmap);
-		sprintf(str, "%pI4_%u_stat", &mr->range[0].min_ip,
+		sprintf(str, NIPQUAD_FMT "_%u_stat", NIPQUAD(mr->range[0].min_ip),
 			33 - ffs(~(ntohl(mr->range[0].min_ip ^
 			mr->range[0].max_ip))));
 		remove_proc_entry(str, dnetmap_net->xt_dnetmap);
@@ -526,8 +536,8 @@ static int dnetmap_seq_show(struct seq_file *seq, void *v)
 {
 	const struct dnetmap_entry *e = v;
 
-	seq_printf(seq, "%pI4 -> %pI4 --- ttl: %d lasthit: %lu\n",
-		   &e->prenat_addr, &e->postnat_addr,
+	seq_printf(seq, NIPQUAD_FMT " -> " NIPQUAD_FMT " --- ttl: %d lasthit: %lu\n",
+		   NIPQUAD(e->prenat_addr), NIPQUAD(e->postnat_addr),
 		   (int)(e->stamp - jiffies) / HZ, (e->stamp - jtimeout) / HZ);
 	return 0;
 }
@@ -610,6 +620,7 @@ static void __net_exit dnetmap_proc_net_exit(struct net *net)
 {
 	proc_net_remove(net, "xt_DNETMAP");
 }
+
 #else
 static inline int dnetmap_proc_net_init(struct net *net)
 {
@@ -619,13 +630,19 @@ static inline int dnetmap_proc_net_init(struct net *net)
 static inline void dnetmap_proc_net_exit(struct net *net)
 {
 }
-
 #endif /* CONFIG_PROC_FS */
 
 static int __net_init dnetmap_net_init(struct net *net)
 {
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(net);
 	int i;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+	dnetmap = kmalloc(sizeof(struct dnetmap_net),GFP_ATOMIC);
+	if (dnetmap == NULL)
+		return -ENOMEM;
+	dnetmap_net = dnetmap;
+#endif
 
 	dnetmap_net->dnetmap_iphash = kmalloc(sizeof(struct list_head) *
 					      hash_size * 2, GFP_ATOMIC);
@@ -644,14 +661,19 @@ static void __net_exit dnetmap_net_exit(struct net *net)
 
 	BUG_ON(!list_empty(&dnetmap_net->prefixes));
 	kfree(dnetmap_net->dnetmap_iphash);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+	kfree(dnetmap_net);
+#endif
 	dnetmap_proc_net_exit(net);
 }
 
 static struct pernet_operations dnetmap_net_ops = {
 	.init = dnetmap_net_init,
 	.exit = dnetmap_net_exit,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 	.id   = &dnetmap_net_id,
 	.size = sizeof(struct dnetmap_net),
+#endif
 };
 
 static struct xt_target dnetmap_tg_reg __read_mostly = {
