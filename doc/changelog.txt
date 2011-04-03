@@ -6,6 +6,10 @@ Fixes:
 - xt_pknock: avoid inversion of rule lookup that led to warnings
 - xt_DNETMAP: add missing module alias
 - xt_DNETMAP: support for kernels below 2.6.34
+Changes:
+- Linux kernel versions below 2.6.29 are no longer officially
+  supported, and will not be part of compilation testing.
+  Expect that compat code will be removed shortly.
 
 
 v1.33 (2011-02-02)
