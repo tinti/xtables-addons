@@ -33,6 +33,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Kierdelewicz <marek@koba.pl>");
 MODULE_DESCRIPTION(
 	"Xtables: dynamic two-way 1:1 NAT mapping of IPv4 addresses");
+MODULE_ALIAS("ipt_DNETMAP");
 
 static unsigned int default_ttl = 600;
 static unsigned int proc_perms = S_IRUGO | S_IWUSR;
