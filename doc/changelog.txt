@@ -1,6 +1,30 @@
 
 HEAD
 ====
+Enhancements:
+- update to ipset 6.0
+  * allow "new" as a commad alias to "create"
+  * ipset: improve command argument parsing
+  * ipset: avoid the unnecessary argv[] loop
+  * ipset: pass ipset_arg argument pointer
+  * separate ipset errnos completely from system ones and bump protocol version
+  * resolving IP addresses did not work at listing/saving sets, fixed
+  * ipset: fix spelling error
+  * ipset: fix the Netlink sequence number
+  * ipset: turn Set name[] into a const pointer
+  * check ICMP and ICMPv6 with the set match and target in the testsuite
+  * avoid possible syntax clashing at saving hostnames
+  * fix linking with CONFIG_IPV6=n
+- update to ipset 6.1
+  * sctp, udplite support for the hash:*port* types
+  * fix hash:*port* types ignoring the address range for non-{tcp,udp}
+  * revision reporting fixes
+- update to ipset 6.2
+  * list:set timeout variant fixes
+- update to ipset 6.3
+  * bitmap:ip,mac type requires "src" for MAC, enforce it
+- ipset-genl: handle EAGAIN return value emitted from autoloader
+- ipset-genl: resolve nfgenmsg remains and fix spurious protocol abort
 
 
 v1.34 (2011-04-07)

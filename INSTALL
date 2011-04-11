@@ -22,7 +22,7 @@ Supported configurations for this release
 	  - CONFIG_CONNECTOR y/m if you wish to receive userspace
 	    notifications from pknock through netlink/connector
 
-For ipset-5 you need:
+For ipset-6 you need:
 
 	* libmnl
 
