@@ -14,7 +14,7 @@
 #include <linux/netlink.h>
 
 /* The protocol version */
-#define IPSET_PROTOCOL		60
+#define IPSET_PROTOCOL		6
 
 /* The max length of strings including NUL: set and type identifiers */
 #define IPSET_MAXNAMELEN	32

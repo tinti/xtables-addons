@@ -26,6 +26,8 @@
 #include <net/genetlink.h>
 #define GENLMSG_DEFAULT_SIZE (NLMSG_DEFAULT_SIZE - GENL_HDRLEN)
 
+struct genlmsg_buf;
+
 static LIST_HEAD(ip_set_type_list);		/* all registered set types */
 static DEFINE_MUTEX(ip_set_type_mutex);		/* protects ip_set_type_list */
 static DEFINE_RWLOCK(ip_set_ref_lock);		/* protects the set refs */
@@ -82,14 +84,14 @@ find_set_type(const char *name, u8 family, u8 revision)
 static int
 try_to_load_type(const char *name)
 {
-	nfnl_unlock();
+	genl_unlock();
 	pr_debug("try to load ip_set_%s\n", name);
 	if (request_module("ip_set_%s", name) < 0) {
 		pr_warning("Can't find ip_set type %s\n", name);
-		nfnl_lock();
+		genl_lock();
 		return -IPSET_ERR_FIND_TYPE;
 	}
-	nfnl_lock();
+	genl_lock();
 	return -EAGAIN;
 }
 
@@ -99,8 +101,10 @@ find_set_type_get(const char *name, u8 family, u8 revision,
 		  struct ip_set_type **found)
 {
 	struct ip_set_type *type;
+	unsigned int retry = 0;
 	int err;
 
+retry:
 	rcu_read_lock();
 	*found = find_set_type(name, family, revision);
 	if (*found) {
@@ -115,7 +119,10 @@ find_set_type_get(const char *name, u8 family, u8 revision,
 		}
 	rcu_read_unlock();
 
-	return try_to_load_type(name);
+	err = try_to_load_type(name);
+	if (err == -EAGAIN && retry++ == 0)
+		goto retry;
+	return err;
 
 unlock:
 	rcu_read_unlock();
@@ -131,7 +138,10 @@ find_set_type_minmax(const char *name, u8 family, u8 *min, u8 *max)
 {
 	struct ip_set_type *type;
 	bool found = false;
+	unsigned int retry = 0;
+	int err;
 
+retry:
 	*min = 255; *max = 0;
 	rcu_read_lock();
 	list_for_each_entry_rcu(type, &ip_set_type_list, list)
@@ -147,7 +157,10 @@ find_set_type_minmax(const char *name, u8 family, u8 *min, u8 *max)
 	if (found)
 		return 0;
 
-	return try_to_load_type(name);
+	err = try_to_load_type(name);
+	if (err == -EAGAIN && retry++ == 0)
+		goto retry;
+	return err;
 }
 
 #define family_name(f)	((f) == AF_INET ? "inet" : \
@@ -482,9 +495,9 @@ ip_set_nfnl_get(const char *name)
 	struct ip_set *s;
 	ip_set_id_t index;
 
-	nfnl_lock();
+	genl_lock();
 	index = ip_set_get_byname(name, &s);
-	nfnl_unlock();
+	genl_unlock();
 
 	return index;
 }
@@ -502,12 +515,12 @@ ip_set_nfnl_get_byindex(ip_set_id_t index)
 	if (index > ip_set_max)
 		return IPSET_INVALID_ID;
 
-	nfnl_lock();
+	genl_lock();
 	if (ip_set_list[index])
 		__ip_set_get(index);
 	else
 		index = IPSET_INVALID_ID;
-	nfnl_unlock();
+	genl_unlock();
 
 	return index;
 }
@@ -523,9 +536,9 @@ EXPORT_SYMBOL_GPL(ip_set_nfnl_get_byindex);
 void
 ip_set_nfnl_put(ip_set_id_t index)
 {
-	nfnl_lock();
+	genl_lock();
 	ip_set_put_byindex(index);
-	nfnl_unlock();
+	genl_unlock();
 }
 EXPORT_SYMBOL_GPL(ip_set_nfnl_put);
 
@@ -548,11 +561,11 @@ flag_exist(const struct genlmsghdr *ghdr)
 	return ghdr->reserved & NLM_F_EXCL ? 0 : IPSET_FLAG_EXIST;
 }
 
-static struct nlmsghdr *
+static struct genlmsg_buf *
 start_msg(struct sk_buff *skb, u32 pid, u32 seq, unsigned int flags,
 	  enum ipset_cmd cmd)
 {
-	void *nlh;
+	struct genlmsg_buf *nlh;
 
 	nlh = genlmsg_put(skb, pid, seq, &ip_set_netlink_subsys, flags, cmd);
 	if (nlh == NULL)
@@ -950,10 +963,11 @@ ip_set_dump_done(struct netlink_callback *cb)
 }
 
 static inline void
-dump_attrs(void *phdr)
+dump_attrs(struct genlmsg_buf *phdr)
 {
 	const struct nlattr *attr;
-	const struct nlmsghdr *nlh = phdr - GENL_HDRLEN - NLMSG_HDRLEN;
+	const struct nlmsghdr *nlh =
+		(const void *)phdr - GENL_HDRLEN - NLMSG_HDRLEN;
 	int rem;
 
 	pr_debug("dump nlmsg\n");
@@ -999,14 +1013,14 @@ ip_set_dump_start(struct sk_buff *skb, struct netlink_callback *cb)
 {
 	ip_set_id_t index = IPSET_INVALID_ID, max;
 	struct ip_set *set = NULL;
-	struct nlmsghdr *nlh = NULL;
+	struct genlmsg_buf *nlh = NULL;
 	unsigned int flags = NETLINK_CB(cb->skb).pid ? NLM_F_MULTI : 0;
 	int ret = 0;
 
 	if (cb->args[0] == DUMP_INIT) {
 		ret = dump_init(cb);
 		if (ret < 0) {
-			nlh = nlmsg_hdr(cb->skb);
+			struct nlmsghdr *nlh = nlmsg_hdr(cb->skb);
 			/* We have to create and send the error message
 			 * manually :-( */
 			if (nlh->nlmsg_flags & NLM_F_ACK)
@@ -1159,7 +1173,7 @@ call_ad(struct sock *ctnl, struct sk_buff *skb, struct ip_set *set,
 		struct sk_buff *skb2;
 		struct nlmsgerr *errmsg;
 		size_t payload = sizeof(*errmsg) + nlmsg_len(nlh);
-		int min_len = NLMSG_SPACE(sizeof(struct nfgenmsg));
+		int min_len = NLMSG_SPACE(sizeof(struct genlmsghdr));
 		struct nlattr *cda[IPSET_ATTR_CMD_MAX+1];
 		struct nlattr *cmdattr;
 		u32 *errline;
@@ -1342,7 +1356,7 @@ ip_set_header(struct sk_buff *skb, struct genl_info *info)
 	struct nlattr *const *attr = info->attrs;
 	const struct nlmsghdr *nlh = info->nlhdr;
 	struct sk_buff *skb2;
-	struct nlmsghdr *nlh2;
+	struct genlmsg_buf *nlh2;
 	ip_set_id_t index;
 	int ret = 0;
 
@@ -1355,7 +1369,7 @@ ip_set_header(struct sk_buff *skb, struct genl_info *info)
 		return -ENOENT;
 	set = ip_set_list[index];
 
-	skb2 = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+	skb2 = genlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
 	if (skb2 == NULL)
 		return -ENOMEM;
 
@@ -1377,7 +1391,7 @@ ip_set_header(struct sk_buff *skb, struct genl_info *info)
 	return 0;
 
 nla_put_failure:
-	nlmsg_cancel(skb2, nlh2);
+	genlmsg_cancel(skb2, nlh2);
 nlmsg_failure:
 	kfree_skb(skb2);
 	return -EMSGSIZE;
@@ -1399,7 +1413,7 @@ ip_set_type(struct sk_buff *skb, struct genl_info *info)
 	const struct nlmsghdr *nlh = info->nlhdr;
 
 	struct sk_buff *skb2;
-	void *nlh2;
+	struct genlmsg_buf *nlh2;
 	u8 family, min, max;
 	const char *typename;
 	int ret = 0;
@@ -1458,7 +1472,7 @@ ip_set_protocol(struct sk_buff *skb, struct genl_info *info)
 	const struct nlmsghdr *nlh = info->nlhdr;
 
 	struct sk_buff *skb2;
-	void *nlh2;
+	struct genlmsg_buf *nlh2;
 	int ret = 0;
 
 	if (unlikely(attr[IPSET_ATTR_PROTOCOL] == NULL))
@@ -1633,9 +1647,9 @@ ip_set_sockfn_get(struct sock *sk, int optval, void __user *user, int *len)
 			goto done;
 		}
 		req_get->set.name[IPSET_MAXNAMELEN - 1] = '\0';
-		nfnl_lock();
+		genl_lock();
 		req_get->set.index = find_set_id(req_get->set.name);
-		nfnl_unlock();
+		genl_unlock();
 		goto copy;
 	}
 	case IP_SET_OP_GET_BYINDEX: {
@@ -1646,12 +1660,12 @@ ip_set_sockfn_get(struct sock *sk, int optval, void __user *user, int *len)
 			ret = -EINVAL;
 			goto done;
 		}
-		nfnl_lock();
+		genl_lock();
 		strncpy(req_get->set.name,
 			ip_set_list[req_get->set.index]
 				? ip_set_list[req_get->set.index]->name : "",
 			IPSET_MAXNAMELEN);
-		nfnl_unlock();
+		genl_unlock();
 		goto copy;
 	}
 	default:

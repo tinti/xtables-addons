@@ -21,6 +21,10 @@ Enhancements:
   * revision reporting fixes
 - update to ipset 6.2
   * list:set timeout variant fixes
+- update to ipset 6.3
+  * bitmap:ip,mac type requires "src" for MAC, enforce it
+- ipset-genl: handle EAGAIN return value emitted from autoloader
+- ipset-genl: resolve nfgenmsg remains and fix spurious protocol abort
 
 
 v1.33 (2011-02-02)
