@@ -13,4 +13,10 @@ config NETFILTER_XT_TARGET_TARPIT
 	This offers similar functionality to LaBrea
 	<http://www.hackbusters.net/LaBrea/>, but does not require dedicated
 	hardware or IPs. Any TCP port that you would normally DROP or REJECT
-	can instead become a tar pit.
+	can instead become a tar pit or honeypot. All 3 modes may be used
+	in iptables rules interchangably and simultaneously.
+
+	A honeypot option is available which will answer connections normally
+	and allow the remote to send data packets that may be captured in a
+	pcap for later analysis. A reset mode is also available that will only
+	send an inline reset (RST).
