@@ -40,19 +40,7 @@ to account the overall traffic to/from your internet provider.
 .PP
 The data can be queried using the userspace libxt_ACCOUNT_cl library,
 and by the reference implementation to show usage of this library,
-the \fBiptaccount\fP(8) tool, which features following options:
-.PP
-[\fB\-u\fP] show kernel handle usage
-.PP
-[\fB\-h\fP] free all kernel handles (experts only!)
-.PP
-[\fB\-a\fP] list all table names
-.PP
-[\fB\-l\fP \fIname\fP] show data in table \fIname\fP
-.PP
-[\fB\-f\fP] flush data after showing
-.PP
-[\fB\-c\fP] loop every second (abort with CTRL+C)
+the \fBiptaccount\fP(8) tool.
 .PP
 Here is an example of use:
 .PP

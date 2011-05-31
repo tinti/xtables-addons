@@ -5,8 +5,8 @@ Xtables-addons \(em additional extensions for iptables, ip6tables, etc.
 .\" @TARGET@
 .SH Matches
 .\" @MATCHES@
-.SH "SEE ALSO"
-\fBiptables\fP(8), \fBip6tables\fP(8)
+.SH "See also"
+\fBiptables\fP(8), \fBip6tables\fP(8), \fBiptaccount\fP(8)
 .PP
 For developers, the book "Writing Netfilter modules" at
 http://jengelh.medozas.de/documents/Netfilter_Modules.pdf provides detailed
