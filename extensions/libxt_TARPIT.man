@@ -48,11 +48,11 @@ the Linux box, and add:
 .PP
 NOTE:
 If you use the conntrack module while you are using TARPIT, you should also use
-the NOTRACK target, or the kernel will unnecessarily allocate resources for
-each TARPITted connection. To TARPIT incoming connections to the standard IRC
-port while using conntrack, you could:
+unset tracking on the packet, or the kernel will unnecessarily allocate
+resources for each TARPITted connection. To TARPIT incoming connections to the
+standard IRC port while using conntrack, you could:
 .IP
-\-t raw \-A PREROUTING \-p tcp \-\-dport 6667 \-j NOTRACK
+\-t raw \-A PREROUTING \-p tcp \-\-dport 6667 \-j CT \-\-notrack
 .IP
 \-A INPUT \-p tcp \-\-dport 6667 \-j NFLOG
 .IP
