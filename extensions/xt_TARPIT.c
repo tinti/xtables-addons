@@ -285,7 +285,6 @@ static struct xt_target tarpit_tg_reg __read_mostly = {
 	.name       = "TARPIT",
 	.revision   = 0,
 	.family     = NFPROTO_IPV4,
-	.table      = "filter",
 	.hooks      = (1 << NF_INET_LOCAL_IN) | (1 << NF_INET_FORWARD),
 	.proto      = IPPROTO_TCP,
 	.target     = tarpit_tg,
