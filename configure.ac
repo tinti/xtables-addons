@@ -61,19 +61,14 @@ if test -n "$kbuilddir"; then
 		echo "WARNING: Version detection did not succeed. Continue at own luck.";
 	else
 		echo "$kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
-		if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 38; then
+		if test "$kmajor" -gt 3 -o "$kmajor" -eq 3 -a "$kminor" -gt 1; then
 			echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
-		elif test "$kmajor" -eq 2 -a "$kminor" -eq 6 -a "$kmicro" -ge 29; then
-			:; # everything ok
-		elif test \( "$kmajor" -lt 2 -o \
-		    \( "$kmajor" -eq 2 -a "$kminor" -lt 6 \) -o \
-		    \( "$kmajor" -eq 2 -a "$kminor" -eq 0 -a "$kmicro" -lt 17 \) -o \
-		    \( "$kmajor" -eq 2 -a "$kminor" -eq 6 -a "$kmicro" -eq 18 -a \
-		    "$kstable" -lt 5 \) \); then
-			echo "ERROR: That kernel version is not supported at all. Please see INSTALL for minimum configuration.";
-			exit 1;
+		elif test "$kmajor" -eq 3; then
+			:;
+		elif test "$kmajor" -eq 2 -a "$kminor" -ge 29; then
+			:;
 		else
-			echo "WARNING: That kernel version has been recently deprecated for use with Xtables-addons). Compilation may fail.";
+			echo "WARNING: That kernel version is not supported.";
 		fi;
 	fi;
 fi;
