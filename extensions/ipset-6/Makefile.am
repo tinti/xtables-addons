@@ -21,4 +21,4 @@ ipset_SOURCES = src/ipset.c src/errcode.c src/ui.c src/ipset_bitmap_ip.c \
                 src/ipset_list_set.c
 ipset_LDADD   = libipset.la
 
-man_MANS      = ipset.8
+man_MANS      = src/ipset.8
