@@ -81,7 +81,7 @@ static const char hash_ip_usage[] =
 
 struct ipset_type ipset_hash_ip0 = {
 	.name = "hash:ip",
-	.alias = { "iphash", "iptree", "iptreemap", NULL },
+	.alias = { "iphash", NULL },
 	.revision = 0,
 	.family = AF_INET46,
 	.dimension = IPSET_DIM_ONE,
@@ -92,7 +92,6 @@ struct ipset_type ipset_hash_ip0 = {
 			.opt = IPSET_OPT_IP
 		},
 	},
-	.compat_parse_elem = ipset_parse_iptimeout,
 	.args = {
 		[IPSET_CREATE] = hash_ip_create_args,
 		[IPSET_ADD] = hash_ip_add_args,

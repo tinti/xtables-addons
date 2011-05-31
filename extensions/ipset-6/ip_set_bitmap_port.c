@@ -208,14 +208,16 @@ nla_put_failure:
 
 static int
 bitmap_port_kadt(struct ip_set *set, const struct sk_buff *skb,
-		 enum ipset_adt adt, u8 pf, u8 dim, u8 flags)
+		 const struct xt_action_param *par,
+		 enum ipset_adt adt, const struct ip_set_adt_opt *opt)
 {
 	struct bitmap_port *map = set->data;
 	ipset_adtfn adtfn = set->variant->adt[adt];
 	__be16 __port;
 	u16 port = 0;
 
-	if (!ip_set_get_ip_port(skb, pf, flags & IPSET_DIM_ONE_SRC, &__port))
+	if (!ip_set_get_ip_port(skb, opt->family,
+				opt->flags & IPSET_DIM_ONE_SRC, &__port))
 		return -EINVAL;
 
 	port = ntohs(__port);
@@ -225,12 +227,12 @@ bitmap_port_kadt(struct ip_set *set, const struct sk_buff *skb,
 
 	port -= map->first_port;
 
-	return adtfn(set, &port, map->timeout, flags);
+	return adtfn(set, &port, opt_timeout(opt, map), opt->cmdflags);
 }
 
 static int
 bitmap_port_uadt(struct ip_set *set, struct nlattr *tb[],
-		 enum ipset_adt adt, u32 *lineno, u32 flags)
+		 enum ipset_adt adt, u32 *lineno, u32 flags, bool retried)
 {
 	struct bitmap_port *map = set->data;
 	ipset_adtfn adtfn = set->variant->adt[adt];
@@ -482,7 +484,8 @@ static struct ip_set_type bitmap_port_type = {
 	.features	= IPSET_TYPE_PORT,
 	.dimension	= IPSET_DIM_ONE,
 	.family		= AF_UNSPEC,
-	.revision	= 0,
+	.revision_min	= 0,
+	.revision_max	= 0,
 	.create		= bitmap_port_create,
 	.create_policy	= {
 		[IPSET_ATTR_PORT]	= { .type = NLA_U16 },

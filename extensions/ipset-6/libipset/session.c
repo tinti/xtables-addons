@@ -37,6 +37,7 @@ struct ipset_session {
 	/* Command state */
 	enum ipset_cmd cmd;			/* Current command */
 	uint32_t lineno;			/* Current lineno in restore mode */
+	uint32_t printed_set;			/* Printed sets so far */
 	char saved_setname[IPSET_MAXNAMELEN];	/* Saved setname */
 	const struct ipset_type *saved_type;	/* Saved type */
 	struct nlattr *nested[IPSET_NEST_MAX];	/* Pointer to nest levels */
@@ -138,6 +139,8 @@ ipset_envopt_parse(struct ipset_session *session, int opt,
 	case IPSET_ENV_QUIET:
 	case IPSET_ENV_RESOLVE:
 	case IPSET_ENV_EXIST:
+	case IPSET_ENV_LIST_SETNAME:
+	case IPSET_ENV_LIST_HEADER:
 		session->envopts |= opt;
 		return 0;
 	default:
@@ -468,6 +471,10 @@ static const struct ipset_attr_policy adt_attrs[] = {
 		.type = MNL_TYPE_U8,
 		.opt = IPSET_OPT_CIDR2,
 	},
+	[IPSET_ATTR_IP2_TO] = {
+		.type = MNL_TYPE_NESTED,
+		.opt = IPSET_OPT_IP2_TO,
+	},
 };
 
 static const struct ipset_attr_policy ipaddr_attrs[] = {
@@ -480,6 +487,10 @@ static const struct ipset_attr_policy ipaddr_attrs[] = {
 	},
 };
 
+#ifdef IPSET_DEBUG
+static int debug = 1;
+#endif
+
 static int
 generic_data_attr_cb(const struct nlattr *attr, void *data,
 		     int attr_max, const struct ipset_attr_policy *policy)
@@ -487,14 +498,14 @@ generic_data_attr_cb(const struct nlattr *attr, void *data,
 	const struct nlattr **tb = data;
 	int type = mnl_attr_get_type(attr);
 	
-	D("attr type: %u, len %u", type, attr->nla_len);
+	IF_D(debug, "attr type: %u, len %u", type, attr->nla_len);
 	if (mnl_attr_type_valid(attr, attr_max) < 0) {
-		D("attr type: %u INVALID", type);
+		IF_D(debug, "attr type: %u INVALID", type);
 		return MNL_CB_ERROR;
 	}
 	if (mnl_attr_validate(attr, policy[type].type) < 0) {
-		D("attr type: %u POLICY, attrlen %u", type,
-		  mnl_attr_get_payload_len(attr));
+		IF_D(debug, "attr type: %u POLICY, attrlen %u", type,
+		     mnl_attr_get_payload_len(attr));
 		return MNL_CB_ERROR;
 	}
 	if (policy[type].type == MNL_TYPE_NUL_STRING
@@ -829,8 +840,9 @@ list_create(struct ipset_session *session, struct nlattr *nla[])
 			      type->name);
 		break;
 	case IPSET_LIST_PLAIN:
-		safe_snprintf(session, "Name: %s\n"
+		safe_snprintf(session, "%sName: %s\n"
 			      "Type: %s\nHeader: ",
+			      session->printed_set ? "\n" : "",
 			      ipset_data_setname(data),
 			      type->name);
 		break;
@@ -887,18 +899,24 @@ list_create(struct ipset_session *session, struct nlattr *nla[])
 		safe_dprintf(session, ipset_print_number, IPSET_OPT_MEMSIZE);
 		safe_snprintf(session, "\nReferences: ");
 		safe_dprintf(session, ipset_print_number, IPSET_OPT_REFERENCES);
-		safe_snprintf(session, "\nMembers:\n");
+		safe_snprintf(session,
+			session->envopts & IPSET_ENV_LIST_HEADER ?
+			"\n" : "\nMembers:\n");
 		break;
 	case IPSET_LIST_XML:
-		safe_snprintf(session, "</elements>\n    <memsize>");
+		safe_snprintf(session, "    <memsize>");
 		safe_dprintf(session, ipset_print_number, IPSET_OPT_MEMSIZE);
 		safe_snprintf(session, "</memsize>\n    <references>");
 		safe_dprintf(session, ipset_print_number, IPSET_OPT_REFERENCES);
-		safe_snprintf(session, "</references>\n  </header>\n  <members>\n");
+		safe_snprintf(session,
+			session->envopts & IPSET_ENV_LIST_HEADER ?
+			"</references>\n  </header>\n" :
+			"</references>\n  </header>\n  <members>\n");
 		break;
 	default:
 		break;
 	}
+	session->printed_set++;
 
 	return MNL_CB_OK;
 }
@@ -910,16 +928,17 @@ print_set_done(struct ipset_session *session)
 		? "NONE" : session->saved_setname);
 	switch (session->mode) {
 	case IPSET_LIST_XML:
-		if (session->saved_setname[0] == '\0')
-			safe_snprintf(session, "\n");
-		else
+		if (session->envopts & IPSET_ENV_LIST_SETNAME)
+			break;
+		if (session->envopts & IPSET_ENV_LIST_HEADER) {
+			if (session->saved_setname[0] != '\0')
+				safe_snprintf(session, "</ipset>\n");
+			break;
+		}
+		if (session->saved_setname[0] != '\0')
 			safe_snprintf(session, "  </members>\n</ipset>\n");
 		break;
-	case IPSET_LIST_SAVE:
-		/* No empty lines between the sets */
-		break;
 	default:
-		safe_snprintf(session, "\n");
 		break;
 	}
 	return call_outfn(session) ? MNL_CB_ERROR : MNL_CB_STOP;
@@ -931,8 +950,11 @@ callback_list(struct ipset_session *session, struct nlattr *nla[],
 {
 	struct ipset_data *data = session->data;
 
-	if (setjmp(printf_failure))
+	if (setjmp(printf_failure)) {
+		session->saved_setname[0] = '\0';
+		session->printed_set = 0;
 		return MNL_CB_ERROR;
+	}
 
 	if (!nla[IPSET_ATTR_SETNAME])
 		FAILURE("Broken %s kernel message: missing setname!",
@@ -940,6 +962,17 @@ callback_list(struct ipset_session *session, struct nlattr *nla[],
 
 	ATTR2DATA(session, nla, IPSET_ATTR_SETNAME, cmd_attrs);
 	D("setname %s", ipset_data_setname(data));
+	if (session->envopts & IPSET_ENV_LIST_SETNAME &&
+	    session->mode != IPSET_LIST_SAVE) {
+		if (session->mode == IPSET_LIST_XML)
+			safe_snprintf(session, "<ipset name=\"%s\"/>\n",
+				      ipset_data_setname(data));
+		else
+			safe_snprintf(session, "%s\n",
+				      ipset_data_setname(data));
+		return call_outfn(session) ? MNL_CB_ERROR : MNL_CB_OK;
+	}
+
 	if (STREQ(ipset_data_setname(data), session->saved_setname)) {
 		/* Header part already seen */
 		if (ipset_data_test(data, IPSET_OPT_TYPE)
@@ -1422,6 +1455,9 @@ rawdata2attr(struct ipset_session *session, struct nlmsghdr *nlh,
 		return 1;
 
 	switch (attr->type) {
+	case MNL_TYPE_NUL_STRING:
+		alen = strlen((const char *)d) + 1;
+		break;
 	case MNL_TYPE_U32: {
 		uint32_t value = htonl(*(const uint32_t *)d);
 		
@@ -1497,7 +1533,7 @@ addattr_adt(struct ipset_session *session,
 static int
 build_send_private_msg(struct ipset_session *session, enum ipset_cmd cmd)
 {
-	char buffer[PRIVATE_MSG_BUFLEN] __attribute__ ((aligned));
+	char buffer[PRIVATE_MSG_BUFLEN] __attribute__ ((aligned)) = {};
 	struct nlmsghdr *nlh = (void *)buffer;
 	struct ipset_data *data = session->data;
 	int len = PRIVATE_MSG_BUFLEN, ret;
@@ -1592,7 +1628,12 @@ build_msg(struct ipset_session *session, bool aggregate)
 			    IPSET_ATTR_REVISION, cmd_attrs);
 		D("family: %u, type family %u",
 		  ipset_data_family(data), type->family);
-		ADDATTR(session, nlh, data, IPSET_ATTR_FAMILY, AF_INET, cmd_attrs);
+		if (ipset_data_test(data, IPSET_OPT_FAMILY))
+			ADDATTR(session, nlh, data, IPSET_ATTR_FAMILY,
+				AF_INET, cmd_attrs);
+		else
+			/* bitmap:port and list:set types */
+			mnl_attr_put_u8(nlh, IPSET_ATTR_FAMILY, AF_UNSPEC);
 
 		/* Type-specific create attributes */
 		D("call open_nested");
@@ -1604,11 +1645,26 @@ build_msg(struct ipset_session *session, bool aggregate)
 	}
 	case IPSET_CMD_DESTROY:
 	case IPSET_CMD_FLUSH:
-	case IPSET_CMD_LIST:
 	case IPSET_CMD_SAVE:
 		if (ipset_data_test(data, IPSET_SETNAME))
 			ADDATTR_SETNAME(session, nlh, data);
 		break;
+	case IPSET_CMD_LIST: {
+		uint32_t flags = 0;
+		
+		if (session->envopts & IPSET_ENV_LIST_SETNAME)
+			flags |= IPSET_FLAG_LIST_SETNAME;
+		if (session->envopts & IPSET_ENV_LIST_HEADER)
+			flags |= IPSET_FLAG_LIST_HEADER;
+		if (ipset_data_test(data, IPSET_SETNAME))
+			ADDATTR_SETNAME(session, nlh, data);
+		if (flags && session->mode != IPSET_LIST_SAVE) {
+			ipset_data_set(data, IPSET_OPT_FLAGS, &flags);
+			ADDATTR(session, nlh, data, IPSET_ATTR_FLAGS, AF_INET,
+				cmd_attrs);
+		}
+		break;
+	}
 	case IPSET_CMD_RENAME:
 	case IPSET_CMD_SWAP:
 		if (!ipset_data_test(data, IPSET_SETNAME))
@@ -1729,6 +1785,7 @@ ipset_commit(struct ipset_session *session)
 
 	/* Reset saved data and nested state */
 	session->saved_setname[0] = '\0';
+	session->printed_set = 0;
 	for (i = session->nestid - 1; i >= 0; i--)
 		session->nested[i] = NULL;
 	session->nestid = 0;
@@ -1926,3 +1983,7 @@ ipset_session_fini(struct ipset_session *session)
 	free(session);
 	return 0;
 }
+
+#ifdef IPSET_DEBUG
+#include "debug.c"
+#endif
