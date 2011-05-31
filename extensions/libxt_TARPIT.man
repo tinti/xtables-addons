@@ -30,8 +30,8 @@ analysis. The module does not send any data, so if the remote expects an
 application level response, the game is up.
 .TP
 \fB\-\-reset\fP
-This mode is handy because we can send an inline RST (reset) from userspace. It
-has no other function.
+This mode is handy because we can send an inline RST (reset). It has no other
+function.
 .PP
 To tarpit connections to TCP port 80 destined for the current machine:
 .IP
