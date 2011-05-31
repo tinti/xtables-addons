@@ -188,6 +188,19 @@ const struct ipset_envopts ipset_envopts[] = {
 	          "        when adding already existing elements\n"
 		  "        or when deleting non-existing elements.",
 	},
+	{ .name = { "-n", "-name" },
+	  .parse = ipset_envopt_parse,
+	  .has_arg = IPSET_NO_ARG,	.flag = IPSET_ENV_LIST_SETNAME,
+	  .help = "\n"
+	          "        When listing, list just setnames from kernel.\n",
+	},
+	{ .name = { "-t", "-terse" },
+	  .parse = ipset_envopt_parse,
+	  .has_arg = IPSET_NO_ARG,	.flag = IPSET_ENV_LIST_HEADER,
+	  .help = "\n"
+	          "        When listing, list setnames and set headers\n"
+		  "        from kernel only.",
+	},
 	{ },
 };
 
@@ -256,9 +269,9 @@ ipset_port_usage(void)
 	const char *name;
 
 	printf("      [PROTO:]PORT is a valid pattern of the following:\n"
-	       "           PORTNAME         port name from /etc/services\n"
-	       "           PORTNUMBER       port number identifier\n"
-	       "           tcp|udp:PORTNAME|PORTNUMBER\n"
+	       "           PORTNAME         TCP port name from /etc/services\n"
+	       "           PORTNUMBER       TCP port number identifier\n"
+	       "           tcp|sctp|udp|udplite:PORTNAME|PORTNUMBER\n"
 	       "           icmp:CODENAME    supported ICMP codename\n"
 	       "           icmp:TYPE/CODE   ICMP type/code value\n"
 	       "           icmpv6:CODENAME  supported ICMPv6 codename\n"

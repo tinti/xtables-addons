@@ -19,7 +19,7 @@ simplified, and sped up.
 Included in this package
 ========================
 - ipset 4.5
-- ipset 5.4.1
+- ipset 6.6a-genl
 - xt_ACCOUNT 1.16, libxt_ACCOUNT 1.3
 
 

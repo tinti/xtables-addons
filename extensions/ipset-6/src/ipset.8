@@ -21,7 +21,7 @@ ipset \(em administration tool for IP sets
 .PP 
 COMMANDS := { \fBcreate\fR | \fBadd\fR | \fBdel\fR | \fBtest\fR | \fBdestroy\fR | \fBlist\fR | \fBsave\fR | \fBrestore\fR | \fBflush\fR | \fBrename\fR | \fBswap\fR | \fBhelp\fR | \fBversion\fR | \fB\-\fR }
 .PP 
-\fIOPTIONS\fR := { \fB\-exist\fR | \fB\-output\fR { \fBplain\fR | \fBsave\fR | \fBxml\fR } | \fB\-quiet\fR | \fB\-resolve\fR | \fB\-sorted\fR }
+\fIOPTIONS\fR := { \fB\-exist\fR | \fB\-output\fR { \fBplain\fR | \fBsave\fR | \fBxml\fR } | \fB\-quiet\fR | \fB\-resolve\fR | \fB\-sorted\fR | \fB\-name\fR | \fB\-terse\fR }
 .PP 
 \fBipset\fR \fBcreate\fR \fISETNAME\fR \fITYPENAME\fR [ \fICREATE\-OPTIONS\fR ]
 .PP 
@@ -109,7 +109,7 @@ Destroy the specified set or all the sets if none is given.
 
 If the set has got reference(s), nothing is done and no set destroyed.
 .TP 
-\fBlist\fP [ \fISETNAME\fP ]
+\fBlist\fP [ \fISETNAME\fP ] [ \fIOPTIONS\fP ]
 List the header data and the entries for the specified set, or for
 all sets if none is given. The
 \fB\-resolve\fP
@@ -120,8 +120,13 @@ type supports the operation). The option
 \fB\-output\fR
 can be used to control the format of the listing:
 \fBplain\fR, \fBsave\fR or \fBxml\fR.
-The default is
-\fBplain\fR. 
+(The default is
+\fBplain\fR.)
+If the option
+\fB\-name\fR
+is specified, just the names of the existing sets are listed. If the option
+\fB\-terse\fR
+is specified, just the set names and headers are listed. 
 .TP 
 \fBsave\fP [ \fISETNAME\fP ]
 Save the given set, or all sets if none is given
@@ -190,6 +195,13 @@ DNS lookups.
 .TP 
 \fB\-s\fP, \fB\-sorted\fP
 Sorted output. When listing sets entries are listed sorted. Not supported yet.
+.TP 
+\fB\-n\fP, \fB\-name\fP
+List just the names of the existing sets, i.e. suppress listing of set headers and members.
+.TP 
+\fB\-t\fP, \fB\-terse\fP
+List the set names and headers, i.e. suppress listing of set members.
+
 .SH "SET TYPES"
 A set type comprises of the storage method by which the data is stored and
 the data type(s) which are stored in the set. Therefore the
@@ -202,7 +214,7 @@ command follows the syntax
 
 where the current list of the methods are
 \fBbitmap\fR, \fBhash\fR, and \fBlist\fR and the possible data types
-are \fBip\fR, \fBmac\fR and \fBport\fR. The dimension of a set
+are \fBip\fR, \fBnet\fR, \fBmac\fR and \fBport\fR. The dimension of a set
 is equal to the number of data types in its type name.
 
 When adding, deleting or testing entries in a set, the same comma separated
@@ -397,13 +409,16 @@ Network address with zero prefix size cannot be stored in this type of sets.
 .PP 
 \fICREATE\-OPTIONS\fR := [ \fBfamily\fR { \fBinet\fR | \fBinet6\fR } ] | [ \fBhashsize\fR \fIvalue\fR ] [ \fBmaxelem\fR \fIvalue\fR ] [ \fBtimeout\fR \fIvalue\fR ]
 .PP 
-\fIADD\-ENTRY\fR := \fIip\fR[/\fIcidr\fR]
+\fIADD\-ENTRY\fR := \fInetaddr\fR
 .PP 
 \fIADD\-OPTIONS\fR := [ \fBtimeout\fR \fIvalue\fR ]
 .PP 
-\fIDEL\-ENTRY\fR := \fIip\fR[/\fIcidr\fR]
+\fIDEL\-ENTRY\fR := \fInetaddr\fR
 .PP 
-\fITEST\-ENTRY\fR := \fIip\fR[/\fIcidr\fR]
+\fITEST\-ENTRY\fR := \fInetaddr\fR
+.PP 
+where
+\fInetaddr\fR := \fIip\fR[/\fIcidr\fR]
 .PP 
 Optional \fBcreate\fR options:
 .TP 
@@ -418,6 +433,11 @@ correct value.
 .TP 
 \fBmaxelem\fR \fIvalue\fR
 The maximal number of elements which can be stored in the set, default 65536.
+.PP 
+For the \fBinet\fR family one can add or delete multiple entries by specifying
+a range, which is converted internally to network(s) equal to the range:
+.PP 
+\fInetaddr\fR := { \fIip\fR[/\fIcidr\fR] | \fIfromaddr\fR\-\fItoaddr\fR }
 .PP 
 When adding/deleting/testing entries, if the cidr prefix parameter is not specified,
 then the host prefix value is assumed. When adding/deleting entries, the exact
@@ -527,13 +547,16 @@ address with zero prefix size is not accepted either.
 .PP 
 \fICREATE\-OPTIONS\fR := [ \fBfamily\fR { \fBinet\fR | \fBinet6\fR } ] | [ \fBhashsize\fR \fIvalue\fR ] [ \fBmaxelem\fR \fIvalue\fR ] [ \fBtimeout\fR \fIvalue\fR ]
 .PP 
-\fIADD\-ENTRY\fR := \fIipaddr\fR[/\fIcidr\fR],[\fIproto\fR:]\fIport\fR
+\fIADD\-ENTRY\fR := \fInetaddr\fR,[\fIproto\fR:]\fIport\fR
 .PP 
 \fIADD\-OPTIONS\fR := [ \fBtimeout\fR \fIvalue\fR ]
 .PP 
-\fIDEL\-ENTRY\fR := \fIipaddr\fR[/\fIcidr\fR],[\fIproto\fR:]\fIport\fR
+\fIDEL\-ENTRY\fR := \fInetaddr\fR,[\fIproto\fR:]\fIport\fR
 .PP 
-\fITEST\-ENTRY\fR := \fIipaddr\fR[/\fIcidr\fR],[\fIproto\fR:]\fIport\fR
+\fITEST\-ENTRY\fR := \fInetaddr\fR,[\fIproto\fR:]\fIport\fR
+.PP 
+where
+\fInetaddr\fR := \fIip\fR[/\fIcidr\fR]
 .PP 
 Optional \fBcreate\fR options:
 .TP 
@@ -549,7 +572,8 @@ correct value.
 \fBmaxelem\fR \fIvalue\fR
 The maximal number of elements which can be stored in the set, default 65536.
 .PP 
-For the
+For the \fInetaddr\fR part of the elements
+see the description at the \fBhash:net\fR set type. For the
 [\fIproto\fR:]\fIport\fR
 part of the elements see the description at the
 \fBhash:ip,port\fR set type.
@@ -633,18 +657,22 @@ address with zero prefix size cannot be stored either.
 .PP 
 \fICREATE\-OPTIONS\fR := [ \fBfamily\fR { \fBinet\fR | \fBinet6\fR } ] | [ \fBhashsize\fR \fIvalue\fR ] [ \fBmaxelem\fR \fIvalue\fR ] [ \fBtimeout\fR \fIvalue\fR ]
 .PP 
-\fIADD\-ENTRY\fR := \fIipaddr\fR,[\fIproto\fR:]\fIport\fR,\fIip\fR[/\fIcidr\fR]
+\fIADD\-ENTRY\fR := \fIipaddr\fR,[\fIproto\fR:]\fIport\fR,\fInetaddr\fR
 .PP 
 \fIADD\-OPTIONS\fR := [ \fBtimeout\fR \fIvalue\fR ]
 .PP 
-\fIDEL\-ENTRY\fR := \fIipaddr\fR,[\fIproto\fR:]\fIport\fR,\fIip\fR[/\fIcidr\fR]
+\fIDEL\-ENTRY\fR := \fIipaddr\fR,[\fIproto\fR:]\fIport\fR,\fInetaddr\fR
 .PP 
-\fITEST\-ENTRY\fR := \fIipaddr\fR,[\fIproto\fR:]\fIport\fR,\fIip\fR[/\fIcidr\fR]
+\fITEST\-ENTRY\fR := \fIipaddr\fR,[\fIproto\fR:]\fIport\fR,\fInetaddr\fR
 .PP 
-For the first \fIipaddr\fR and
+where
+\fInetaddr\fR := \fIip\fR[/\fIcidr\fR]
+.PP 
+For the \fIipaddr\fR and
 [\fIproto\fR:]\fIport\fR
 parts of the elements see the descriptions at the
-\fBhash:ip,port\fR set type.
+\fBhash:ip,port\fR set type. For the \fInetaddr\fR part of the elements
+see the description at the \fBhash:net\fR set type.
 .PP 
 Optional \fBcreate\fR options:
 .TP 

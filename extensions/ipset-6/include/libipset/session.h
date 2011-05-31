@@ -65,6 +65,10 @@ enum ipset_envopt {
 	IPSET_ENV_RESOLVE	= (1 << IPSET_ENV_BIT_RESOLVE),
 	IPSET_ENV_BIT_EXIST	= 3,
 	IPSET_ENV_EXIST		= (1 << IPSET_ENV_BIT_EXIST),
+	IPSET_ENV_BIT_LIST_SETNAME = 4,
+	IPSET_ENV_LIST_SETNAME	= (1 << IPSET_ENV_BIT_LIST_SETNAME),
+	IPSET_ENV_BIT_LIST_HEADER = 5,
+	IPSET_ENV_LIST_HEADER	= (1 << IPSET_ENV_BIT_LIST_HEADER),
 };
 
 extern int ipset_envopt_parse(struct ipset_session *session,
@@ -91,5 +95,7 @@ typedef int (*ipset_outfn)(const char *fmt, ...)
 
 extern struct ipset_session * ipset_session_init(ipset_outfn outfn);
 extern int ipset_session_fini(struct ipset_session *session);
+
+extern void ipset_debug_msg(const char *dir, void *buffer, int len);
 
 #endif /* LIBIPSET_SESSION_H */

@@ -39,10 +39,13 @@ extern struct ipset_type ipset_bitmap_ipmac0;
 extern struct ipset_type ipset_bitmap_port0;
 extern struct ipset_type ipset_hash_ip0;
 extern struct ipset_type ipset_hash_net0;
-extern struct ipset_type ipset_hash_netport0;
-extern struct ipset_type ipset_hash_ipport0;
-extern struct ipset_type ipset_hash_ipportip0;
-extern struct ipset_type ipset_hash_ipportnet0;
+extern struct ipset_type ipset_hash_net1;
+extern struct ipset_type ipset_hash_netport1;
+extern struct ipset_type ipset_hash_netport2;
+extern struct ipset_type ipset_hash_ipport1;
+extern struct ipset_type ipset_hash_ipportip1;
+extern struct ipset_type ipset_hash_ipportnet1;
+extern struct ipset_type ipset_hash_ipportnet2;
 extern struct ipset_type ipset_list_set0;
 
 enum exittype {
@@ -145,9 +148,9 @@ build_argv(char *buffer)
 		newargv[i] = NULL;
 	newargc = 1;
 
-	ptr = strtok(buffer, " \t\n");
+	ptr = strtok(buffer, " \t\r\n");
 	newargv[newargc++] = ptr;
-	while ((ptr = strtok(NULL, " \t\n")) != NULL) {
+	while ((ptr = strtok(NULL, " \t\r\n")) != NULL) {
 		if ((newargc + 1) < (int)(sizeof(newargv)/sizeof(char *)))
 			newargv[newargc++] = ptr;
 		else {
@@ -181,7 +184,7 @@ restore(char *argv0)
 			c++;
 		if (c[0] == '\0' || c[0] == '#')
 			continue;
-		else if (strcmp(c, "COMMIT\n") == 0) {
+		else if (STREQ(c, "COMMIT\n") || STREQ(c, "COMMIT\r\n")) {
 			ret = ipset_commit(session);
 			if (ret < 0)
 				handle_error();
@@ -715,16 +718,21 @@ parse_commandline(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
+	int ret;
+
 	/* Register types */
 	ipset_type_add(&ipset_bitmap_ip0);
 	ipset_type_add(&ipset_bitmap_ipmac0);
 	ipset_type_add(&ipset_bitmap_port0);
 	ipset_type_add(&ipset_hash_ip0);
 	ipset_type_add(&ipset_hash_net0);
-	ipset_type_add(&ipset_hash_netport0);
-	ipset_type_add(&ipset_hash_ipport0);
-	ipset_type_add(&ipset_hash_ipportip0);
-	ipset_type_add(&ipset_hash_ipportnet0);
+	ipset_type_add(&ipset_hash_net1);
+	ipset_type_add(&ipset_hash_netport1);
+	ipset_type_add(&ipset_hash_netport2);
+	ipset_type_add(&ipset_hash_ipport1);
+	ipset_type_add(&ipset_hash_ipportip1);
+	ipset_type_add(&ipset_hash_ipportnet1);
+	ipset_type_add(&ipset_hash_ipportnet2);
 	ipset_type_add(&ipset_list_set0);
 
 	/* Initialize session */
@@ -733,5 +741,9 @@ main(int argc, char *argv[])
 		return exit_error(OTHER_PROBLEM,
 			"Cannot initialize ipset session, aborting.");
 
-	return parse_commandline(argc, argv);
+	ret = parse_commandline(argc, argv);
+	
+	ipset_session_fini(session);
+	
+	return ret;
 }

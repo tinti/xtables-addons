@@ -12,7 +12,7 @@
  */
 
 /* The protocol version */
-#define IPSET_PROTOCOL		6
+#define IPSET_PROTOCOL		0x60
 
 /* The max length of strings including NUL: set and type identifiers */
 #define IPSET_MAXNAMELEN	32
@@ -104,6 +104,7 @@ enum {
 	IPSET_ATTR_NAMEREF,
 	IPSET_ATTR_IP2,
 	IPSET_ATTR_CIDR2,
+	IPSET_ATTR_IP2_TO,
 	__IPSET_ATTR_ADT_MAX,
 };
 #define IPSET_ATTR_ADT_MAX	(__IPSET_ATTR_ADT_MAX - 1)
@@ -142,6 +143,10 @@ enum ipset_errno {
 enum ipset_cmd_flags {
 	IPSET_FLAG_BIT_EXIST	= 0,
 	IPSET_FLAG_EXIST	= (1 << IPSET_FLAG_BIT_EXIST),
+	IPSET_FLAG_BIT_LIST_SETNAME = 1,
+	IPSET_FLAG_LIST_SETNAME	= (1 << IPSET_FLAG_BIT_LIST_SETNAME),
+	IPSET_FLAG_BIT_LIST_HEADER = 2,
+	IPSET_FLAG_LIST_HEADER	= (1 << IPSET_FLAG_BIT_LIST_HEADER),
 };
 
 /* Flags at CADT attribute level */

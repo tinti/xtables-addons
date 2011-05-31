@@ -72,7 +72,8 @@ list_set_expired(const struct list_set *map, u32 id)
 
 static int
 list_set_kadt(struct ip_set *set, const struct sk_buff *skb,
-	      enum ipset_adt adt, u8 pf, u8 dim, u8 flags)
+	      const struct xt_action_param *par,
+	      enum ipset_adt adt, const struct ip_set_adt_opt *opt)
 {
 	struct list_set *map = set->data;
 	struct set_elem *elem;
@@ -87,17 +88,17 @@ list_set_kadt(struct ip_set *set, const struct sk_buff *skb,
 			continue;
 		switch (adt) {
 		case IPSET_TEST:
-			ret = ip_set_test(elem->id, skb, pf, dim, flags);
+			ret = ip_set_test(elem->id, skb, par, opt);
 			if (ret > 0)
 				return ret;
 			break;
 		case IPSET_ADD:
-			ret = ip_set_add(elem->id, skb, pf, dim, flags);
+			ret = ip_set_add(elem->id, skb, par, opt);
 			if (ret == 0)
 				return ret;
 			break;
 		case IPSET_DEL:
-			ret = ip_set_del(elem->id, skb, pf, dim, flags);
+			ret = ip_set_del(elem->id, skb, par, opt);
 			if (ret == 0)
 				return ret;
 			break;
@@ -218,7 +219,7 @@ cleanup_entries(struct list_set *map)
 
 static int
 list_set_uadt(struct ip_set *set, struct nlattr *tb[],
-	      enum ipset_adt adt, u32 *lineno, u32 flags)
+	      enum ipset_adt adt, u32 *lineno, u32 flags, bool retried)
 {
 	struct list_set *map = set->data;
 	bool with_timeout = with_timeout(map->timeout);
@@ -575,7 +576,8 @@ static struct ip_set_type list_set_type __read_mostly = {
 	.features	= IPSET_TYPE_NAME | IPSET_DUMP_LAST,
 	.dimension	= IPSET_DIM_ONE,
 	.family		= AF_UNSPEC,
-	.revision	= 0,
+	.revision_min	= 0,
+	.revision_max	= 0,
 	.create		= list_set_create,
 	.create_policy	= {
 		[IPSET_ATTR_SIZE]	= { .type = NLA_U32 },

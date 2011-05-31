@@ -83,7 +83,6 @@ ipset_mnl_fill_hdr(struct ipset_handle *handle, enum ipset_cmd cmd,
 	nlh->nlmsg_flags = NLM_F_REQUEST;
 	if (cmdflags[cmd-1] & NLM_F_ACK)
 		nlh->nlmsg_flags |= NLM_F_ACK;
-	nlh->nlmsg_seq = ++handle->seq;
 
 	ghdr = mnl_nlmsg_put_extra_header(nlh, sizeof(struct genlmsghdr));
 	ghdr->cmd = cmd;
@@ -102,19 +101,24 @@ ipset_mnl_query(struct ipset_handle *handle, void *buffer, size_t len)
 	assert(handle);
 	assert(buffer);
 
+	nlh->nlmsg_seq = ++handle->seq;
+#ifdef IPSET_DEBUG
+	ipset_debug_msg("sent", nlh, nlh->nlmsg_len);
+#endif
 	if (mnl_socket_sendto(handle->h, nlh, nlh->nlmsg_len) < 0)
 		return -ECOMM;
 
-	D("message sent");
 	ret = mnl_socket_recvfrom(handle->h, buffer, len);
-	D("message received, ret: %d", ret);
+#ifdef IPSET_DEBUG
+	ipset_debug_msg("received", buffer, ret);
+#endif
 	while (ret > 0) {
 		ret = mnl_cb_run2(buffer, ret,
 				  handle->seq, handle->portid,
 				  handle->cb_ctl[NLMSG_MIN_TYPE],
 				  handle->data,
 				  handle->cb_ctl, NLMSG_MIN_TYPE);
-		D("nfln_cb_run2, ret: %d", ret);
+		D("nfln_cb_run2, ret: %d, errno %d", ret, errno);
 		if (ret <= 0)
 			break;
 		ret = mnl_socket_recvfrom(handle->h, buffer, len);
