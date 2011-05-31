@@ -21,7 +21,7 @@ Known symbol names (and their number):
 .PP
 4 \(em \fBtimestamp\fP \(em RFC 781, 791
 .PP
-7 \(em \fBrecord\-route\fP \em RFC 791
+7 \(em \fBrecord\-route\fP \(em RFC 791
 .PP
 9 \(em \fBssrr\fP \(em Strict Source Routing, RFC 791
 .PP
