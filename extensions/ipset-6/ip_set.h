@@ -107,6 +107,7 @@ enum {
 	IPSET_ATTR_IP2,
 	IPSET_ATTR_CIDR2,
 	IPSET_ATTR_IP2_TO,
+	IPSET_ATTR_IFACE,
 	__IPSET_ATTR_ADT_MAX,
 };
 #define IPSET_ATTR_ADT_MAX	(__IPSET_ATTR_ADT_MAX - 1)
@@ -155,6 +156,8 @@ enum ipset_cmd_flags {
 enum ipset_cadt_flags {
 	IPSET_FLAG_BIT_BEFORE	= 0,
 	IPSET_FLAG_BEFORE	= (1 << IPSET_FLAG_BIT_BEFORE),
+	IPSET_FLAG_BIT_PHYSDEV	= 1,
+	IPSET_FLAG_PHYSDEV	= (1 << IPSET_FLAG_BIT_PHYSDEV),
 };
 
 /* Commands with settype-specific attributes */
@@ -214,6 +217,8 @@ enum ip_set_feature {
 	IPSET_TYPE_IP2 = (1 << IPSET_TYPE_IP2_FLAG),
 	IPSET_TYPE_NAME_FLAG = 4,
 	IPSET_TYPE_NAME = (1 << IPSET_TYPE_NAME_FLAG),
+	IPSET_TYPE_IFACE_FLAG = 5,
+	IPSET_TYPE_IFACE = (1 << IPSET_TYPE_IFACE_FLAG),
 	/* Strictly speaking not a feature, but a flag for dumping:
 	 * this settype must be dumped last */
 	IPSET_DUMP_LAST_FLAG = 7,
@@ -328,7 +333,7 @@ struct ip_set {
 /* register and unregister set references */
 extern ip_set_id_t ip_set_get_byname(const char *name, struct ip_set **set);
 extern void ip_set_put_byindex(ip_set_id_t index);
-extern const char * ip_set_name_byindex(ip_set_id_t index);
+extern const char *ip_set_name_byindex(ip_set_id_t index);
 extern ip_set_id_t ip_set_nfnl_get(const char *name);
 extern ip_set_id_t ip_set_nfnl_get_byindex(ip_set_id_t index);
 extern void ip_set_nfnl_put(ip_set_id_t index);
@@ -346,7 +351,7 @@ extern int ip_set_test(ip_set_id_t id, const struct sk_buff *skb,
 		       const struct ip_set_adt_opt *opt);
 
 /* Utility functions */
-extern void * ip_set_alloc(size_t size);
+extern void *ip_set_alloc(size_t size);
 extern void ip_set_free(void *members);
 extern int ip_set_get_ipaddr4(struct nlattr *nla,  __be32 *ipaddr);
 extern int ip_set_get_ipaddr6(struct nlattr *nla, union nf_inet_addr *ipaddr);
@@ -356,7 +361,7 @@ ip_set_get_hostipaddr4(struct nlattr *nla, u32 *ipaddr)
 {
 	__be32 ip;
 	int ret = ip_set_get_ipaddr4(nla, &ip);
-	
+
 	if (ret)
 		return ret;
 	*ipaddr = ntohl(ip);

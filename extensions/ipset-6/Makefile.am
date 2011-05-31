@@ -17,7 +17,8 @@ ipset_SOURCES = src/ipset.c src/errcode.c src/ui.c src/ipset_bitmap_ip.c \
                 src/ipset_bitmap_ipmac.c src/ipset_bitmap_port.c \
                 src/ipset_hash_ip.c src/ipset_hash_ipport.c \
                 src/ipset_hash_ipportip.c src/ipset_hash_ipportnet.c \
-                src/ipset_hash_net.c src/ipset_hash_netport.c \
+                src/ipset_hash_net.c src/ipset_hash_netiface.c \
+                src/ipset_hash_netport.c \
                 src/ipset_list_set.c
 ipset_LDADD   = libipset.la
 
