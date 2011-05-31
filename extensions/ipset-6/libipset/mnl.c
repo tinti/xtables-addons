@@ -1,7 +1,7 @@
 /* Copyright 2007-2010 Jozsef Kadlecsik (kadlec@blackhole.kfki.hu)
  *
- * This program is free software; you can redistribute it and/or modify   
- * it under the terms of the GNU General Public License version 2 as 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  */
 #include <assert.h>				/* assert */
@@ -38,7 +38,8 @@ struct ipset_handle {
 
 /* Netlink flags of the commands */
 static const uint16_t cmdflags[] = {
-	[IPSET_CMD_CREATE-1]	= NLM_F_REQUEST|NLM_F_ACK|NLM_F_CREATE|NLM_F_EXCL,
+	[IPSET_CMD_CREATE-1]	= NLM_F_REQUEST|NLM_F_ACK|
+					NLM_F_CREATE|NLM_F_EXCL,
 	[IPSET_CMD_DESTROY-1]	= NLM_F_REQUEST|NLM_F_ACK,
 	[IPSET_CMD_FLUSH-1]	= NLM_F_REQUEST|NLM_F_ACK,
 	[IPSET_CMD_RENAME-1]	= NLM_F_REQUEST|NLM_F_ACK,
@@ -209,28 +210,28 @@ static int ipset_mnl_getid(struct ipset_handle *h, bool modprobe)
 
 static struct ipset_handle *
 ipset_mnl_init(mnl_cb_t *cb_ctl, void *data)
-{	
+{
 	struct ipset_handle *handle;
-	
+
 	assert(cb_ctl);
 	assert(data);
 
 	handle = calloc(1, sizeof(*handle));
 	if (!handle)
 		return NULL;
-		
+
 	handle->h = mnl_socket_open(NETLINK_GENERIC);
 	if (!handle->h)
 		goto free_handle;
-	
+
 	if (mnl_socket_bind(handle->h, 0, MNL_SOCKET_AUTOPID) < 0)
 		goto close_nl;
-	
+
 	handle->portid = mnl_socket_get_portid(handle->h);
 	handle->cb_ctl = cb_ctl;
 	handle->data = data;
 	handle->seq = time(NULL);
-	
+
 	if (ipset_mnl_getid(handle, false) < 0)
 		goto close_nl;
 	return handle;
@@ -240,7 +241,7 @@ close_nl:
 free_handle:
 	free(handle);
 
-   	return NULL;
+	return NULL;
 }
 
 static int
