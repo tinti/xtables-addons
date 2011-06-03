@@ -1,8 +1,16 @@
 
 HEAD
 ====
+
+
+v1.36 (2011-06-03)
+==================
 Changes:
 - xt_geoip: avoid recursive function calls
+- xt_TARPIT: unlock for use in all tables
+- xt_TARPIT: honeypot and reset modes
+- update to ipset 6.7
+- support for Linux 3.0
 
 
 v1.35 (2011-04-11)
