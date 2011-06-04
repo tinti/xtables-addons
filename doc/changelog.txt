@@ -1,6 +1,8 @@
 
 HEAD
 ====
+Fixes:
+- xt_TARPIT: fix a kernel oops in --reset mode
 
 
 v1.36 (2011-06-03)

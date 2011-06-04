@@ -58,7 +58,7 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 	struct sk_buff *nskb;
 	const struct iphdr *oldhdr;
 	struct iphdr *niph;
-	u_int16_t tmp;
+	uint16_t tmp, payload;
 
 	/* A truncated TCP header is not going to be useful */
 	if (oldskb->len < ip_hdrlen(oldskb) + sizeof(struct tcphdr))
@@ -68,29 +68,6 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 	                         sizeof(_otcph), &_otcph);
 	if (oth == NULL)
 		return;
-
-	if (mode == XTTARPIT_TARPIT) {
-		/* No replies for RST, FIN or !SYN,!ACK */
-		if (oth->rst || oth->fin || (!oth->syn && !oth->ack))
-			return;
-#if 0
-		/* Rate-limit replies to !SYN,ACKs */
-		if (!oth->syn && oth->ack)
-			if (!xrlim_allow(rt_dst(ort), HZ))
-				return;
-#endif
-	} else  if (mode == XTTARPIT_HONEYPOT) {
-		/* Do not answer any resets regardless of combination */
-		if (oth->rst || oth->seq == 0xDEADBEEF)
-			return;
-	} else if (mode == XTTARPIT_RESET) {
-		tcph->window = 0;
-		tcph->ack = false;
-		tcph->syn = false;
-		tcph->rst = true;
-		tcph->seq = oth->ack_seq;
-		tcph->ack_seq = oth->seq;
-	}
 
 	/* Check checksum. */
 	if (nf_ip_checksum(oldskb, hook, ip_hdrlen(oldskb), IPPROTO_TCP))
@@ -127,6 +104,9 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 	tcph->source = tcph->dest;
 	tcph->dest   = tmp;
 
+	/* Calculate payload size?? */
+	payload = nskb->len - ip_hdrlen(nskb) - sizeof(struct tcphdr);
+
 	/* Truncate to length (no data) */
 	tcph->doff    = sizeof(struct tcphdr) / 4;
 	skb_trim(nskb, ip_hdrlen(nskb) + sizeof(struct tcphdr));
@@ -136,7 +116,9 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 	((u_int8_t *)tcph)[13] = 0;
 
 	if (mode == XTTARPIT_TARPIT) {
-		/* Use supplied sequence number or make a new one */
+		/* No replies for RST, FIN or !SYN,!ACK */
+		if (oth->rst || oth->fin || (!oth->syn && !oth->ack))
+			return;
 		tcph->seq = oth->ack ? oth->ack_seq : 0;
 
 		/* Our SYN-ACKs must have a >0 window */
@@ -149,7 +131,16 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 			tcph->ack     = true;
 			tcph->ack_seq = htonl(ntohl(oth->seq) + oth->syn);
 		}
+#if 0
+		/* Rate-limit replies to !SYN,ACKs */
+		if (!oth->syn && oth->ack)
+			if (!xrlim_allow(rt_dst(ort), HZ))
+				return;
+#endif
 	} else if (mode == XTTARPIT_HONEYPOT) {
+		/* Do not answer any resets regardless of combination */
+		if (oth->rst || oth->seq == 0xDEADBEEF)
+			return;
 		/* Send a reset to scanners. They like that. */
 		if (oth->syn && oth->ack) {
 			tcph->window  = 0;
@@ -159,23 +150,29 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 			tcph->seq     = oth->ack_seq;
 			tcph->rst     = true;
 		}
+
 		/* SYN > SYN-ACK */
 		if (oth->syn && !oth->ack) {
 			tcph->syn     = true;
 			tcph->ack     = true;
-			tcph->window  = oth->window;
-			tcph->ack_seq = oth->seq;
-			tcph->seq     = htonl(net_random() | ~oth->seq);
+			tcph->window  = oth->window &
+			                ((net_random() & 0x1f) - 0xf);
+			tcph->seq     = htonl(net_random() & ~oth->seq);
+			tcph->ack_seq = htonl(ntohl(oth->seq) + oth->syn);
 		}
+
 		/* ACK > ACK */
-		if (oth->ack && !oth->fin && !oth->syn) {
+		if (oth->ack && (!(oth->fin || oth->syn))) {
 			tcph->syn     = false;
 			tcph->ack     = true;
 			tcph->window  = oth->window &
 			                ((net_random() & 0x1f) - 0xf);
-			tcph->ack_seq = htonl(ntohl(oth->seq) + 1);
+			tcph->ack_seq = payload > 100 ?
+			                htonl(ntohl(oth->seq) + payload) :
+			                oth->seq;
 			tcph->seq     = oth->ack_seq;
 		}
+
 		/*
 		 * FIN > RST.
 		 * We cannot terminate gracefully so just be abrupt.
@@ -188,6 +185,13 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 			tcph->ack     = false;
 			tcph->rst     = true;
 		}
+	} else if (mode == XTTARPIT_RESET) {
+		tcph->window  = 0;
+		tcph->ack     = false;
+		tcph->syn     = false;
+		tcph->rst     = true;
+		tcph->seq     = oth->ack_seq;
+		tcph->ack_seq = oth->seq;
 	}
 
 	/* Adjust TCP checksum */
@@ -204,7 +208,7 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 
 	/* Set DF, id = 0 */
 	niph->frag_off = htons(IP_DF);
-	if (mode == XTTARPIT_TARPIT)
+	if (mode == XTTARPIT_TARPIT || mode == XTTARPIT_RESET)
 		niph->id = 0;
 	else if (mode == XTTARPIT_HONEYPOT)
 		niph->id = ~oldhdr->id + 1;
@@ -225,7 +229,10 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 	nskb->ip_summed = CHECKSUM_NONE;
 
 	/* Adjust IP TTL */
-	niph->ttl = dst_metric(skb_dst(nskb), RTAX_HOPLIMIT);
+	if (mode == XTTARPIT_HONEYPOT)
+		niph->ttl = 128;
+	else
+		niph->ttl = dst_metric(skb_dst(nskb), RTAX_HOPLIMIT);
 
 	/* Adjust IP checksum */
 	niph->check = 0;
