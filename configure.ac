@@ -42,7 +42,7 @@ regular_CFLAGS="-Wall -Waggregate-return -Wmissing-declarations \
 
 if test -n "$kbuilddir"; then
 	AC_MSG_CHECKING([kernel version that we will build against])
-	krel="$(make -sC "$kbuilddir" M=. kernelrelease)";
+	krel="$(make -sC "$kbuilddir" M=$PWD kernelrelease)";
 	kmajor="${krel%%[[^0-9]]*}";
 	kmajor="$(($kmajor+0))";
 	krel="${krel:${#kmajor}}";
