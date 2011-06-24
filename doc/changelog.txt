@@ -2,6 +2,7 @@
 HEAD
 ====
 Fixes:
+- xt_SYSRQ: make IPv6 trigger work again
 - xt_TARPIT: fix a kernel oops in --reset mode
 
 

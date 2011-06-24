@@ -253,7 +253,7 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 		       ": " NIP6_FMT ":%hu -> :%hu len=%u\n",
 		       NIP6(iph->saddr), ntohs(udph->source),
 		       ntohs(udph->dest), len);
-	return sysrq_tg(udph + sizeof(struct udphdr), len);
+	return sysrq_tg((void *)udph + sizeof(struct udphdr), len);
 }
 #endif
 
@@ -376,6 +376,7 @@ module_init(sysrq_tg_init);
 module_exit(sysrq_tg_exit);
 MODULE_DESCRIPTION("Xtables: triggering SYSRQ remotely");
 MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("John Haxby <john.haxby@oracle.com");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_SYSRQ");
 MODULE_ALIAS("ip6t_SYSRQ");
