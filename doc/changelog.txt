@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+v1.37 (2011-06-25)
+==================
 Fixes:
 - xt_SYSRQ: make IPv6 trigger work again
 - xt_SYSRQ: improve security: include host address in digest
