@@ -54,7 +54,7 @@ The xt_SYSRQ module is normally silent unless a successful request is received,
 but the \fIdebug\fP module parameter can be used to find exactly why a
 seemingly correct request is not being processed.
 .PP
-To trigger SYSRQ from a remote host, just use netcat or socat:
+To trigger SYSRQ from a remote host, just use socat:
 .PP
 .nf
 sysrq_key="s"  # the SysRq key(s)
@@ -67,8 +67,6 @@ req="$sysrq_key,$seqno,$salt"
 req="$req,$(echo \-n "$req,$ipaddr,$password" | sha1sum | cut \-c1\-40)"
 
 echo "$req" | socat stdin udp\-sendto:$ipaddr:9
-# or
-echo "$req" | netcat \-uw1 $ipaddr 9
 .fi
 .PP
 See the Linux docs for possible sysrq keys. Important ones are: re(b)oot,
