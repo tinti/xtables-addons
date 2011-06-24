@@ -4,6 +4,8 @@
  *
  *	Based upon the ipt_SYSRQ idea by Marek Zalem <marek [at] terminus sk>
  *
+ *	Security additions John Haxby <john.haxby [at] oracle com>
+ *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License
  *	version 2 or 3 as published by the Free Software Foundation.
@@ -58,13 +60,13 @@ static char *sysrq_hexdigest;
  * is a series of sysrq requests; <seqno> is a sequence number that must be
  * greater than the last sequence number; <salt> is some random bytes; and
  * <hash> is the hash of everything up to and including the preceding ","
- * together with the password.
+ * together with "<dstaddr>,<password>".
  *
  * For example
  *
  *   salt=$RANDOM
  *   req="s,$(date +%s),$salt"
- *   echo "$req,$(echo -n $req,secret | sha1sum | cut -c1-40)"
+ *   echo "$req,$(echo -n $req,10.10.25.1,secret | sha1sum | cut -c1-40)"
  *
  * You will want a better salt and password than that though :-)
  */
@@ -121,7 +123,6 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	sg_init_table(sg, 2);
 #endif
 	sg_set_buf(&sg[0], data, n);
-	strcpy(sysrq_digest_password, sysrq_password);
 	i = strlen(sysrq_digest_password);
 	sg_set_buf(&sg[1], sysrq_digest_password, i);
 	ret = crypto_hash_digest(&desc, sg, n + i, sysrq_digest);
@@ -223,6 +224,8 @@ sysrq_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 		       ": " NIPQUAD_FMT ":%u -> :%u len=%u\n",
 		       NIPQUAD(iph->saddr), htons(udph->source),
 		       htons(udph->dest), len);
+	sprintf(sysrq_digest_password, NIPQUAD_FMT ",%s",
+	        NIPQUAD(iph->daddr), sysrq_password);
 	return sysrq_tg((void *)udph + sizeof(struct udphdr), len);
 }
 
@@ -253,6 +256,8 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 		       ": " NIP6_FMT ":%hu -> :%hu len=%u\n",
 		       NIP6(iph->saddr), ntohs(udph->source),
 		       ntohs(udph->dest), len);
+	sprintf(sysrq_digest_password, NIP6_FMT ",%s",
+	        NIP6(iph->daddr), sysrq_password);
 	return sysrq_tg((void *)udph + sizeof(struct udphdr), len);
 }
 #endif
@@ -340,7 +345,9 @@ static int __init sysrq_crypto_init(void)
 	sysrq_hexdigest = kmalloc(2 * sysrq_digest_size + 1, GFP_KERNEL);
 	if (sysrq_hexdigest == NULL)
 		goto fail;
-	sysrq_digest_password = kmalloc(sizeof(sysrq_password), GFP_KERNEL);
+	sysrq_digest_password =
+	    kmalloc(sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:255.255.255.255") +
+		    sizeof(sysrq_password), GFP_KERNEL);
 	if (sysrq_digest_password == NULL)
 		goto fail;
 	do_gettimeofday(&now);
