@@ -4,7 +4,7 @@
  * by Jan Engelhardt <jengelh@medozas.de>, 2008
  *
  * Originally based on xt_quota.c:
- * 	netfilter module to enforce network quotas
+ * 	Xtables module to enforce network quotas
  * 	Sam Johnston <samj@samj.net>
  *
  *	This program is free software; you can redistribute it and/or modify

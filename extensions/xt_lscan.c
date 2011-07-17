@@ -1,5 +1,5 @@
 /*
- *	LSCAN match for netfilter
+ *	LSCAN match for Xtables
  *	Copyright © Jan Engelhardt, 2006 - 2009
  *
  *	This program is free software; you can redistribute it and/or modify

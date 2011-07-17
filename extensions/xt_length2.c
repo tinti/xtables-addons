@@ -1,5 +1,5 @@
 /*
- *	xt_length - Netfilter module to match packet length
+ *	xt_length - Xtables module to match packet length
  *	Copyright © Jan Engelhardt <jengelh@medozas.de>, 2007 - 2009
  *
  *	This program is free software; you can redistribute it and/or

@@ -1,5 +1,5 @@
 /*
- *	xt_ipv4opts - Netfilter module to match IPv4 options
+ *	xt_ipv4opts - Xtables module to match IPv4 options
  *	Copyright © Jan Engelhardt, 2009
  *
  *	This program is free software; you can redistribute it and/or

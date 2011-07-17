@@ -1,5 +1,5 @@
 /*
- *	"SYSRQ" target extension for Netfilter
+ *	"SYSRQ" target extension for Xtables
  *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008 - 2010
  *
  *	Based upon the ipt_SYSRQ idea by Marek Zalem <marek [at] terminus sk>
