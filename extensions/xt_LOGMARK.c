@@ -29,6 +29,38 @@ static const char *const dir_names[] = {
 	"ORIGINAL", "REPLY",
 };
 
+static void logmark_ct(const struct nf_conn *ct, enum ip_conntrack_info ctinfo)
+{
+	bool prev = false;
+
+	printk(" ct=0x%p ctmark=0x%x ctstate=", ct, ct->mark);
+	ctinfo %= IP_CT_IS_REPLY;
+	if (ctinfo == IP_CT_NEW)
+		printk("NEW");
+	else if (ctinfo == IP_CT_ESTABLISHED)
+		printk("ESTABLISHED");
+	else if (ctinfo == IP_CT_RELATED)
+		printk("RELATED");
+	if (test_bit(IPS_SRC_NAT_BIT, &ct->status))
+		printk(",SNAT");
+	if (test_bit(IPS_DST_NAT_BIT, &ct->status))
+		printk(",DNAT");
+
+	printk(" ctstatus=");
+	if (ct->status & IPS_EXPECTED) {
+		printk("EXPECTED");
+		prev = true;
+	}
+	if (ct->status & IPS_SEEN_REPLY)
+		printk("%s""SEEN_REPLY", prev++ ? "," : "");
+	if (ct->status & IPS_ASSURED)
+		printk("%s""ASSURED", prev++ ? "," : "");
+	if (ct->status & IPS_CONFIRMED)
+		printk("%s""CONFIRMED", prev++ ? "," : "");
+	printk(" lifetime=%lus",
+	       (jiffies - ct->timeout.expires) / HZ);
+}
+
 static unsigned int
 logmark_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 {
@@ -36,7 +68,6 @@ logmark_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 	const struct xt_logmark_tginfo *info = par->targinfo;
 	const struct nf_conn *ct;
 	enum ip_conntrack_info ctinfo;
-	bool prev = false;
 
 	printk("<%u>%.*s""iif=%d hook=%s nfmark=0x%x "
 	       "secmark=0x%x classify=0x%x",
@@ -46,43 +77,17 @@ logmark_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 
 	ct = nf_ct_get(skb, &ctinfo);
 	printk(" ctdir=%s", dir_names[ctinfo >= IP_CT_IS_REPLY]);
-	if (ct == NULL) {
+	if (ct == NULL)
 		printk(" ct=NULL ctmark=NULL ctstate=INVALID ctstatus=NONE");
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
-	} else if (nf_ct_is_untracked(ct)) {
+	else if (nf_ct_is_untracked(ct))
 		printk(" ct=UNTRACKED ctmark=NULL ctstate=UNTRACKED ctstatus=NONE");
 #else
-	} else if (ct == &nf_conntrack_untracked) {
+	else if (ct == &nf_conntrack_untracked)
 		printk(" ct=UNTRACKED ctmark=NULL ctstate=UNTRACKED ctstatus=NONE");
 #endif
-	} else {
-		printk(" ct=0x%p ctmark=0x%x ctstate=", ct, ct->mark);
-		ctinfo %= IP_CT_IS_REPLY;
-		if (ctinfo == IP_CT_NEW)
-			printk("NEW");
-		else if (ctinfo == IP_CT_ESTABLISHED)
-			printk("ESTABLISHED");
-		else if (ctinfo == IP_CT_RELATED)
-			printk("RELATED");
-		if (test_bit(IPS_SRC_NAT_BIT, &ct->status))
-			printk(",SNAT");
-		if (test_bit(IPS_DST_NAT_BIT, &ct->status))
-			printk(",DNAT");
-
-		printk(" ctstatus=");
-		if (ct->status & IPS_EXPECTED) {
-			printk("EXPECTED");
-			prev = true;
-		}
-		if (ct->status & IPS_SEEN_REPLY)
-			printk("%s""SEEN_REPLY", prev++ ? "," : "");
-		if (ct->status & IPS_ASSURED)
-			printk("%s""ASSURED", prev++ ? "," : "");
-		if (ct->status & IPS_CONFIRMED)
-			printk("%s""CONFIRMED", prev++ ? "," : "");
-		printk(" lifetime=%lus",
-		       (jiffies - ct->timeout.expires) / HZ);
-	}
+	else
+		logmark_ct(ct, ctinfo);
 
 	printk("\n");
 	return XT_CONTINUE;
