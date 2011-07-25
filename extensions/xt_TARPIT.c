@@ -232,7 +232,11 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 	if (mode == XTTARPIT_HONEYPOT)
 		niph->ttl = 128;
 	else
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
+		niph->ttl = ip4_dst_hoplimit(skb_dst(nskb));
+#else
 		niph->ttl = dst_metric(skb_dst(nskb), RTAX_HOPLIMIT);
+#endif
 
 	/* Adjust IP checksum */
 	niph->check = 0;

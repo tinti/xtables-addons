@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- xt_TARPIT: fix kernel warning about RTAX_HOPLIMIT being used
 
 
 v1.37 (2011-06-25)
