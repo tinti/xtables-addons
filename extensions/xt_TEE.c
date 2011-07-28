@@ -14,12 +14,20 @@
 #include <linux/module.h>
 #include <linux/route.h>
 #include <linux/skbuff.h>
+#include <linux/version.h>
 #include <net/checksum.h>
 #include <net/icmp.h>
 #include <net/ip.h>
 #include <net/ip6_route.h>
 #include <net/route.h>
 #include <linux/netfilter/x_tables.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35)
+#	error ----------------------------------------------------------
+#	error This module has been merged into, and is available in the
+#	error mainline since Linux kernel v2.6.35. Please use that.
+#	error ----------------------------------------------------------
+#endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
 #	define WITH_CONNTRACK 1
