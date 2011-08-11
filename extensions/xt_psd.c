@@ -130,6 +130,12 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	/* Get the source address, source & destination ports, and TCP flags */
 
 	addr.s_addr = iph->saddr;
+	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
+	 * them spoof us. [DHCP needs this feature - HW] */
+	if (addr.s_addr == 0) {
+		pr_debug("spoofed source address (0.0.0.0)\n");
+		return false;
+	}
 
 	if (proto == IPPROTO_TCP) {
 		tcph = skb_header_pointer(pskb, match->thoff,
@@ -151,13 +157,6 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		tcp_flags = 0;
 	} else {
 		pr_debug("protocol not supported\n");
-		return false;
-	}
-
-	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
-	 * them spoof us. [DHCP needs this feature - HW] */
-	if (addr.s_addr == 0) {
-		pr_debug("spoofed source address (0.0.0.0)\n");
 		return false;
 	}
 
