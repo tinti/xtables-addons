@@ -104,7 +104,9 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
 	const struct iphdr *iph;
 	const struct tcphdr *tcph;
+	const struct udphdr *udph;
 	struct tcphdr _tcph;
+	struct udphdr _udph;
 	struct in_addr addr;
 	u_int16_t src_port,dest_port;
   	u_int8_t tcp_flags, proto;
@@ -135,18 +137,25 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 
 	addr.s_addr = iph->saddr;
 
-	tcph = skb_header_pointer(pskb, match->thoff, sizeof(_tcph), &_tcph);
-	if (tcph == NULL)
-		return false;
+	if (proto == IPPROTO_TCP) {
+		tcph = skb_header_pointer(pskb, match->thoff,
+		       sizeof(_tcph), &_tcph);
+		if (tcph == NULL)
+			return false;
 
-	/* Yep, it's dirty */
-	src_port = tcph->source;
-	dest_port = tcph->dest;
-
-	if (proto == IPPROTO_TCP)
+		/* Yep, it's dirty */
+		src_port = tcph->source;
+		dest_port = tcph->dest;
 		tcp_flags = *((u_int8_t*)tcph + 13);
-	else
-		tcp_flags = 0x00;
+	} else if (proto == IPPROTO_UDP) {
+		udph = skb_header_pointer(pskb, match->thoff,
+		       sizeof(_udph), &_udph);
+		if (udph == NULL)
+			return false;
+		src_port  = udph->source;
+		dest_port = udph->dest;
+		tcp_flags = 0;
+	}
 
 	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
 	 * them spoof us. [DHCP needs this feature - HW] */
