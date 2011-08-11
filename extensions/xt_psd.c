@@ -147,7 +147,7 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		src_port = tcph->source;
 		dest_port = tcph->dest;
 		tcp_flags = *((u_int8_t*)tcph + 13);
-	} else if (proto == IPPROTO_UDP) {
+	} else if (proto == IPPROTO_UDP || proto == IPPROTO_UDPLITE) {
 		udph = skb_header_pointer(pskb, match->thoff,
 		       sizeof(_udph), &_udph);
 		if (udph == NULL)
