@@ -127,12 +127,6 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 
 	/* TCP or UDP ? */
 	proto = iph->protocol;
-
-	if (proto != IPPROTO_TCP && proto != IPPROTO_UDP) {
-		pr_debug("protocol not supported\n");
-		return false;
-	}
-
 	/* Get the source address, source & destination ports, and TCP flags */
 
 	addr.s_addr = iph->saddr;
@@ -155,6 +149,9 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		src_port  = udph->source;
 		dest_port = udph->dest;
 		tcp_flags = 0;
+	} else {
+		pr_debug("protocol not supported\n");
+		return false;
 	}
 
 	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
