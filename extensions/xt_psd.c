@@ -103,7 +103,7 @@ static bool
 xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
 	const struct iphdr *iph;
-	const struct tcphdr *tcph;
+	const struct tcphdr *tcph = NULL;
 	const struct udphdr *udph;
 	union {
 		struct tcphdr tcph;
