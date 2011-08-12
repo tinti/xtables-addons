@@ -3,6 +3,8 @@ HEAD
 ====
 - xt_TARPIT: fix kernel warning about RTAX_HOPLIMIT being used
 - xt_TEE: abort build when the feature is already provided by mainline
+- xt_psd: restore functionality with UDP
+- xt_psd: support UDPLITE
 
 
 v1.37 (2011-06-25)

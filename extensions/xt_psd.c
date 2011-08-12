@@ -103,8 +103,12 @@ static bool
 xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
 	const struct iphdr *iph;
-	const struct tcphdr *tcph;
-	struct tcphdr _tcph;
+	const struct tcphdr *tcph = NULL;
+	const struct udphdr *udph;
+	union {
+		struct tcphdr tcph;
+		struct udphdr udph;
+	} _buf;
 	struct in_addr addr;
 	u_int16_t src_port,dest_port;
   	u_int8_t tcp_flags, proto;
@@ -125,33 +129,36 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 
 	/* TCP or UDP ? */
 	proto = iph->protocol;
-
-	if (proto != IPPROTO_TCP && proto != IPPROTO_UDP) {
-		pr_debug("protocol not supported\n");
-		return false;
-	}
-
 	/* Get the source address, source & destination ports, and TCP flags */
 
 	addr.s_addr = iph->saddr;
-
-	tcph = skb_header_pointer(pskb, match->thoff, sizeof(_tcph), &_tcph);
-	if (tcph == NULL)
-		return false;
-
-	/* Yep, it's dirty */
-	src_port = tcph->source;
-	dest_port = tcph->dest;
-
-	if (proto == IPPROTO_TCP)
-		tcp_flags = *((u_int8_t*)tcph + 13);
-	else
-		tcp_flags = 0x00;
-
 	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
 	 * them spoof us. [DHCP needs this feature - HW] */
 	if (addr.s_addr == 0) {
 		pr_debug("spoofed source address (0.0.0.0)\n");
+		return false;
+	}
+
+	if (proto == IPPROTO_TCP) {
+		tcph = skb_header_pointer(pskb, match->thoff,
+		       sizeof(_buf.tcph), &_buf.tcph);
+		if (tcph == NULL)
+			return false;
+
+		/* Yep, it's dirty */
+		src_port = tcph->source;
+		dest_port = tcph->dest;
+		tcp_flags = *((u_int8_t*)tcph + 13);
+	} else if (proto == IPPROTO_UDP || proto == IPPROTO_UDPLITE) {
+		udph = skb_header_pointer(pskb, match->thoff,
+		       sizeof(_buf.udph), &_buf.udph);
+		if (udph == NULL)
+			return false;
+		src_port  = udph->source;
+		dest_port = udph->dest;
+		tcp_flags = 0;
+	} else {
+		pr_debug("protocol not supported\n");
 		return false;
 	}
 
