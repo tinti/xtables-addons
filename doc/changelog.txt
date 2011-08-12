@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- xt_CHECKSUM: abort build when the feature is already provided by mainline
 - xt_TARPIT: fix kernel warning about RTAX_HOPLIMIT being used
 - xt_TEE: abort build when the feature is already provided by mainline
 - xt_psd: restore functionality with UDP
