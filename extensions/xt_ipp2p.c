@@ -868,6 +868,7 @@ ipp2p_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	}
 
 	case IPPROTO_UDP:	/* what to do with an UDP packet */
+	case IPPROTO_UDPLITE:
 	{
 		const struct udphdr *udph = (const void *)ip + ip_hdrlen(skb);
 
