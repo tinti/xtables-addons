@@ -881,7 +881,7 @@ update_peer(struct peer *peer, const struct xt_pknock_mtinfo *info,
 
 	/* If security is needed. */
 	if (info->option & XT_PKNOCK_OPENSECRET ) {
-		if (hdr->proto != IPPROTO_UDP)
+		if (hdr->proto != IPPROTO_UDP && hdr->proto != IPPROTO_UDPLITE)
 			return false;
 
 		if (!pass_security(peer, info, hdr->payload, hdr->payload_len))
@@ -982,6 +982,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 		break;
 
 	case IPPROTO_UDP:
+	case IPPROTO_UDPLITE:
 #ifdef PK_CRYPTO
 		hdr_len = (iph->ihl * 4) + sizeof(struct udphdr);
 		break;
@@ -1013,7 +1014,7 @@ static bool pknock_mt(const struct sk_buff *skb,
 		goto out;
 	}
 
-	if (iph->protocol == IPPROTO_UDP) {
+	if (iph->protocol == IPPROTO_UDP || iph->protocol == IPPROTO_UDPLITE) {
 		hdr.payload = (void *)iph + hdr_len;
 		hdr.payload_len = skb->len - hdr_len;
 	}
@@ -1022,7 +1023,8 @@ static bool pknock_mt(const struct sk_buff *skb,
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
 		if ((ret = is_allowed(peer))) {
 			if (info->option & XT_PKNOCK_CLOSESECRET &&
-							iph->protocol == IPPROTO_UDP)
+			    (iph->protocol == IPPROTO_UDP ||
+			    iph->protocol == IPPROTO_UDPLITE))
 			{
 				if (is_close_knock(peer, info, hdr.payload, hdr.payload_len))
 				{
