@@ -244,7 +244,8 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 		return NF_DROP;
 
 	iph = ipv6_hdr(skb);
-	if (ipv6_find_hdr(skb, &th_off, IPPROTO_UDP, &frag_off) < 0 ||
+	if ((ipv6_find_hdr(skb, &th_off, IPPROTO_UDP, &frag_off) < 0 &&
+	    ipv6_find_hdr(skb, &th_off, IPPROTO_UDPLITE, &frag_off) < 0) ||
 	    frag_off > 0)
 		return NF_DROP;
 
