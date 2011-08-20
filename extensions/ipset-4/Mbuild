@@ -1,7 +1,0 @@
-# -*- Makefile -*-
-
-obj-m += $(addprefix lib,$(patsubst %.c,%.so,$(notdir \
-	$(wildcard ${XA_SRCDIR}/ipset_*.c))))
-
-libipset_%.oo: ${XA_SRCDIR}/ipset_%.c
-	${AM_V_CC}${CC} ${AM_DEPFLAGS} ${AM_CPPFLAGS} ${AM_CFLAGS} -DPIC -fPIC ${CPPFLAGS} ${CFLAGS} -o $@ -c $<;

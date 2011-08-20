@@ -1,6 +1,7 @@
 
 HEAD
 ====
+- Remove unsupported ipset 4.x from the Xtables-addons distribution
 
 
 v1.38 (2011-08-20)
