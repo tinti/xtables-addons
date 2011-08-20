@@ -1160,9 +1160,13 @@ ip_set_dump(struct sk_buff *skb, struct genl_info *info)
 		return -IPSET_ERR_PROTOCOL;
 
 	genl_unlock();
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0)
+	ret = netlink_dump_start(ctnl, skb, nlh, ip_set_dump_start, ip_set_dump_done, 0);
+#else
 	ret = netlink_dump_start(ctnl, skb, nlh,
 				  ip_set_dump_start,
 				  ip_set_dump_done);
+#endif
 	genl_lock();
 	return ret;
 }

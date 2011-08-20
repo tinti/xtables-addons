@@ -10,6 +10,7 @@ HEAD
 - xt_psd: restore functionality with UDP
 - xt_psd: support UDPLITE
 - update to ipset 6.8
+- support for Linux 3.1
 
 
 v1.37 (2011-06-25)
