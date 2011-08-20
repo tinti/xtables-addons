@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+v1.38 (2011-08-20)
+==================
 - xt_CHECKSUM: abort build when the feature is already provided by mainline
 - xt_SYSRQ: fix UDPLITE header lookup in IPv6
 - xt_TARPIT: fix kernel warning about RTAX_HOPLIMIT being used
