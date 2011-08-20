@@ -23,8 +23,8 @@
 #include <libipset/ui.h>		/* core options, commands */
 #include <libipset/utils.h>		/* STREQ */
 
-static char program_name[] = PACKAGE;
-static char program_version[] = PACKAGE_VERSION;
+static char program_name[] = "ipset";
+static char program_version[] = "6.8-genl-xta";
 
 static struct ipset_session *session;
 static uint32_t restore_line;
