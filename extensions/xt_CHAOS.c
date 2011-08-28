@@ -13,6 +13,7 @@
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/stat.h>
+#include <linux/version.h>
 #include <linux/netfilter/x_tables.h>
 #include <linux/netfilter/xt_tcpudp.h>
 #include <linux/netfilter_ipv4/ipt_REJECT.h>

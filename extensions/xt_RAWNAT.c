@@ -13,6 +13,7 @@
 #include <linux/skbuff.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
+#include <linux/version.h>
 #include <linux/netfilter.h>
 #include <linux/netfilter/nf_conntrack_common.h>
 #include <linux/netfilter/x_tables.h>

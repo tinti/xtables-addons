@@ -11,6 +11,7 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 #include <linux/module.h>
 #include <linux/skbuff.h>
+#include <linux/version.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 #	error ----------------------------------------------------------

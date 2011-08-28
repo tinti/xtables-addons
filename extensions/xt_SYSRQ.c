@@ -17,6 +17,7 @@
 #include <linux/skbuff.h>
 #include <linux/sysrq.h>
 #include <linux/udp.h>
+#include <linux/version.h>
 #include <linux/netfilter_ipv4/ip_tables.h>
 #include <linux/netfilter_ipv6/ip6_tables.h>
 #include <linux/netfilter/x_tables.h>

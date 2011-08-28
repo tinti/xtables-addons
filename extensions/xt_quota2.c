@@ -15,6 +15,7 @@
 #include <linux/proc_fs.h>
 #include <linux/skbuff.h>
 #include <linux/spinlock.h>
+#include <linux/version.h>
 #include <asm/atomic.h>
 
 #include <linux/netfilter/x_tables.h>

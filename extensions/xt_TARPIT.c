@@ -41,6 +41,7 @@
 #include <linux/ip.h>
 #include <linux/module.h>
 #include <linux/skbuff.h>
+#include <linux/version.h>
 #include <linux/netfilter/x_tables.h>
 #ifdef CONFIG_BRIDGE_NETFILTER
 #	include <linux/netfilter_bridge.h>

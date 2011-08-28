@@ -12,6 +12,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/skbuff.h>
+#include <linux/version.h>
 #include <linux/netfilter/nf_conntrack_common.h>
 #include <linux/netfilter/x_tables.h>
 #include "compat_xtables.h"
