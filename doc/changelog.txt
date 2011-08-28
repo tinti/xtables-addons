@@ -3,8 +3,10 @@ HEAD
 ====
 Fixes:
 - libxt_ACCOUNT: fix compilation after missing libxtables_CFLAGS
+- build: fix compilation after missing libxtables_CFLAGS in submodules
 Changes:
 - Remove unsupported ipset 4.x from the Xtables-addons distribution
+- ipset: move ipset_errcode from src to library to avoid undefined reference
 
 
 v1.38 (2011-08-20)
