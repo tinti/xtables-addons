@@ -8,6 +8,7 @@ Fixes:
 Changes:
 - Remove unsupported ipset 4.x from the Xtables-addons distribution
 - ipset: move ipset_errcode from src to library to avoid undefined reference
+- update to ipset 6.9.1
 
 
 v1.38 (2011-08-20)

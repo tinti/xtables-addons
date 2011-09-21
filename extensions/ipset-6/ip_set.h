@@ -11,6 +11,7 @@
  * published by the Free Software Foundation.
  */
 
+#include <linux/types.h>
 #include <linux/netlink.h>
 
 /* The protocol version */
@@ -170,19 +171,10 @@ enum ipset_adt {
 	IPSET_CADT_MAX,
 };
 
-#ifdef __KERNEL__
-#include <linux/ip.h>
-#include <linux/ipv6.h>
-#include <linux/netlink.h>
-#include <linux/netfilter.h>
-#include <linux/netfilter/x_tables.h>
-#include <linux/vmalloc.h>
-#include <net/netlink.h>
-
 /* Sets are identified by an index in kernel space. Tweak with ip_set_id_t
  * and IPSET_INVALID_ID if you want to increase the max number of sets.
  */
-typedef u16 ip_set_id_t;
+typedef __u16 ip_set_id_t;
 
 #define IPSET_INVALID_ID		65535
 
@@ -204,6 +196,15 @@ enum ip_set_kopt {
 	IPSET_DIM_TWO_SRC = (1 << IPSET_DIM_TWO),
 	IPSET_DIM_THREE_SRC = (1 << IPSET_DIM_THREE),
 };
+
+#ifdef __KERNEL__
+#include <linux/ip.h>
+#include <linux/ipv6.h>
+#include <linux/netlink.h>
+#include <linux/netfilter.h>
+#include <linux/netfilter/x_tables.h>
+#include <linux/vmalloc.h>
+#include <net/netlink.h>
 
 /* Set features */
 enum ip_set_feature {
@@ -290,7 +291,10 @@ struct ip_set_type {
 	u8 features;
 	/* Set type dimension */
 	u8 dimension;
-	/* Supported family: may be AF_UNSPEC for both AF_INET/AF_INET6 */
+	/*
+	 * Supported family: may be NFPROTO_UNSPEC for both
+	 * NFPROTO_IPV4/NFPROTO_IPV6.
+	 */
 	u8 family;
 	/* Type revisions */
 	u8 revision_min, revision_max;
@@ -465,6 +469,8 @@ bitmap_bytes(u32 a, u32 b)
 	return 4 * ((((b - a + 8) / 8) + 3) / 4);
 }
 
+#endif /* __KERNEL__ */
+
 /* Interface to iptables/ip6tables */
 
 #define SO_IP_SET		83
@@ -489,7 +495,5 @@ struct ip_set_req_version {
 	unsigned op;
 	unsigned version;
 };
-
-#endif	/* __KERNEL__ */
 
 #endif /*_IP_SET_H */

@@ -14,23 +14,21 @@
 #include <libipset/parse.h>			/* ipset_parsefn */
 #include <libipset/print.h>			/* ipset_printfn */
 #include <libipset/linux_ip_set.h>		/* IPSET_MAXNAMELEN */
-
-#define AF_INET46		255
+#include <libipset/nfproto.h>			/* for NFPROTO_ */
 
 /* Family rules:
- * - AF_UNSPEC:	type is family-neutral
- * - AF_INET:	type supports IPv4 only
- * - AF_INET6:	type supports IPv6 only
- * - AF_INET46:	type supports both IPv4 and IPv6
+ * - NFPROTO_UNSPEC:		type is family-neutral
+ * - NFPROTO_IPV4:		type supports IPv4 only
+ * - NFPROTO_IPV6:		type supports IPv6 only
+ * Special (userspace) ipset-only extra value:
+ * - NFPROTO_IPSET_IPV46:	type supports both IPv4 and IPv6
  */
-
-/* Set dimensions */
 enum {
-	IPSET_DIM_ONE,			/* foo */
-	IPSET_DIM_TWO,			/* foo,bar */
-	IPSET_DIM_THREE,		/* foo,bar,fie */
-	IPSET_DIM_MAX,
+	NFPROTO_IPSET_IPV46 = 255,
 };
+
+/* The maximal type dimension userspace supports */
+#define IPSET_DIM_UMAX		3
 
 /* Parser options */
 enum {
@@ -76,7 +74,7 @@ struct ipset_type {
 	uint8_t dimension;			/* elem dimension */
 	int8_t kernel_check;			/* kernel check */
 	bool last_elem_optional;		/* last element optional */
-	struct ipset_elem elem[IPSET_DIM_MAX];	/* parse elem */
+	struct ipset_elem elem[IPSET_DIM_UMAX];	/* parse elem */
 	ipset_parsefn compat_parse_elem;	/* compatibility parser */
 	const struct ipset_arg *args[IPSET_CADT_MAX]; /* create/ADT args besides elem */
 	uint64_t mandatory[IPSET_CADT_MAX];	/* create/ADT mandatory flags */

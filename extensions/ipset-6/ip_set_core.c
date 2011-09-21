@@ -17,7 +17,9 @@
 #include <linux/spinlock.h>
 #include <linux/netlink.h>
 #include <linux/rculist.h>
+#ifdef IPSET_EXTERNAL_MODULE
 #include <linux/version.h>
+#endif
 #include <net/netlink.h>
 
 #include <linux/netfilter.h>
@@ -75,7 +77,7 @@ find_set_type(const char *name, u8 family, u8 revision)
 
 	list_for_each_entry_rcu(type, &ip_set_type_list, list)
 		if (STREQ(type->name, name) &&
-		    (type->family == family || type->family == AF_UNSPEC) &&
+		    (type->family == family || type->family == NFPROTO_UNSPEC) &&
 		    revision >= type->revision_min &&
 		    revision <= type->revision_max)
 			return type;
@@ -83,37 +85,42 @@ find_set_type(const char *name, u8 family, u8 revision)
 }
 
 /* Unlock, try to load a set type module and lock again */
-static int
-try_to_load_type(const char *name)
+static bool
+load_settype(const char *name)
 {
 	genl_unlock();
 	pr_debug("try to load ip_set_%s\n", name);
 	if (request_module("ip_set_%s", name) < 0) {
 		pr_warning("Can't find ip_set type %s\n", name);
 		genl_lock();
-		return -IPSET_ERR_FIND_TYPE;
+		return false;
 	}
 	genl_lock();
-	return -EAGAIN;
+	return true;
 }
 
 /* Find a set type and reference it */
+#define find_set_type_get(name, family, revision, found)	\
+	__find_set_type_get(name, family, revision, found, false)
+
 static int
-find_set_type_get(const char *name, u8 family, u8 revision,
-		  struct ip_set_type **found)
+__find_set_type_get(const char *name, u8 family, u8 revision,
+		    struct ip_set_type **found, bool retry)
 {
 	struct ip_set_type *type;
-	unsigned int retry = 0;
 	int err;
 
-retry:
+	if (retry && !load_settype(name))
+		return -IPSET_ERR_FIND_TYPE;
+
 	rcu_read_lock();
 	*found = find_set_type(name, family, revision);
 	if (*found) {
 		err = !try_module_get((*found)->me) ? -EFAULT : 0;
 		goto unlock;
 	}
-	/* Make sure the type is loaded but we don't support the revision */
+	/* Make sure the type is already loaded
+	 * but we don't support the revision */
 	list_for_each_entry_rcu(type, &ip_set_type_list, list)
 		if (STREQ(type->name, name)) {
 			err = -IPSET_ERR_FIND_TYPE;
@@ -121,10 +128,8 @@ retry:
 		}
 	rcu_read_unlock();
 
-	err = try_to_load_type(name);
-	if (err == -EAGAIN && retry++ == 0)
-		goto retry;
-	return err;
+	return retry ? -IPSET_ERR_FIND_TYPE :
+		__find_set_type_get(name, family, revision, found, true);
 
 unlock:
 	rcu_read_unlock();
@@ -135,20 +140,24 @@ unlock:
  * If we succeeded, the supported minimal and maximum revisions are
  * filled out.
  */
+#define find_set_type_minmax(name, family, min, max) \
+	__find_set_type_minmax(name, family, min, max, false)
+
 static int
-find_set_type_minmax(const char *name, u8 family, u8 *min, u8 *max)
+__find_set_type_minmax(const char *name, u8 family, u8 *min, u8 *max,
+		       bool retry)
 {
 	struct ip_set_type *type;
 	bool found = false;
-	unsigned int retry = 0;
-	int err;
 
-retry:
+	if (retry && !load_settype(name))
+		return -IPSET_ERR_FIND_TYPE;
+
 	*min = 255; *max = 0;
 	rcu_read_lock();
 	list_for_each_entry_rcu(type, &ip_set_type_list, list)
 		if (STREQ(type->name, name) &&
-		    (type->family == family || type->family == AF_UNSPEC)) {
+		    (type->family == family || type->family == NFPROTO_UNSPEC)) {
 			found = true;
 			if (type->revision_min < *min)
 				*min = type->revision_min;
@@ -159,14 +168,12 @@ retry:
 	if (found)
 		return 0;
 
-	err = try_to_load_type(name);
-	if (err == -EAGAIN && retry++ == 0)
-		goto retry;
-	return err;
+	return retry ? -IPSET_ERR_FIND_TYPE :
+		__find_set_type_minmax(name, family, min, max, true);
 }
 
-#define family_name(f)	((f) == AF_INET ? "inet" : \
-			 (f) == AF_INET6 ? "inet6" : "any")
+#define family_name(f)	((f) == NFPROTO_IPV4 ? "inet" : \
+			 (f) == NFPROTO_IPV6 ? "inet6" : "any")
 
 /* Register a set type structure. The type is identified by
  * the unique triple of name, family and revision.
@@ -360,7 +367,7 @@ ip_set_test(ip_set_id_t index, const struct sk_buff *skb,
 	pr_debug("set %s, index %u\n", set->name, index);
 
 	if (opt->dim < set->type->dimension ||
-	    !(opt->family == set->family || set->family == AF_UNSPEC))
+	    !(opt->family == set->family || set->family == NFPROTO_UNSPEC))
 		return 0;
 
 	read_lock_bh(&set->lock);
@@ -393,7 +400,7 @@ ip_set_add(ip_set_id_t index, const struct sk_buff *skb,
 	pr_debug("set %s, index %u\n", set->name, index);
 
 	if (opt->dim < set->type->dimension ||
-	    !(opt->family == set->family || set->family == AF_UNSPEC))
+	    !(opt->family == set->family || set->family == NFPROTO_UNSPEC))
 		return 0;
 
 	write_lock_bh(&set->lock);
@@ -416,7 +423,7 @@ ip_set_del(ip_set_id_t index, const struct sk_buff *skb,
 	pr_debug("set %s, index %u\n", set->name, index);
 
 	if (opt->dim < set->type->dimension ||
-	    !(opt->family == set->family || set->family == AF_UNSPEC))
+	    !(opt->family == set->family || set->family == NFPROTO_UNSPEC))
 		return 0;
 
 	write_lock_bh(&set->lock);
@@ -1137,6 +1144,7 @@ release_refcount:
 	if (ret || !cb->args[2]) {
 		pr_debug("release set %s\n", ip_set_list[index]->name);
 		ip_set_put_byindex(index);
+		cb->args[2] = 0;
 	}
 out:
 	if (nlh) {
@@ -1160,12 +1168,12 @@ ip_set_dump(struct sk_buff *skb, struct genl_info *info)
 		return -IPSET_ERR_PROTOCOL;
 
 	genl_unlock();
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0)
-	ret = netlink_dump_start(ctnl, skb, nlh, ip_set_dump_start, ip_set_dump_done, 0);
-#else
 	ret = netlink_dump_start(ctnl, skb, nlh,
 				  ip_set_dump_start,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 1, 0)
 				  ip_set_dump_done);
+#else
+				  ip_set_dump_done, 0);
 #endif
 	genl_lock();
 	return ret;
@@ -1738,10 +1746,8 @@ ip_set_init(void)
 
 	ip_set_list = kzalloc(sizeof(struct ip_set *) * ip_set_max,
 			      GFP_KERNEL);
-	if (!ip_set_list) {
-		pr_err("ip_set: Unable to create ip_set_list\n");
+	if (!ip_set_list)
 		return -ENOMEM;
-	}
 
 	ret = genl_register_family_with_ops(&ip_set_netlink_subsys,
 	      ip_set_netlink_subsys_cb, ARRAY_SIZE(ip_set_netlink_subsys_cb));

@@ -13,7 +13,6 @@
 
 #include <linux/module.h>
 #include <linux/skbuff.h>
-#include <linux/version.h>
 
 #include <linux/netfilter/x_tables.h>
 #include "xt_set.h"
