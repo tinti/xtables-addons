@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+v1.39 (2011-09-21)
+==================
 Fixes:
 - libxt_ACCOUNT: fix compilation after missing libxtables_CFLAGS
 - build: fix compilation after missing libxtables_CFLAGS in submodules
