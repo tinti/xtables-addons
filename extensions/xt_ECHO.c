@@ -29,33 +29,33 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
 	struct udphdr *newudp, oldudp_buf;
 	struct iphdr *newip;
 	struct sk_buff *newskb;
-	unsigned int addr_type, data_len;
+	unsigned int data_len;
 	void *payload;
-
-	printk(KERN_INFO "dst_out=%p\n", skb_dst(*poldskb)->output);
 
 	/* This allows us to do the copy operation in fewer lines of code. */
 	if (skb_linearize(*poldskb) < 0)
 		return NF_DROP;
 
 	oldip  = ip_hdr(oldskb);
-	oldudp = skb_header_pointer(oldskb, ip_hdrlen(oldskb),
-	         sizeof(struct udphdr), &oldudp_buf);
+	oldudp = skb_header_pointer(oldskb, par->thoff,
+	         sizeof(*oldudp), &oldudp_buf);
 	if (oldudp == NULL)
 		return NF_DROP;
-	if (ntohs(oldudp->len) <= sizeof(struct udphdr))
+	if (ntohs(oldudp->len) <= sizeof(*oldudp))
 		return NF_DROP;
 
-	newskb = alloc_skb(LL_MAX_HEADER + sizeof(struct iphdr) +
+	newskb = alloc_skb(LL_MAX_HEADER + sizeof(*newip) +
 	         ntohs(oldudp->len), GFP_ATOMIC);
 	if (newskb == NULL)
 		return NF_DROP;
 
 	skb_reserve(newskb, LL_MAX_HEADER);
+	newskb->protocol = oldskb->protocol;
+
 	skb_reset_network_header(newskb);
-	newip = (void *)skb_put(newskb, sizeof(struct iphdr));
-	newip->version  = 4;
-	newip->ihl      = sizeof(struct iphdr) / 4;
+	newip = (void *)skb_put(newskb, sizeof(*newip));
+	newip->version  = oldip->version;
+	newip->ihl      = sizeof(*newip) / 4;
 	newip->tos      = oldip->tos;
 	newip->id       = 0;
 	newip->frag_off = htons(IP_DF);
@@ -64,30 +64,22 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
 	newip->saddr    = oldip->daddr;
 	newip->daddr    = oldip->saddr;
 
-	newudp = (void *)skb_put(newskb, sizeof(struct udphdr));
+	skb_reset_transport_header(newskb);
+	newudp = (void *)skb_put(newskb, sizeof(*newudp));
 	newudp->source = oldudp->dest;
 	newudp->dest   = oldudp->source;
 	newudp->len    = oldudp->len;
 	newudp->check  = 0;
 
 	data_len = htons(oldudp->len) - sizeof(*oldudp);
-	payload  = skb_header_pointer(oldskb, ip_hdrlen(oldskb) +
+	payload  = skb_header_pointer(oldskb, par->thoff +
 	           sizeof(*oldudp), data_len, NULL);
 	memcpy(skb_put(newskb, data_len), payload, data_len);
-
-	addr_type = RTN_UNSPEC;
-#ifdef CONFIG_BRIDGE_NETFILTER
-	if (par->hooknum != NF_INET_FORWARD || (newskb->nf_bridge != NULL &&
-	    newskb->nf_bridge->mask & BRNF_BRIDGED))
-#else
-	if (par->hooknum != NF_INET_FORWARD)
-#endif
-		addr_type = RTN_LOCAL;
 
 	/* ip_route_me_harder expects the skb's dst to be set */
 	skb_dst_set(newskb, dst_clone(skb_dst(oldskb)));
 
-	if (ip_route_me_harder(&newskb, addr_type) < 0)
+	if (ip_route_me_harder(&newskb, RTN_UNSPEC) != 0)
 		goto free_nskb;
 
 	newip->ttl        = dst_metric(skb_dst(newskb), RTAX_HOPLIMIT);
