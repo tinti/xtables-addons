@@ -18,6 +18,7 @@
 #	include <linux/netfilter_bridge.h>
 #endif
 #include <net/ip.h>
+#include <net/route.h>
 #include "compat_xtables.h"
 
 static unsigned int
@@ -82,7 +83,11 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
 	if (ip_route_me_harder(&newskb, RTN_UNSPEC) != 0)
 		goto free_nskb;
 
-	newip->ttl        = dst_metric(skb_dst(newskb), RTAX_HOPLIMIT);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
+	newip->ttl = ip4_dst_hoplimit(skb_dst(newskb));
+#else
+	newip->ttl = dst_metric(skb_dst(newskb), RTAX_HOPLIMIT);
+#endif
 	newskb->ip_summed = CHECKSUM_NONE;
 
 	/* "Never happens" (?) */
