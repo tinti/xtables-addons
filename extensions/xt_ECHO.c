@@ -70,12 +70,24 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
 	newudp->source = oldudp->dest;
 	newudp->dest   = oldudp->source;
 	newudp->len    = oldudp->len;
-	newudp->check  = 0;
 
 	data_len = htons(oldudp->len) - sizeof(*oldudp);
 	payload  = skb_header_pointer(oldskb, par->thoff +
 	           sizeof(*oldudp), data_len, NULL);
 	memcpy(skb_put(newskb, data_len), payload, data_len);
+
+#if 0
+	/*
+	 * Since no fields are modified (we just swapped things around),
+	 * this works too in our specific echo case.
+	 */
+	newudp->check = oldudp->check;
+#else
+	newudp->check = 0;
+	newudp->check = csum_tcpudp_magic(newip->saddr, newip->daddr,
+	                ntohs(newudp->len), IPPROTO_UDP,
+	                csum_partial(newudp, ntohs(newudp->len), 0));
+#endif
 
 	/* ip_route_me_harder expects the skb's dst to be set */
 	skb_dst_set(newskb, dst_clone(skb_dst(oldskb)));
