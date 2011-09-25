@@ -5,6 +5,8 @@ Fixes:
 - xt_ECHO: fix kernel warning about RTAX_HOPLIMIT being used
 Changes:
 - xt_ECHO: now calculates UDP checksum
+Enhancements:
+- xt_ECHO: IPv6 support
 
 
 v1.39 (2011-09-21)
