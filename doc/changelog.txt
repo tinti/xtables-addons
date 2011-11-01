@@ -1,6 +1,9 @@
 
 HEAD
 ====
+Fixes:
+- build: the code actually requires at least iptables 1.4.5 (would yield a
+  compile error otherwise), make sure configure checks for it; update INSTALL
 
 
 v1.39 (2011-09-21)
