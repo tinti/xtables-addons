@@ -151,38 +151,39 @@ rawdnat_tg6_save(const void *entry, const struct xt_entry_target *target)
 	       info->mask);
 }
 
-static struct xtables_target rawdnat_tg4_reg = {
-	.version       = XTABLES_VERSION,
-	.name          = "RAWDNAT",
-	.revision      = 0,
-	.family        = NFPROTO_IPV4,
-	.size          = XT_ALIGN(sizeof(struct xt_rawnat_tginfo)),
-	.userspacesize = XT_ALIGN(sizeof(struct xt_rawnat_tginfo)),
-	.help          = rawdnat_tg_help,
-	.parse         = rawdnat_tg4_parse,
-	.final_check   = rawdnat_tg_check,
-	.print         = rawdnat_tg4_print,
-	.save          = rawdnat_tg4_save,
-	.extra_opts    = rawdnat_tg_opts,
-};
-
-static struct xtables_target rawdnat_tg6_reg = {
-	.version       = XTABLES_VERSION,
-	.name          = "RAWDNAT",
-	.revision      = 0,
-	.family        = NFPROTO_IPV6,
-	.size          = XT_ALIGN(sizeof(struct xt_rawnat_tginfo)),
-	.userspacesize = XT_ALIGN(sizeof(struct xt_rawnat_tginfo)),
-	.help          = rawdnat_tg_help,
-	.parse         = rawdnat_tg6_parse,
-	.final_check   = rawdnat_tg_check,
-	.print         = rawdnat_tg6_print,
-	.save          = rawdnat_tg6_save,
-	.extra_opts    = rawdnat_tg_opts,
+static struct xtables_target rawdnat_tg_reg[] = {
+	{
+		.version       = XTABLES_VERSION,
+		.name          = "RAWDNAT",
+		.revision      = 0,
+		.family        = NFPROTO_IPV4,
+		.size          = XT_ALIGN(sizeof(struct xt_rawnat_tginfo)),
+		.userspacesize = XT_ALIGN(sizeof(struct xt_rawnat_tginfo)),
+		.help          = rawdnat_tg_help,
+		.parse         = rawdnat_tg4_parse,
+		.final_check   = rawdnat_tg_check,
+		.print         = rawdnat_tg4_print,
+		.save          = rawdnat_tg4_save,
+		.extra_opts    = rawdnat_tg_opts,
+	},
+	{
+		.version       = XTABLES_VERSION,
+		.name          = "RAWDNAT",
+		.revision      = 0,
+		.family        = NFPROTO_IPV6,
+		.size          = XT_ALIGN(sizeof(struct xt_rawnat_tginfo)),
+		.userspacesize = XT_ALIGN(sizeof(struct xt_rawnat_tginfo)),
+		.help          = rawdnat_tg_help,
+		.parse         = rawdnat_tg6_parse,
+		.final_check   = rawdnat_tg_check,
+		.print         = rawdnat_tg6_print,
+		.save          = rawdnat_tg6_save,
+		.extra_opts    = rawdnat_tg_opts,
+	},
 };
 
 static void _init(void)
 {
-	xtables_register_target(&rawdnat_tg4_reg);
-	xtables_register_target(&rawdnat_tg6_reg);
+	xtables_register_targets(rawdnat_tg_reg,
+		sizeof(rawdnat_tg_reg) / sizeof(*rawdnat_tg_reg));
 }
