@@ -20,6 +20,17 @@ static uint32_t ipv4options_rd(const uint8_t *data, int len)
 	uint32_t opts = 0;
 
 	while (len >= 2) {
+		switch (data[0]) {
+		case IPOPT_END:
+			return opts;
+		case IPOPT_NOOP:
+			--len;
+			++data;
+			continue;
+		}
+
+		if (data[1] < 2 || data[1] > len)
+			return opts;
 		opts |= 1 << (data[0] & 0x1F);
 		len  -= data[1];
 		data += data[1];

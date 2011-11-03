@@ -5,6 +5,7 @@ Fixes:
 - build: the code actually requires at least iptables 1.4.5 (would yield a
   compile error otherwise), make sure configure checks for it; update INSTALL
 - xt_ECHO: fix kernel warning about RTAX_HOPLIMIT being used
+- xt_ipv4options: fix an infinite loop
 Changes:
 - xt_ECHO: now calculates UDP checksum
 Enhancements:
