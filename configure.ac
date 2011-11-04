@@ -22,7 +22,7 @@ fi
 
 AC_CHECK_HEADERS([linux/netfilter/x_tables.h], [],
 	[AC_MSG_ERROR([You need to have linux/netfilter/x_tables.h, see INSTALL file for details])])
-PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
+PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.5])
 xtlibdir="$(pkg-config --variable=xtlibdir xtables)"
 PKG_CHECK_MODULES([libmnl], [libmnl >= 1], [:], [:])
 
