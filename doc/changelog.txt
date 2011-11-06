@@ -8,6 +8,8 @@ Fixes:
 - xt_ipv4options: fix an infinite loop
 Changes:
 - xt_ECHO: now calculates UDP checksum
+- Linux kernel versions below 2.6.32 are no longer officially
+  supported, and will not be part of compilation testing.
 Enhancements:
 - xt_ECHO: IPv6 support
 
@@ -80,7 +82,6 @@ Fixes:
 Changes:
 - Linux kernel versions below 2.6.29 are no longer officially
   supported, and will not be part of compilation testing.
-  Expect that compat code will be removed shortly.
 
 
 v1.33 (2011-02-02)
