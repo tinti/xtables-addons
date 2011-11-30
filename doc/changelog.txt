@@ -10,6 +10,7 @@ Changes:
 - xt_ECHO: now calculates UDP checksum
 - Linux kernel versions below 2.6.32 are no longer officially
   supported, and will not be part of compilation testing.
+- update to ipset 6.10
 Enhancements:
 - xt_ECHO: IPv6 support
 

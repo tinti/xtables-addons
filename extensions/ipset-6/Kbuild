@@ -8,4 +8,4 @@ obj-m += ip_set_hash_netiface.o ip_set_hash_netport.o ip_set_list_set.o
 
 ip_set-y := ip_set_core.o ip_set_getport.o pfxlen.o
 
-EXTRA_CFLAGS += -DLCONFIG_IP_SET_MAX=256 -DIPSET_EXTERNAL_MODULE=1
+EXTRA_CFLAGS += -DLCONFIG_IP_SET_MAX=256

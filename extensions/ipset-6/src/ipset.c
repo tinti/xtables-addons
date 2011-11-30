@@ -24,7 +24,7 @@
 #include <libipset/utils.h>		/* STREQ */
 
 static char program_name[] = "ipset";
-static char program_version[] = "6.9.1-genl-xta";
+static char program_version[] = "6.10-genl-xta";
 
 static struct ipset_session *session;
 static uint32_t restore_line;

@@ -307,7 +307,7 @@ int
 ipset_parse_tcp_port(struct ipset_session *session,
 		     enum ipset_opt opt, const char *str)
 {
-	return ipset_parse_tcpudp_port(session, opt, str, "TCP");
+	return ipset_parse_tcpudp_port(session, opt, str, "tcp");
 }
 
 /**
@@ -330,7 +330,7 @@ ipset_parse_single_tcp_port(struct ipset_session *session,
 	assert(opt == IPSET_OPT_PORT || opt == IPSET_OPT_PORT_TO);
 	assert(str);
 
-	return ipset_parse_port(session, opt, str, "TCP");
+	return ipset_parse_port(session, opt, str, "tcp");
 }
 
 /**
@@ -391,8 +391,8 @@ parse_icmp_typecode(struct ipset_session *session,
 				 str, family);
 	}
 	*a++ = '\0';
-	if ((err = string_to_u8(session, a, &type)) != 0 ||
-	    (err = string_to_u8(session, tmp, &code)) != 0)
+	if ((err = string_to_u8(session, tmp, &type)) != 0 ||
+	    (err = string_to_u8(session, a, &code)) != 0)
 		goto error;
 
 	typecode = (type << 8) | code;
