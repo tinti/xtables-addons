@@ -1,6 +1,10 @@
 
 HEAD
 ====
+Changes:
+- Deactivate build of ipset-genl by default.
+  I think the original ipset package can now take over, given there are
+  a handful of kernels (2.6.39 onwards) that do not need patching.
 Enhancements:
 - Support for Linux 3.2
 
