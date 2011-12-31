@@ -41,6 +41,10 @@ Configuring and compiling
 
 ./configure [options]
 
+--without-kbuild
+
+	Deactivate building kernel modules, and just do userspace parts.
+
 --with-kbuild=
 
 	Specifies the path to the kernel build output directory. We need

@@ -11,7 +11,7 @@ AC_PROG_LIBTOOL
 AC_ARG_WITH([kbuild],
 	AS_HELP_STRING([--with-kbuild=PATH],
 	[Path to kernel build directory [[/lib/modules/CURRENT/build]]])
-	AS_HELP_STRING([--without-kbuild],
+AS_HELP_STRING([--without-kbuild],
 	[Build only userspace tools]),
 	[kbuilddir="$withval"],
 	[kbuilddir="/lib/modules/$(uname -r)/build"])
