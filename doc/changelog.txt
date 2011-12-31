@@ -1,6 +1,8 @@
 
 HEAD
 ====
+Enhancements:
+- Support for Linux 3.2
 
 
 v1.40 (2011-11-30)

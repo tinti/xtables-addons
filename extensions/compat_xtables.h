@@ -92,6 +92,12 @@
 #	define rt_dst(rt)	(&(rt)->u.dst)
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
+#	define nf_nat_ipv4_multi_range_compat nf_nat_multi_range_compat
+#	define nf_nat_ipv4_range nf_nat_range
+#	define NF_NAT_RANGE_MAP_IPS IP_NAT_RANGE_MAP_IPS
+#endif
+
 #if !defined(NIP6) && !defined(NIP6_FMT)
 #	define NIP6(addr) \
 		ntohs((addr).s6_addr16[0]), \

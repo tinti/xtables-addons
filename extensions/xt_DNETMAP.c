@@ -77,7 +77,7 @@ struct dnetmap_entry {
 };
 
 struct dnetmap_prefix {
-	struct nf_nat_multi_range_compat prefix;
+	struct nf_nat_ipv4_multi_range_compat prefix;
 	char prefix_str[16];
 	struct list_head list;
 	unsigned int refcnt;
@@ -154,7 +154,7 @@ dnetmap_entry_rlookup(struct dnetmap_net *dnetmap_net, const __be32 addr)
 
 static struct dnetmap_prefix *
 dnetmap_prefix_lookup(struct dnetmap_net *dnetmap_net,
-		      const struct nf_nat_multi_range_compat *mr)
+		      const struct nf_nat_ipv4_multi_range_compat *mr)
 {
 	struct dnetmap_prefix *p;
 
@@ -194,7 +194,7 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 {
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(par->net);
 	const struct xt_DNETMAP_tginfo *tginfo = par->targinfo;
-	const struct nf_nat_multi_range_compat *mr = &tginfo->prefix;
+	const struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
 	struct dnetmap_prefix *p;
 	struct dnetmap_entry *e;
 #ifdef CONFIG_PROC_FS
@@ -213,7 +213,7 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 		return ret;
 	}
 
-	if (!(mr->range[0].flags & IP_NAT_RANGE_MAP_IPS)) {
+	if (!(mr->range[0].flags & NF_NAT_RANGE_MAP_IPS)) {
 		pr_debug("DNETMAP:check: bad MAP_IPS.\n");
 		return -EINVAL;
 	}
@@ -316,8 +316,8 @@ dnetmap_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 	enum ip_conntrack_info ctinfo;
 	__be32 prenat_ip, postnat_ip, prenat_ip_prev;
 	const struct xt_DNETMAP_tginfo *tginfo = par->targinfo;
-	const struct nf_nat_multi_range_compat *mr = &tginfo->prefix;
-	struct nf_nat_range newrange;
+	const struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
+	struct nf_nat_ipv4_range newrange;
 	struct dnetmap_entry *e;
 	struct dnetmap_prefix *p;
 	__s32 jttl;
@@ -354,8 +354,8 @@ dnetmap_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 
 		spin_unlock_bh(&dnetmap_lock);
 
-		newrange = ((struct nf_nat_range) {
-			    mr->range[0].flags | IP_NAT_RANGE_MAP_IPS,
+		newrange = ((struct nf_nat_ipv4_range) {
+			    mr->range[0].flags | NF_NAT_RANGE_MAP_IPS,
 			    e->prenat_addr, e->prenat_addr,
 			    mr->range[0].min, mr->range[0].max});
 
@@ -440,8 +440,8 @@ bind_new_prefix:
 
 	spin_unlock_bh(&dnetmap_lock);
 
-	newrange = ((struct nf_nat_range) {
-		    mr->range[0].flags | IP_NAT_RANGE_MAP_IPS,
+	newrange = ((struct nf_nat_ipv4_range) {
+		    mr->range[0].flags | NF_NAT_RANGE_MAP_IPS,
 		    postnat_ip, postnat_ip,
 		    mr->range[0].min, mr->range[0].max});
 
@@ -459,7 +459,7 @@ static void dnetmap_tg_destroy(const struct xt_tgdtor_param *par)
 {
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(par->net);
 	const struct xt_DNETMAP_tginfo *tginfo = par->targinfo;
-	const struct nf_nat_multi_range_compat *mr = &tginfo->prefix;
+	const struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
 	struct dnetmap_prefix *p;
 #ifdef CONFIG_PROC_FS
 	char str[25];

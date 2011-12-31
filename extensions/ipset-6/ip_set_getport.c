@@ -12,6 +12,7 @@
 #include <linux/icmp.h>
 #include <linux/icmpv6.h>
 #include <linux/sctp.h>
+#include <linux/version.h>
 #include <linux/netfilter_ipv6/ip6_tables.h>
 #include <net/ip.h>
 #include <net/ipv6.h>
@@ -115,9 +116,14 @@ ip_set_get_ip6_port(const struct sk_buff *skb, bool src,
 {
 	int protoff;
 	u8 nexthdr;
+	__be16 frag_off;
 
 	nexthdr = ipv6_hdr(skb)->nexthdr;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
 	protoff = ipv6_skip_exthdr(skb, sizeof(struct ipv6hdr), &nexthdr);
+#else
+	protoff = ipv6_skip_exthdr(skb, sizeof(struct ipv6hdr), &nexthdr, &frag_off);
+#endif
 	if (protoff < 0)
 		return false;
 
