@@ -1,6 +1,6 @@
 .*.cmd
 .*.d
-.tmp_versions
+.tmp_versions/
 *.ko
 *.mod.c
 Module.markers
