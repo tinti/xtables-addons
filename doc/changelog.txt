@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+v1.41 (2012-01-04)
+==================
 Changes:
 - Deactivate build of ipset-genl by default.
   I think the original ipset package can now take over, given there are
