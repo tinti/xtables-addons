@@ -31,8 +31,13 @@
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
 #endif
-#include "xt_DNETMAP.h"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
+#	include <net/netfilter/nf_nat.h>
+#else
+#	include <linux/netfilter/nf_nat.h>
+#endif
 #include "compat_xtables.h"
+#include "xt_DNETMAP.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Kierdelewicz <marek@koba.pl>");
