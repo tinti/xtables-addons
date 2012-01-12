@@ -13,7 +13,7 @@ match:
 		int *hotdrop,
 	);
 
-	/* error code */
+	/* true/false */
 	int
 	(*checkentry)(
 		const char *tablename,
@@ -45,7 +45,7 @@ target:
 		void *userdata,
 	);
 
-	/* error code */
+	/* true/false */
 	int
 	(*checkentry)(
 		const char *tablename,

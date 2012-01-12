@@ -1,6 +1,9 @@
 
 HEAD
 ====
+Fixes:
+- compat_xtables: fixed mistranslation of checkentry return values
+  (affected kernels < 2.6.23)
 
 
 v1.41 (2012-01-04)

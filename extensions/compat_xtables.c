@@ -110,11 +110,7 @@ static bool xtnu_match_check(const char *table, const void *entry,
 		return false;
 	if (nm->checkentry == NULL)
 		return true;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
-	return nm->checkentry(&local_par);
-#else
 	return nm->checkentry(&local_par) == 0;
-#endif
 }
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
@@ -322,11 +318,7 @@ static bool xtnu_target_check(const char *table, const void *entry,
 	if (nt->checkentry == NULL)
 		/* this is valid, just like if there was no function */
 		return true;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
-	return nt->checkentry(&local_par);
-#else
 	return nt->checkentry(&local_par) == 0;
-#endif
 }
 #endif
 
