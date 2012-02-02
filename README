@@ -1,3 +1,23 @@
+Sitfilter
+=========
+
+This repo includes 'sitfilter' to Xtables-addons, this is the
+only change from the original one. The 'sitfilter' allows to
+match IPv6 packets inside IPv4 packets. Example:
+
+	iptables -A INPUT -p ipv6 -i eth0 -m sitfilter \
+                --v4-start 0 --v6-start 96 --bit-len 32 -j ACCEPT
+	iptables -A INPUT -p ipv6 -i eth0 -j DROP
+
+This work was based on: 
+        http://jengelh.medozas.de/documents/Netfilter_Modules.pdf
+
+Special thanks to:
+        Denis Lubineau (IUT)
+        Dominique Fournier (CRIC)
+        Laurent Neiger (CRIC)
+        Yannis Rossetto (CRIC)
+
 Xtables-addons
 ==============
 
